@@ -93,24 +93,6 @@ void DesignArea::mouseReleaseEvent(QMouseEvent * event)
 	}
 }
 
-void DesignArea::drawLine()
-{
-	constructing = false;
-	glBegin(GL_LINES);
-	glColor3f(1.0f, 0.0f, 0.0f);
-	glVertex2f(lastPoint.x(), lastPoint.y());
-	glVertex2f( firstPoint.x(), firstPoint.y());
-	glEnd();
-	/*glBegin(GL_TRIANGLES);
-	glColor3f(1.0f, 0.0f, 0.0f);
-	glVertex2f((float)lastPoint.x(), (float)lastPoint.y());
-	glColor3f(0.0f, 1.0f, 0.0f);
-	glVertex2f((float)firstPoint.x(), (float)firstPoint.y());
-	glColor3f(0.0f, 0.0f, 1.0f);
-	glVertex2f(600.0f, 600.0f);
-	glEnd();*/
-}
-
 void DesignArea::drawRoad()
 {/*
 	constructing = false;
@@ -144,15 +126,57 @@ void DesignArea::drawRoad()
 		glVertex2f(x, y);
 	glEnd();
 	*/
+	Point point;
+	int startRoad = -1;
+	int endRoad = -1;
+	int currentRoadId = allRoads.size();
+	LineParams startBermParams = LineParams{ 0.0, 0.0, false }, endBermParams = LineParams{ 0.0,  0.0, false };
+	//std::vector<Roads::Road*>::iterator roads_it;
+	for (auto road : this->allRoads)
+	{
+		point = road->searchPoint(lastPoint);
+		if (point.x() != 0) {
+			endRoad = road->id;
+			lastPoint = QPoint(point.x(), point.y());
+			endBermParams = road->getBermParams(road->returnCloserBerm(firstPoint));
+		}
+		point = road->searchPoint(firstPoint);
+		if (point.x() != 0) {
+			startRoad = road->id;
+			firstPoint = QPoint(point.x(), point.y());
+			startBermParams = road->getBermParams(road->returnCloserBerm(lastPoint));
+		}
+		if (startRoad == endRoad && startRoad != -1)
+			return;
+	}
+
 	switch (currentObjectBrush)
 	{
 	case OneWayOneLane: {
-		Roads::OneWayOneLane road = Roads::OneWayOneLane();
-		road.drawLane(firstPoint, lastPoint);
-		constructing = false;
-		appObjects.push_back(road);
+		Roads::OneWayOneLane *road = new Roads::OneWayOneLane(currentRoadId);
+		if ((*road).drawRoad(firstPoint, lastPoint, endRoad != -1, startBermParams, endBermParams)) {
+			if (startRoad != -1)
+			{
+				(*road).addOtherRoad(startRoad);
+				allRoads[startRoad]->addOtherRoad(startRoad);
+			}
+			if (endRoad != -1)
+			{
+				(*road).addOtherRoad(endRoad);
+				allRoads[endRoad]->addOtherRoad(endRoad);
+			}
+			constructing = false;
+			allRoads.push_back(road);
+		}
+		else //if drawing not succesfull
+			return;
 	}
 	}
+}
+
+Point DesignArea::searchPoint(QPoint)
+{
+	return Point(1, 1);
 }
 
 /*

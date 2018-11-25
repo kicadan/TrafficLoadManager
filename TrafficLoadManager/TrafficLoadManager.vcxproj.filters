@@ -51,6 +51,9 @@
     <ClCompile Include="Roads.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Junction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="TrafficLoadManager.h">
@@ -78,6 +81,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Roads.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Junction.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

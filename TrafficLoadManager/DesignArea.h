@@ -29,7 +29,7 @@ private:
 	QOpenGLFunctions *openGLFunctions;
 	QOpenGLContext *context;
 	CurrentBrush currentObjectBrush = OneWayOneLane;
-	std::vector<AppObject> appObjects;
+	std::vector<Roads::Road*> allRoads;
 	QTimer timer;
 	int actualScale;
 	QPoint lastPoint;
@@ -41,8 +41,8 @@ private:
 	GLUquadric * object;
 
 	//void drawLineTo(const QPoint &endPoint);
-	void drawLine();
 	void drawRoad();
+	Point searchPoint(QPoint);
 	vectors calc_vectors(QPoint, QPoint);
 
 protected:

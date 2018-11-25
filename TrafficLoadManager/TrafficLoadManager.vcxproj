@@ -115,6 +115,7 @@
   <ItemGroup>
     <ClCompile Include="AppObject.cpp" />
     <ClCompile Include="DesignArea.cpp" />
+    <ClCompile Include="Junction.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Point.cpp" />
     <ClCompile Include="Roads.cpp" />
@@ -131,6 +132,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AppObject.h" />
+    <ClInclude Include="Junction.h" />
     <ClInclude Include="Point.h" />
     <ClInclude Include="Roads.h" />
     <QtMoc Include="DesignArea.h">
