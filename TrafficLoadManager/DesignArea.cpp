@@ -130,46 +130,74 @@ void DesignArea::drawRoad()
 	int startRoad = -1;
 	int endRoad = -1;
 	int currentRoadId = allRoads.size();
+	Junction *startJunction = NULL, *endJunction = NULL;
+	bool startJunctionExists = false, endJunctionExists = false;
 	LineParams startBermParams = LineParams{ 0.0, 0.0, false }, endBermParams = LineParams{ 0.0,  0.0, false };
-	//std::vector<Roads::Road*>::iterator roads_it;
+
+	// search all roads
 	for (auto road : this->allRoads)
 	{
 		point = road->searchPoint(lastPoint);
 		if (point.x() != 0) {
 			endRoad = road->id;
 			lastPoint = QPoint(point.x(), point.y());
-			endBermParams = road->getBermParams(road->returnCloserBerm(firstPoint));
+			//endBermParams = road->getBermParams(road->returnCloserBerm(firstPoint));
 		}
 		point = road->searchPoint(firstPoint);
 		if (point.x() != 0) {
 			startRoad = road->id;
 			firstPoint = QPoint(point.x(), point.y());
-			startBermParams = road->getBermParams(road->returnCloserBerm(lastPoint));
+			//startBermParams = road->getBermParams(road->returnCloserBerm(lastPoint));
 		}
-		if (startRoad == endRoad && startRoad != -1)
-			return;
 	}
+	if (startRoad == endRoad && startRoad != -1)
+		return;
 
 	switch (currentObjectBrush)
 	{
-	case OneWayOneLane: {
-		Roads::OneWayOneLane *road = new Roads::OneWayOneLane(currentRoadId);
-		if ((*road).drawRoad(firstPoint, lastPoint, endRoad != -1, startBermParams, endBermParams)) {
-			if (startRoad != -1)
-			{
-				(*road).addOtherRoad(startRoad);
-				allRoads[startRoad]->addOtherRoad(startRoad);
-			}
-			if (endRoad != -1)
-			{
-				(*road).addOtherRoad(endRoad);
-				allRoads[endRoad]->addOtherRoad(endRoad);
-			}
-			constructing = false;
-			allRoads.push_back(road);
+	case OneWayRoadWithOneLane: {
+		OneWayOneLane *road = new OneWayOneLane(currentRoadId);
+		//if ((*road).drawRoad(firstPoint, lastPoint, endRoad != -1, // startBermParams, endBermParams)) {
+		//	if (startRoad != -1)
+		//	{
+		//		(*road).addOtherRoad(startRoad);
+		//		allRoads[startRoad]->addOtherRoad(startRoad);
+		//	}
+		//	if (endRoad != -1)
+		//	{
+		//		(*road).addOtherRoad(endRoad);
+		//		allRoads[endRoad]->addOtherRoad(endRoad);
+		//	}
+		//	constructing = false;
+		//	allRoads.push_back(road);
+		//}
+		if (startRoad != -1) {
+			for (auto junction : this->allJunctions)
+				if (junction->isPoint(firstPoint)) {
+					startJunction = junction;
+					startJunctionExists = true;
+					break;
+				}
+			if (!startJunctionExists)
+				startJunction = new Junction(firstPoint, allRoads[startRoad], road);
+			allJunctions.push_back(startJunction);
 		}
-		else //if drawing not succesfull
-			return;
+		if (endRoad != -1) {
+			for (auto junction : this->allJunctions)
+				if (junction->isPoint(lastPoint)) {
+					endJunction = junction;
+					startJunctionExists = true;
+					break;
+				}
+			if (!endJunctionExists)
+				endJunction = new Junction(lastPoint, allRoads[endRoad], road);
+			allJunctions.push_back(endJunction);
+		}
+		road->drawRoad(firstPoint, lastPoint, endRoad != -1, startJunction, endJunction);
+		allRoads.push_back(road);
+		constructing = false;
+		//else //if drawing not succesfull
+		//	return;
 	}
 	}
 }

@@ -5,17 +5,18 @@ class Point :
 	public AppObject
 {
 private:
-	float _x, _y;
+	double _x, _y;
 	bool free = true;
 public:
 	Point();
 	Point(float, float);
 	~Point();
 
-	float x();
-	float y();
+	double x();
+	double y();
 	bool isFree();
 
 	bool operator ==(Point);
+	bool operator ==(QPoint);
 };
 

@@ -11,10 +11,7 @@
 #include <QPoint>
 #include <gl\GLU.h>
 #include "Roads.h"
-
-enum CurrentBrush {
-	OneWayOneLane = 0
-};
+#include "OneWayOneLane.h"
 
 
 class DesignArea : public QOpenGLWidget
@@ -28,16 +25,17 @@ public:
 private:
 	QOpenGLFunctions *openGLFunctions;
 	QOpenGLContext *context;
-	CurrentBrush currentObjectBrush = OneWayOneLane;
-	std::vector<Roads::Road*> allRoads;
+	RoadType currentObjectBrush = OneWayRoadWithOneLane;
+	std::vector<Road*> allRoads;
+	std::vector<Junction*> allJunctions;
 	QTimer timer;
 	int actualScale;
 	QPoint lastPoint;
 	QPoint firstPoint;
 	bool constructing = false;
 	QImage image;
-	float x = 10;
-	float y = 10;
+	double x = 10;
+	double y = 10;
 	GLUquadric * object;
 
 	//void drawLineTo(const QPoint &endPoint);

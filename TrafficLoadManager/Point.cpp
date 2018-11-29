@@ -16,12 +16,12 @@ Point::~Point()
 {
 }
 
-float Point::x()
+double Point::x()
 {
 	return this->_x;
 }
 
-float Point::y()
+double Point::y()
 {
 	return this->_y;
 }
@@ -34,4 +34,9 @@ bool Point::isFree()
 bool Point::operator==(Point other)
 {
 	return this->_x == other._x && this->_y == other._y;
+}
+
+bool Point::operator==(QPoint other)
+{
+	return this->_x == other.x() && this->_y == other.y();
 }

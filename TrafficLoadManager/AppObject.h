@@ -11,3 +11,6 @@ public:
 	~AppObject();
 };
 
+double min(double, double);
+double max(double, double);
+

@@ -1,6 +1,7 @@
 #pragma once
 #include "AppObject.h"
-#include "Point.h"
+#include "Roads.h"
+
 
 struct Connection {
 	int roadFirst;
@@ -15,10 +16,16 @@ class Junction :
 	public AppObject
 {
 public:
-	Junction(Point);
+	Junction();
+	Junction(QPoint, Road*, Road*);
 	~Junction();
+	Point returnCrossPointsForBerm(LineParams, LaneType, QPoint);
+	void connectRoads();
+	bool isPoint(QPoint);
+	bool isPoint(Point);
 private:
 	Point point;
 	std::vector<Connection> connections;
+	std::vector<Road*> roads;
 };
 
