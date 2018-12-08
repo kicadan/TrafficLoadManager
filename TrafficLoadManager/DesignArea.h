@@ -10,9 +10,14 @@
 #include <QtOpenGL>
 #include <QPoint>
 #include <gl\GLU.h>
+#include <algorithm>
 #include "Roads.h"
 #include "OneWayOneLane.h"
 
+struct Change {
+	AppObject *appObject;
+	int changeId;
+};
 
 class DesignArea : public QOpenGLWidget
 {
@@ -28,11 +33,17 @@ private:
 	RoadType currentObjectBrush = OneWayRoadWithOneLane;
 	std::vector<Road*> allRoads;
 	std::vector<Junction*> allJunctions;
+	std::vector<Change> allChanges;
+	int changeCounter = 0;
 	QTimer timer;
 	int actualScale;
 	QPoint lastPoint;
 	QPoint firstPoint;
+	Point _lastPoint;
+	Point _firstPoint;
 	bool constructing = false;
+	bool repainting = false;
+	bool undo = false;
 	QImage image;
 	double x = 10;
 	double y = 10;
@@ -40,7 +51,14 @@ private:
 
 	//void drawLineTo(const QPoint &endPoint);
 	void drawRoad();
+	void repaintScene();
+	void undoChanges();
+	void addChanges(std::vector<AppObject*>);
+	void makeConnections();
 	Point searchPoint(QPoint);
+	bool checkIfCollidingWithOtherRoad(Road*, std::vector<int>);
+	void deleteJunction(Junction*);
+	void deleteRoad(Road*);
 	vectors calc_vectors(QPoint, QPoint);
 
 protected:

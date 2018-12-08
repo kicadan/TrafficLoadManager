@@ -1,9 +1,8 @@
 #include "OneWayOneLane.h"
 
-OneWayOneLane::OneWayOneLane(int _id)
+OneWayOneLane::OneWayOneLane(int _id):Road(OneWayRoadWithOneLane)
 {
 	this->Road::id = _id;
-	this->Road::roadType = OneWayRoadWithOneLane;
 }
 
 OneWayOneLane::~OneWayOneLane()
@@ -13,16 +12,14 @@ OneWayOneLane::~OneWayOneLane()
 void OneWayOneLane::addPoint(Point point, LaneType pointType)
 {
 	switch (pointType) {
-	case LANE: { lane.push_back(point); break; }
+	case LANE: { lane.push_back(LanePoint{ point }); mid.push_back(point); break; }
 	case LEFT_BERM: { bermL.push_back(point); break; }
 	case RIGHT_BERM: bermR.push_back(point);
 	}
 }
 
-void OneWayOneLane::drawRoad(QPoint firstPoint, QPoint lastPoint, bool endingToOtherRoad, Junction* startJunction, Junction* endJunction)//std::vector<Road*> startRoads, std::vector<Road*> endRoads)//LineParams startBermParams, LineParams endBermParams)//, int beginRoad, int endRoad)
+void OneWayOneLane::setRoad(Point firstPoint, Point lastPoint, bool endingToOtherRoad, Junction* startJunction, Junction* endJunction)//std::vector<Road*> startRoads, std::vector<Road*> endRoads)//LineParams startBermParams, LineParams endBermParams)//, int beginRoad, int endRoad)
 {
-	glLineWidth(3);
-
 	this->parallel_segments = calc_vectors(lastPoint, firstPoint);
 	double x, y, A, B, bermLeftA, bermLeftB, bermRightA, bermRightB;
 	bool upright = false;
@@ -42,9 +39,9 @@ void OneWayOneLane::drawRoad(QPoint firstPoint, QPoint lastPoint, bool endingToO
 		B = -firstPoint.x();
 		upright = true;
 	}
-	this->Road::midLineParams.a = A;
-	this->Road::midLineParams.b = B;
-	this->Road::midLineParams.upright = upright;
+	this->Road::coreLineParams.a = A;
+	this->Road::coreLineParams.b = B;
+	this->Road::coreLineParams.upright = upright;
 
 	this->Road::bermLParams.a = bermLeftA;
 	this->Road::bermLParams.b = bermLeftB;
@@ -77,17 +74,18 @@ void OneWayOneLane::drawRoad(QPoint firstPoint, QPoint lastPoint, bool endingToO
 		// y = A * x + B
 		double x_last = lastPoint.x();
 		if (lastPoint.x() > firstPoint.x())
-			for (_x = xm; _x <= x_last; _x += distance, xl += distance, xr += distance) {
+			for (_x = xm; _x < x_last; _x += distance, xl += distance, xr += distance) {
 				addPoint(Point(_x, A*_x + B), LANE);
 				addPoint(Point(xl, A*xl + B), LEFT_BERM);
 				addPoint(Point(xr, A*xr + B), RIGHT_BERM);
 			}
 		else
-			for (_x = xm; _x >= x_last; _x -= distance, xl -= distance, xr -= distance) {
+			for (_x = xm; _x > x_last; _x -= distance, xl -= distance, xr -= distance) {
 				addPoint(Point(_x, A*_x + B), LANE);
 				addPoint(Point(xl, A*xl + B), LEFT_BERM);
 				addPoint(Point(xr, A*xr + B), RIGHT_BERM);
 			}
+		addPoint(Point(x_last, A*x_last + B), LANE);
 	}
 	else
 	{
@@ -97,19 +95,21 @@ void OneWayOneLane::drawRoad(QPoint firstPoint, QPoint lastPoint, bool endingToO
 		double yr = firstPoint.y() + parallel_segments.yr;
 		double y_last = lastPoint.y();
 		if (lastPoint.y() > firstPoint.y())
-			for (_y = ym; _y <= y_last; _y += distance, yl += distance, yr += distance) {
+			for (_y = ym; _y < y_last; _y += distance, yl += distance, yr += distance) {
 				addPoint(Point(dx != 0 ? (_y - B) / A : xm, _y), LANE);
-				addPoint(Point(dx != 0 ? (yl - B) / A : xl, yl), LEFT_BERM);
-				addPoint(Point(dx != 0 ? (yr - B) / A : xr, yr), RIGHT_BERM);
+				addPoint(Point(dx != 0 ? (yl - B) / A : xl, yl), LEFT_BERM); //deprecated
+				addPoint(Point(dx != 0 ? (yr - B) / A : xr, yr), RIGHT_BERM); //deprecated
 			}
 		else
-			for (_y = ym; _y >= y_last; _y -= distance, yl -= distance, yr -= distance) {
+			for (_y = ym; _y > y_last; _y -= distance, yl -= distance, yr -= distance) {
 				addPoint(Point(dx != 0 ? (_y - B) / A : xm, _y), LANE);
-				addPoint(Point(dx != 0 ? (yl - B) / A : xl, yl), LEFT_BERM);
-				addPoint(Point(dx != 0 ? (yr - B) / A : xr, yr), RIGHT_BERM);
+				addPoint(Point(dx != 0 ? (yl - B) / A : xl, yl), LEFT_BERM); //deprecated
+				addPoint(Point(dx != 0 ? (yr - B) / A : xr, yr), RIGHT_BERM); //deprecated
 			}
+		addPoint(Point(dx != 0 ? (y_last - B) / A : xm, y_last), LANE);
 	}
-	//assing real values FROM VECTOR to lastPoint if road is not connecting to the other at its end
+
+	//assing real values FROM VECTOR to _lastPoint if road is not connecting to the other at its end
 	if (!endingToOtherRoad) {
 		if (_y == 0)
 		{
@@ -132,52 +132,154 @@ void OneWayOneLane::drawRoad(QPoint firstPoint, QPoint lastPoint, bool endingToO
 
 	Point _firstBermLeftPoint(0, 0), _firstBermRightPoint(0, 0), _lastBermLeftPoint(0, 0), _lastBermRightPoint(0, 0);
 	if (startJunction != NULL) {
-		_firstBermLeftPoint = startJunction->returnCrossPointsForBerm(bermLParams, LEFT_BERM, lastPoint);
-		_firstBermRightPoint = startJunction->returnCrossPointsForBerm(bermRParams, RIGHT_BERM, lastPoint);
+		_firstBermLeftPoint = startJunction->returnCrossPointsForBerm(bermLParams, lastPoint);
+		_firstBermRightPoint = startJunction->returnCrossPointsForBerm(bermRParams, lastPoint);
+		lane[0].junction = startJunction;
 	}
 	if (endJunction != NULL) {
-		_lastBermLeftPoint = endJunction->returnCrossPointsForBerm(bermLParams, LEFT_BERM, firstPoint);
-		_lastBermRightPoint = endJunction->returnCrossPointsForBerm(bermRParams, RIGHT_BERM, firstPoint);
+		_lastBermLeftPoint = endJunction->returnCrossPointsForBerm(bermLParams, firstPoint);
+		_lastBermRightPoint = endJunction->returnCrossPointsForBerm(bermRParams, firstPoint);
+		lane[lane.size() - 1].junction = endJunction;
 	}
-	//main lane
-	glBegin(GL_LINES);
+	//main lane's points
+	coreLineParams.firstPoint = Point(firstPoint.x(), firstPoint.y());
+	coreLineParams.lastPoint = Point(lastPoint.x(), lastPoint.y());
+	//left berm's points
+	x = _firstBermLeftPoint.x() == 0 ? firstPoint.x() + parallel_segments.xl : _firstBermLeftPoint.x();
+	y = _firstBermLeftPoint.y() == 0 ? firstPoint.y() + parallel_segments.yl : _firstBermLeftPoint.y();
+	bermLParams.firstPoint = Point(x, y);
+	x = _lastBermLeftPoint.x() == 0 ? lastPoint.x() + parallel_segments.xl : _lastBermLeftPoint.x();
+	y = _lastBermLeftPoint.y() == 0 ? lastPoint.y() + parallel_segments.yl : _lastBermLeftPoint.y();
+	bermLParams.lastPoint = Point(x, y);
+	//right berm's points
+	x = _lastBermRightPoint.x() == 0 ? lastPoint.x() + parallel_segments.xr : _lastBermRightPoint.x();
+	y = _lastBermRightPoint.y() == 0 ? lastPoint.y() + parallel_segments.yr : _lastBermRightPoint.y();
+	bermRParams.lastPoint = Point(x, y);
+	x = _firstBermRightPoint.x() == 0 ? firstPoint.x() + parallel_segments.xr : _firstBermRightPoint.x();
+	y = _firstBermRightPoint.y() == 0 ? firstPoint.y() + parallel_segments.yr : _firstBermRightPoint.y();
+	bermRParams.firstPoint = Point(x, y);
+
+	//assign lane to core of the road
+	copyLanePointVectorToPointVector(lane, mid);
+}
+
+void OneWayOneLane::drawRoad()
+{
+	//fulfill with colour 2 polygons
+	/*glBegin(GL_POLYGON);
 	glColor3f(1.0f, 1.0f, 1.0f);
-	midLineParams.firstPoint = Point(firstPoint.x(), firstPoint.y());
-	midLineParams.lastPoint = Point(lastPoint.x(), lastPoint.y());
-	glVertex2f(lastPoint.x(), lastPoint.y());
-	glVertex2f(firstPoint.x(), firstPoint.y());
+	glVertex2f(bermLParams._lastPoint.x(), bermLParams._lastPoint.y());
+	glVertex2f(bermLParams._firstPoint.x(), bermLParams._firstPoint.y());
+	glVertex2f(coreLineParams._firstPoint.x(), coreLineParams._firstPoint.y());
+	glVertex2f(coreLineParams._lastPoint.x(), coreLineParams._lastPoint.y());
+	glEnd;
+
+	glBegin(GL_POLYGON);
+	glColor3f(1.0f, 1.0f, 1.0f);
+	glVertex2f(coreLineParams._lastPoint.x(), coreLineParams._lastPoint.y());
+	glVertex2f(coreLineParams._firstPoint.x(), coreLineParams._firstPoint.y());
+	glVertex2f(bermRParams._firstPoint.x(), bermRParams._firstPoint.y());
+	glVertex2f(bermRParams._lastPoint.x(), bermRParams._lastPoint.y());
+	glEnd;*/
+
+	glLineWidth(3);
+
+	//main lane
+	glBegin(GL_LINES); 
+	glColor3f(0.0f, 0.0f, 1.0f);
+	glVertex2f(coreLineParams.lastPoint.x(), coreLineParams.lastPoint.y());
+	glVertex2f(coreLineParams.firstPoint.x(), coreLineParams.firstPoint.y());
 	glEnd();
 
 	//berm left
 	glBegin(GL_LINES);
 	glColor3f(0.0f, 1.0f, 0.0f);
-	x = _firstBermLeftPoint.x() == 0 ? firstPoint.x() + parallel_segments.xl : _firstBermLeftPoint.x();
-	y = _firstBermLeftPoint.y() == 0 ? firstPoint.y() + parallel_segments.yl : _firstBermLeftPoint.y();
-	bermLParams.firstPoint = Point(x, y);
-	glVertex2f(x, y);
-	x = _lastBermLeftPoint.x() == 0 ? lastPoint.x() + parallel_segments.xl : _lastBermLeftPoint.x();
-	y = _lastBermLeftPoint.y() == 0 ? lastPoint.y() + parallel_segments.yl : _lastBermLeftPoint.y();
-	bermLParams.lastPoint = Point(x, y);
-	glVertex2f(x, y);
+	glVertex2f(bermLParams.lastPoint.x(), bermLParams.lastPoint.y());
+	glVertex2f(bermLParams.firstPoint.x(), bermLParams.firstPoint.y());
 	glEnd();
 
 	//berm right
 	glBegin(GL_LINES);
-	glColor3f(0.0f, 1.0f, 0.0f);
-	x = _lastBermRightPoint.x() == 0 ? lastPoint.x() + parallel_segments.xr : _lastBermRightPoint.x();
-	y = _lastBermRightPoint.y() == 0 ? lastPoint.y() + parallel_segments.yr : _lastBermRightPoint.y();
-	bermRParams.lastPoint = Point(x, y);
-	glVertex2f(x, y);
-	x = _firstBermRightPoint.x() == 0 ? firstPoint.x() + parallel_segments.xr : _firstBermRightPoint.x();
-	y = _firstBermRightPoint.y() == 0 ? firstPoint.y() + parallel_segments.yr : _firstBermRightPoint.y();
-	bermRParams.firstPoint = Point(x, y);
-	glVertex2f(x, y);
+	glColor3f(1.0f, 0.0f, 0.0f);
+	glVertex2f(bermRParams.lastPoint.x(), bermRParams.lastPoint.y());
+	glVertex2f(bermRParams.firstPoint.x(), bermRParams.firstPoint.y());
 	glEnd();
-	//assign lane to core of the road
-	this->Road::mid.assign(this->lane.begin(), this->lane.end());
 }
 
-vectors OneWayOneLane::calc_vectors(QPoint A, QPoint B)
+Point OneWayOneLane::getPoint(int index, LaneType laneType)
+{
+	if (laneType == LANE) {
+		if (index < lane.size())
+			return lane[index].point;
+	}
+	else
+		return Point(0, 0);
+}
+
+int OneWayOneLane::getPointIndex(Point point) //if not found returns -1
+{
+	int index = 0;
+	for (auto pointIt = lane.begin(); pointIt < lane.end(); pointIt++) {
+		if ((*pointIt).point == point)
+			return index;
+		index++;
+	}
+	return -1;
+}
+
+Point OneWayOneLane::getLastPointOf(LaneType laneType)
+{
+	switch (laneType) {
+	case LANE: return lane[lane.size() - 1].point;
+	}
+}
+
+//it is only one lane type in this case; returns distance by pointIdx parameter
+void* OneWayOneLane::getNextJunction(LaneType laneType, int &pointIdx)
+{
+	auto pointIt = lane.begin() + pointIdx;
+	while (pointIt < lane.end() - 1) {
+		pointIt++;
+		if ((*pointIt).junction != NULL) {
+			pointIdx = pointIt - (lane.begin() + pointIdx);
+			return (*pointIt).junction;
+		}
+	}
+	return NULL;
+}
+
+void OneWayOneLane::addJunction(Point point, LaneType laneType, void* junction)
+{
+	for (auto pointIt = lane.begin(); pointIt < lane.end(); pointIt++) {
+		if ((*pointIt).point == point)
+			(*pointIt).junction = (Junction*)junction;
+	}
+}
+
+void OneWayOneLane::deleteJunction(void *junction)
+{
+	for (auto laneIt = lane.begin(); laneIt < lane.end(); laneIt++) {
+		if ((*laneIt).junction == junction)
+			(*laneIt).junction = NULL;
+	}
+}
+
+void OneWayOneLane::deleteFromJunctions()
+{
+	for (auto laneIt = lane.begin(); laneIt < lane.end(); laneIt++) {
+		if ((*laneIt).junction != NULL)
+			(*laneIt).junction->deleteRoad(this);
+	}
+}
+
+Point OneWayOneLane::getFirstPointOf(LaneType laneType)
+{
+	switch (laneType) {
+	case LANE: return lane[0].point;
+	}
+}
+
+vectors OneWayOneLane::calc_vectors(Point A, Point B)
 {
 	//int xa = A.x() - B.x();
 	//int ya = A.y() - B.y();

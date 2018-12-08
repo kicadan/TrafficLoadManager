@@ -2,7 +2,11 @@
 
 
 
-Point::Point()
+Point::Point():AppObject(APP_POINT)
+{
+}
+
+Point::Point(QPoint point):_x(point.x()), _y(point.y())
 {
 }
 
@@ -29,6 +33,16 @@ double Point::y()
 bool Point::isFree()
 {
 	return this->free;
+}
+
+int Point::junctionNumber()
+{
+	return this->_junctionNumber;
+}
+
+ObjectType Point::getObjectType()
+{
+	return _objectType;
 }
 
 bool Point::operator==(Point other)

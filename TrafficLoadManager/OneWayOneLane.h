@@ -10,11 +10,22 @@ public:
 	OneWayOneLane(int);
 	~OneWayOneLane();
 
-	void addPoint(Point, LaneType);
-	void drawRoad(QPoint, QPoint, bool, Junction*, Junction*);// LineParams startBermParams = LineParams{ 0.0, 0.0, false }, LineParams endBermParams = LineParams{ 0.0, 0.0, false }); // , int, int);
+	void setRoad(Point, Point, bool, Junction*, Junction*);// LineParams startBermParams = LineParams{ 0.0, 0.0, false }, LineParams endBermParams = LineParams{ 0.0, 0.0, false }); // , int, int);
+	void drawRoad();
+	//int getPoint(Point);
+
+	Point getPoint(int, LaneType);
+	int getPointIndex(Point);
+	Point getFirstPointOf(LaneType);
+	Point getLastPointOf(LaneType); 
+	void* getNextJunction(LaneType, int&);
+	void addJunction(Point, LaneType, void*);
+	void deleteJunction(void*);
+	void deleteFromJunctions();
 
 private:
-	std::vector<Point> bermL, bermR, lane;
+	std::vector<LanePoint> lane;
 
-	vectors calc_vectors(QPoint, QPoint);
+	void addPoint(Point, LaneType);
+	vectors calc_vectors(Point, Point);
 };

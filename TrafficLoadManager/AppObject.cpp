@@ -2,6 +2,10 @@
 
 
 
+AppObject::AppObject(ObjectType objectType):_objectType(objectType)
+{
+}
+
 AppObject::AppObject()
 {
 }
@@ -9,6 +13,11 @@ AppObject::AppObject()
 
 AppObject::~AppObject()
 {
+}
+
+ObjectType AppObject::getObjectType()
+{
+	return _objectType;
 }
 
 double min(double first, double second) {
