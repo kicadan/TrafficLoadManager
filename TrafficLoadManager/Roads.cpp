@@ -27,14 +27,14 @@ LineParams Road::getLineParams(LaneType laneType)
 	}
 }
 
-// LaneType Road::returnCloserBerm(QPoint point)
-//{
-//	double distanceFromLeftBerm = 0.0;
-//	double distanceFromRightBerm = 0.0;
-//	distanceFromLeftBerm = fabs(-bermLParams.a*point.x() + point.y() - bermLParams.b) / (double)sqrt(pow(bermLParams.a, 2) + 1);
-//	distanceFromRightBerm = fabs(-bermRParams.a*point.x() + point.y() - bermRParams.b) / (double)sqrt(pow(bermRParams.a, 2) + 1);
-//	return distanceFromLeftBerm > distanceFromRightBerm ? RIGHT_BERM : LEFT_BERM;
-//}
+ LaneType Road::getCloserBerm(Point point)
+{
+	double distanceFromLeftBerm = 0.0;
+	double distanceFromRightBerm = 0.0;
+	distanceFromLeftBerm = fabs(-bermLParams.a*point.x() + point.y() - bermLParams.b) / (double)sqrt(pow(bermLParams.a, 2) + 1);
+	distanceFromRightBerm = fabs(-bermRParams.a*point.x() + point.y() - bermRParams.b) / (double)sqrt(pow(bermRParams.a, 2) + 1);
+	return distanceFromLeftBerm > distanceFromRightBerm ? RIGHT_BERM : LEFT_BERM;
+}
 
  RoadType Road::getRoadType()
  {
@@ -131,4 +131,14 @@ LineParams Road::getLineParams(LaneType laneType)
 		 }
 	 }
 	 return crossing;
+ }
+
+ Point Road::getOppositePoint(Point point)
+ {
+	 Point oppositePoint;
+	 if (point == coreLineParams.firstPoint)
+		 oppositePoint = coreLineParams.lastPoint;
+	 else
+		 oppositePoint = coreLineParams.firstPoint;
+	 return oppositePoint;
  }

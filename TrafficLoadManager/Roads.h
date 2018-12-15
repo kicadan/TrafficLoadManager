@@ -31,7 +31,9 @@ enum LaneType
 	RIGHT_BERM = 1,
 	LANE = 2,
 	LEFT_LANE = 3,
-	RIGHT_LANE = 4
+	RIGHT_LANE = 4,
+	LEFT_BACK_LANE = 5,
+	RIGHT_BACK_LANE = 6
 };
 
 class Road :
@@ -45,8 +47,9 @@ public:
 	//virtual bool setRoad(QPoint, QPoint, bool, Junction*);// LineParams startBermParams = LineParams{ 0.0, 0.0, false }, LineParams endBermParams = LineParams{ 0.0, 0.0, false }); // , int, int);//, int, int) = 0;
 	Point searchPoint(Point);
 	void addOtherRoad(int);
-	//LaneType returnCloserBerm(QPoint); //returns berm basing on distance calculated on opposite point to connecting to this road (if _firstPoint connecting, _lastPoint is the calculation base)
+	LaneType getCloserBerm(Point); //returns berm basing on distance calculated on opposite point to connecting to this road (if _firstPoint connecting, _lastPoint is the calculation base)
 	bool doLineCrosses(LineParams);
+	Point getOppositePoint(Point); //returns lastPoint if parameter point is firstPoint and firstPoint if parameter is lastPoint
 	
 
 	virtual Point getPoint(int, LaneType) = 0;

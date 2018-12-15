@@ -19,6 +19,20 @@ struct Change {
 	int changeId;
 };
 
+struct Way {
+	Junction from;
+	Junction to;
+	std::vector<Connection> steps;
+	int length;
+};
+
+struct Node {
+	Junction junction;
+	int cost = 999999;
+	std::vector<Connection> connections;
+	Junction previousJunction;
+};
+
 class DesignArea : public QOpenGLWidget
 {
 	Q_OBJECT
@@ -34,6 +48,7 @@ private:
 	std::vector<Road*> allRoads;
 	std::vector<Junction*> allJunctions;
 	std::vector<Change> allChanges;
+	std::vector<Way> allWays;
 	int changeCounter = 0;
 	QTimer timer;
 	int actualScale;
@@ -59,7 +74,14 @@ private:
 	bool checkIfCollidingWithOtherRoad(Road*, std::vector<int>);
 	void deleteJunction(Junction*);
 	void deleteRoad(Road*);
+	void copyAllJunctions(std::vector<Junction>&);
+	void fulfillNodeTable(std::vector<Node>&, Junction);
+	void transferJunction(std::vector<Junction> &from, std::vector<Junction> &to, Junction junction);
+	void updateConnectionIfCloser(Junction, std::vector<Node>&, Connection);
+	Junction getClosestJunction(std::vector<Node> allNodes, std::vector<Junction> Qset);
 	vectors calc_vectors(QPoint, QPoint);
+	Way makeWayFromNodes(std::vector<Node>, Junction, Junction);
+	Way findWay(Junction, Junction);
 
 protected:
 	

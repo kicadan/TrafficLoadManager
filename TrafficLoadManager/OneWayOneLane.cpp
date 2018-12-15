@@ -12,7 +12,7 @@ OneWayOneLane::~OneWayOneLane()
 void OneWayOneLane::addPoint(Point point, LaneType pointType)
 {
 	switch (pointType) {
-	case LANE: { lane.push_back(LanePoint{ point }); mid.push_back(point); break; }
+	case LANE: { lane.push_back(LanePoint{ point }); break; }
 	case LEFT_BERM: { bermL.push_back(point); break; }
 	case RIGHT_BERM: bermR.push_back(point);
 	}
@@ -64,7 +64,10 @@ void OneWayOneLane::setRoad(Point firstPoint, Point lastPoint, bool endingToOthe
 	else
 		horizontal = false;
 	//create vectors of the roads
-	double xm = firstPoint.x();
+	addPoint(Point(firstPoint.x(), firstPoint.y()), LANE);
+	addPoint(Point(firstPoint.x() + parallel_segments.xr, firstPoint.y() + parallel_segments.yr), RIGHT_BERM);
+	addPoint(Point(firstPoint.x() + parallel_segments.xl, firstPoint.y() + parallel_segments.yl), LEFT_BERM);
+	double xm = firstPoint.x() + distance; //one point later than first
 	double xl = firstPoint.x() + parallel_segments.xl;
 	double xr = firstPoint.x() + parallel_segments.xr;
 	double _x = xm;
@@ -85,12 +88,11 @@ void OneWayOneLane::setRoad(Point firstPoint, Point lastPoint, bool endingToOthe
 				addPoint(Point(xl, A*xl + B), LEFT_BERM);
 				addPoint(Point(xr, A*xr + B), RIGHT_BERM);
 			}
-		addPoint(Point(x_last, A*x_last + B), LANE);
 	}
 	else
 	{
 		// x = (y - B) / A if dx != 0 else x = point.x
-		double ym = firstPoint.y();
+		double ym = firstPoint.y() + distance; //one point later than first
 		double yl = firstPoint.y() + parallel_segments.yl;
 		double yr = firstPoint.y() + parallel_segments.yr;
 		double y_last = lastPoint.y();
@@ -106,8 +108,10 @@ void OneWayOneLane::setRoad(Point firstPoint, Point lastPoint, bool endingToOthe
 				addPoint(Point(dx != 0 ? (yl - B) / A : xl, yl), LEFT_BERM); //deprecated
 				addPoint(Point(dx != 0 ? (yr - B) / A : xr, yr), RIGHT_BERM); //deprecated
 			}
-		addPoint(Point(dx != 0 ? (y_last - B) / A : xm, y_last), LANE);
 	}
+	addPoint(Point(lastPoint.x(), lastPoint.y()), LANE);
+	addPoint(Point(lastPoint.x() + parallel_segments.xr, lastPoint.y() + parallel_segments.yr), RIGHT_BERM);
+	addPoint(Point(lastPoint.x() + parallel_segments.xl, lastPoint.y() + parallel_segments.yl), LEFT_BERM);
 
 	//assing real values FROM VECTOR to _lastPoint if road is not connecting to the other at its end
 	if (!endingToOtherRoad) {

@@ -159,13 +159,13 @@ void DesignArea::drawRoad()
 		if (point.x() != 0 && endRoad == NULL) {
 			endRoad = road;
 			_lastPoint = point;
-			//endBermParams = road->getLineParams(road->returnCloserBerm(_firstPoint));
+			//endBermParams = road->getLineParams(road->getCloserBerm(_firstPoint));
 		}
 		point = road->searchPoint(_firstPoint);
 		if (point.x() != 0 && startRoad == NULL) {
 			startRoad = road;
 			_firstPoint = point;
-			//startBermParams = road->getLineParams(road->returnCloserBerm(_lastPoint));
+			//startBermParams = road->getLineParams(road->getCloserBerm(_lastPoint));
 		}
 	}
 	if (startRoad == endRoad && startRoad != NULL)
@@ -180,11 +180,10 @@ void DesignArea::drawRoad()
 				if (junction->isPoint(_firstPoint)) {
 					startJunction = junction;
 					startJunctionExists = true;
-					junction->addRoad(road);
 					break;
 				}
 			if (!startJunctionExists) {
-				startJunction = new Junction(_firstPoint, startRoad, road);
+				startJunction = new Junction(_firstPoint, startRoad, allJunctions.size());
 				allJunctions.push_back(startJunction);
 			}
 			std::vector<int> roadIds = startJunction->getRoadIds();
@@ -195,11 +194,10 @@ void DesignArea::drawRoad()
 				if (junction->isPoint(_lastPoint)) {
 					endJunction = junction;
 					endJunctionExists = true;
-					junction->addRoad(road);
 					break;
 				}
 			if (!endJunctionExists) {
-				endJunction = new Junction(_lastPoint, endRoad, road);
+				endJunction = new Junction(_lastPoint, endRoad, allJunctions.size());
 				allJunctions.push_back(endJunction);
 			}
 			std::vector<int> roadIds = endJunction->getRoadIds();
@@ -208,8 +206,14 @@ void DesignArea::drawRoad()
 		road->setRoad(_firstPoint, _lastPoint, endRoad != NULL, startJunction, endJunction);
 		if (!checkIfCollidingWithOtherRoad(road, connectedRoads)) { //road can be added
 			road->drawRoad();
-			if (startRoad != NULL) startRoad->addJunction(_firstPoint, LANE, startJunction);
-			if (endRoad != NULL) endRoad->addJunction(_lastPoint, LANE, endJunction);
+			if (startRoad != NULL) {
+				startRoad->addJunction(_firstPoint, LANE, startJunction); 
+				startJunction->addRoad(road);
+			}
+			if (endRoad != NULL) {
+				endRoad->addJunction(_lastPoint, LANE, endJunction); 
+				endJunction->addRoad(road);
+			}
 			allRoads.push_back(road);
 			std::vector<AppObject*> changes;
 			//add changes
@@ -233,6 +237,7 @@ void DesignArea::drawRoad()
 	}
 	}
 	makeConnections();
+	if (allJunctions.size() == 5) allWays.push_back(findWay(*allJunctions[0], *allJunctions[4]));
 }
 
 void DesignArea::repaintScene()
@@ -316,7 +321,7 @@ void DesignArea::deleteJunction(Junction *deletedJunction)
 {
 	for(auto junctionIt = allJunctions.begin(); junctionIt <= allJunctions.end(); junctionIt++)
 		if ((*junctionIt) == deletedJunction) {
-
+			(*junctionIt)->forgetAboutMe();
 			allJunctions.erase(junctionIt);
 			break;
 		}
@@ -330,6 +335,78 @@ void DesignArea::deleteRoad(Road *deletedRoad)
 			allRoads.erase(roadIt);
 			break;
 		}
+}
+
+void DesignArea::copyAllJunctions(std::vector<Junction> &vectorTo)
+{
+	for (auto junctionIt = allJunctions.begin(); junctionIt < allJunctions.end(); junctionIt++)
+		vectorTo.push_back(*(*junctionIt));
+}
+
+void DesignArea::fulfillNodeTable(std::vector<Node> &wayTable, Junction startJunction)
+{
+	for (auto junctionIt = allJunctions.begin(); junctionIt < allJunctions.end(); junctionIt++)
+		if ((*junctionIt)->getId() == startJunction.getId()) {
+			wayTable.push_back(Node{ startJunction, 0 });
+		}
+		else
+			wayTable.push_back(Node{ *(*junctionIt), 999999 });
+}
+
+void DesignArea::transferJunction(std::vector<Junction> &from, std::vector<Junction> &to, Junction junction)
+{
+	for (auto junctionIt = from.begin(); junctionIt < from.end(); junctionIt++) {
+		if ( (*junctionIt).getId() == junction.getId()) {
+			to.push_back(*junctionIt);
+			from.erase(junctionIt);
+			break;
+		}
+	}
+}
+
+void DesignArea::updateConnectionIfCloser(Junction startJunction, std::vector<Node> &allNodes, Connection connection)
+{
+	int previousCost;
+	for (auto nodesIt = allNodes.begin(); nodesIt < allNodes.end(); nodesIt++) {
+		if ((*nodesIt).junction.getId() == startJunction.getId()) {
+			previousCost = (*nodesIt).cost;
+			break;
+		}
+	}
+	//update connection if closer, or add to existing if same length and same previous road id
+	for (auto nodesIt = allNodes.begin(); nodesIt < allNodes.end(); nodesIt++) {
+		if ((*nodesIt).junction.getId() == connection.nextJunction->getId()) {
+			if ((*nodesIt).cost > previousCost + connection.distanceToNextJunction) {
+				(*nodesIt).connections.clear();
+				(*nodesIt).connections.push_back(connection);
+				(*nodesIt).previousJunction = startJunction;
+				(*nodesIt).cost = previousCost + connection.distanceToNextJunction;
+			}
+			else if ((*nodesIt).cost == previousCost + connection.distanceToNextJunction && (*nodesIt).connections[0].previousRoadId == connection.previousRoadId) {
+				(*nodesIt).connections.push_back(connection);
+			}
+			break;
+		}
+	}
+}
+
+Junction DesignArea::getClosestJunction(std::vector<Node> allNodes, std::vector<Junction> Qset)
+{
+	bool found = false;
+	Junction foundJunction;
+	std::sort(allNodes.begin(), allNodes.end(), [](const Node first, const Node second) { return first.cost < second.cost; });
+	auto nodesIt = allNodes.begin();
+	while (!found && nodesIt < allNodes.end()) {
+		for (auto qsetIt = Qset.begin(); qsetIt < Qset.end(); qsetIt++) {
+			if ((*nodesIt).junction.getId() == (*qsetIt).getId()) {
+				found = true;
+				foundJunction = *qsetIt;
+				break;
+			}
+		}
+		nodesIt++;
+	}
+	return foundJunction;
 }
 
 /*
@@ -352,4 +429,71 @@ vectors DesignArea::calc_vectors(QPoint A, QPoint B)
 	double ya = A.y() - B.y();
 	double radius = sqrt(xa*xa + ya * ya);
 	return vectors{ ya*distance / radius, -xa * distance / radius, -ya * distance / radius, xa * distance / radius };
+}
+
+Way DesignArea::makeWayFromNodes(std::vector<Node> allNodes, Junction startJunction, Junction endJunction)
+{
+	int connectionNumber;
+	int length = 0;
+	Way theWay;
+	//could be needed if car couldnt change lane during moving straight the road; it makes car moving straight without changing lanes
+	LaneType expectedLaneType;
+	std::vector<Connection> connections;
+	Junction previousJunction = endJunction;
+	Connection predictedConnection;
+	while (previousJunction.getId() != startJunction.getId()) {
+		connectionNumber = -1;
+		for (auto nodeIt = allNodes.begin(); nodeIt < allNodes.end(); nodeIt++) {
+			if ((*nodeIt).junction.getId() == previousJunction.getId()) {
+				connections = (*nodeIt).connections;
+				previousJunction = (*nodeIt).previousJunction;
+				break;
+			}
+		}
+		if(connections.size() > 1 && connections[0].nextJunction->getId() == endJunction.getId())
+			//take most right lane to allow to get out of car
+			for (auto connectionIt = connections.begin(); connectionIt < connections.end(); connectionIt++) {
+				if ((*connectionIt).nextLaneType == RIGHT_LANE || (*connectionIt).nextLaneType == RIGHT_BACK_LANE)
+					connectionNumber = connectionIt - connections.begin();
+			}
+		//if connection not matched
+		if (connectionNumber == -1) {
+			connectionNumber = qrand() % connections.size();
+		}
+		theWay.steps.push_back(connections[connectionNumber]);
+		length += connections[connectionNumber].distanceToNextJunction;
+		//car can change the lane so expectedLaneType is not needed during next iterations
+		expectedLaneType = connections[connectionNumber].previousLaneType;
+	}
+	theWay.length = length;
+	theWay.from = startJunction;
+	theWay.to = endJunction;
+	return theWay;
+}
+
+Way DesignArea::findWay(Junction startJunction, Junction endJunction)
+{
+	std::vector<Node> allNodes;
+	fulfillNodeTable(allNodes, startJunction);
+	std::vector<Junction> Qset, Sset;
+	copyAllJunctions(Qset);
+	std::vector<Connection> connections;
+	Junction actualJunction;
+	//connections = startJunction.getConnectionsFrom(-1); //get all connections
+	//for (auto connectionIt = connections.begin(); connectionIt < connections.end(); connectionIt++) {
+	//	updateConnectionIfCloser(startJunction, allNodes, (*connectionIt));
+	//}
+	//transferJunction(Qset, Sset, startJunction);
+	//actualJunction = getClosestJunction(allNodes, Qset);
+	while (Qset.size() != 0) {
+		actualJunction = getClosestJunction(allNodes, Qset);
+		connections = actualJunction.getConnectionsFrom(-1); //all connections from this junction
+		for (auto connectionIt = connections.begin(); connectionIt < connections.end(); connectionIt++) {
+			updateConnectionIfCloser(actualJunction, allNodes, *connectionIt);
+		}
+		transferJunction(Qset, Sset, actualJunction);
+	}
+	//now take way from table
+
+	return makeWayFromNodes(allNodes, startJunction, endJunction);
 }

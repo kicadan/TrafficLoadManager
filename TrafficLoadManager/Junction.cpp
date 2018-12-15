@@ -6,13 +6,12 @@ Junction::Junction():AppObject(JUNCTION)
 {
 }
 
-Junction::Junction(Point _point, Road* firstRoad, Road* secondRoad): AppObject(JUNCTION)
+Junction::Junction(Point _point, Road* mainRoad, int id): AppObject(JUNCTION)
 {
 	this->point = _point;
-	roads.push_back(firstRoad);
-	roads.push_back(secondRoad);
-	roadIds.push_back(firstRoad->id);
-	roadIds.push_back(secondRoad->id);
+	this->id = id;
+	roads.push_back(ConnectedRoad{ LANE, mainRoad }); //main actualRoad could be lane, the rest have right or left berm param
+	roadIds.push_back(mainRoad->id);
 }
 
 
@@ -27,9 +26,9 @@ Point Junction::returnCrossPointsForBerm(LineParams lineParams, Point oppositePo
 	LineParams leftBermParams;
 	Point point = Point(0, 0);
 	double x, y;
-	for (auto road : this->roads) {
-		LineParams leftBermParams = road->getLineParams(LEFT_BERM);
-		LineParams rightBermParams = road->getLineParams(RIGHT_BERM);
+	for (auto actualRoad : this->roads) {
+		LineParams leftBermParams = actualRoad.road->getLineParams(LEFT_BERM);
+		LineParams rightBermParams = actualRoad.road->getLineParams(RIGHT_BERM);
 			//left point
 			if (!lineParams.upright && !leftBermParams.upright && leftBermParams.a != lineParams.a) { //first and second line are not parallel and not upright
 				x = (leftBermParams.b - lineParams.b) / (lineParams.a - leftBermParams.a);
@@ -106,19 +105,19 @@ Point Junction::returnCrossPointsForBerm(LineParams lineParams, Point oppositePo
 
 void Junction::addRoad(Road *road)
 {
-	roads.push_back(road);
+	roads.push_back(ConnectedRoad{ roads[0].road->getCloserBerm(road->getOppositePoint(point)), road });
 	roadIds.push_back(road->id);
 }
 
 void Junction::deleteRoad(Road * deletedRoad)
 {
-	for (auto roadIt = roadIds.begin(); roadIt <= roadIds.end(); roadIt++)
+	for (auto roadIt = roadIds.begin(); roadIt < roadIds.end(); roadIt++)
 		if ((*roadIt) == deletedRoad->id) {
 			roadIds.erase(roadIt);
 			break;
 		}
-	for (auto roadIt = roads.begin(); roadIt <= roads.end(); roadIt++)
-		if ((*roadIt)->id == deletedRoad->id) {
+	for (auto roadIt = roads.begin(); roadIt < roads.end(); roadIt++)
+		if ((*roadIt).road->id == deletedRoad->id) {
 			roads.erase(roadIt);
 			break;
 		}
@@ -139,6 +138,11 @@ int Junction::numberOfRoads()
 	return roadIds.size();
 }
 
+int Junction::getId()
+{
+	return id;
+}
+
 ObjectType Junction::getObjectType()
 {
 	return _objectType;
@@ -149,30 +153,49 @@ std::vector<int> Junction::getRoadIds()
 	return roadIds;
 }
 
+std::vector<Connection> Junction::getConnectionsFrom(int roadFrom)
+{
+	std::vector<Connection> workingConnections;
+	for (auto connectionIt = connections.begin(); connectionIt < connections.end(); connectionIt++)
+		if ((*connectionIt).previousRoadId == roadFrom)
+			workingConnections.push_back(*connectionIt);
+	if (roadFrom == -1)
+		workingConnections = connections;
+	return workingConnections;
+}
+
 void Junction::makeConnections()
 {
 	connections.clear();
-	for (auto roadIt = roads.begin(); roadIt < roads.end(); roadIt++) {
-		connectRoad(*roadIt);
-	}
+	for(auto roadFromIt = roads.begin(); roadFromIt < roads.end(); roadFromIt++)
+		for (auto roadIt = roads.begin(); roadIt < roads.end(); roadIt++) {
+			connectRoad(*roadFromIt, *roadIt);
+		}
 }
 
-void Junction::connectRoad(Road* connectingRoad)
+void Junction::connectRoad(ConnectedRoad roadFrom, ConnectedRoad roadTo)
+{ //check previous road, next road and connectRoads with all accurate lane types f.e. OneWayRoadWithTwoLanes : RIGHT_LANE -> right_side_road->ACCURATE_LANES, LEFT_LANE -> left_side_road->ACCURATE_LANES 
+	if (roadTo.road->getRoadType() == OneWayRoadWithOneLane && roadFrom.road->getRoadType() == OneWayRoadWithOneLane)
+		if(roadFrom.road->getPointIndex(point) != 0) //road cannot goes in this direction
+			connectOneWayOneLane(roadTo.road, LANE, roadFrom.road->id);
+	//for other type roads connectTYPEOFROAD(roadTo.road, LANE, roadFrom.road->id, ROADFROMLANE)   ==> ROADFROMLANE is important as input for getNextJunction in function body
+}
+
+//function used only while deleting junction and one actualRoad left from it
+void Junction::forgetAboutMe()
 {
-	if (connectingRoad->getRoadType() == OneWayRoadWithOneLane)
-		connectOneWayOneLane(connectingRoad);
+	for (auto roadIt = roads.begin(); roadIt < roads.end(); roadIt++)
+		(*roadIt).road->deleteJunction(this);
 }
 
-//function used only while deleting junction and one road left from it
-void Junction::forgetAboutMe(int notThisRoad)
-{
-	roads[0]->deleteJunction(this);
-}
-
-void Junction::connectOneWayOneLane(Road *newRoad)
+void Junction::connectOneWayOneLane(Road *newRoad, LaneType previousType, int previousRoadId)
 {
 	Connection newConnection;
+	newConnection.previousLaneType = previousType;
+	newConnection.previousRoadId = previousRoadId;
 	int pointIndexOnTheRoad = newRoad->getPointIndex(point);
+	if (pointIndexOnTheRoad == 0 && newRoad->id == previousRoadId) //break if u try to connect beggining of the same road
+		return;
 	newConnection.nextLaneType = LANE;
 	newConnection.nextRoadId = newRoad->id;
 	newConnection.direction = 1;
