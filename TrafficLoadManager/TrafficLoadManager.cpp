@@ -10,3 +10,4 @@ TrafficLoadManager::TrafficLoadManager(QWidget *parent)
 void TrafficLoadManager::resizeEvent(QResizeEvent * event)
 {
 }
+

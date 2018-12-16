@@ -14,6 +14,15 @@
 #include "Roads.h"
 #include "OneWayOneLane.h"
 
+enum Menu {
+	LOAD_FROM_FILE = 0,
+	WRITE_TO_FILE = 1,
+	UNDO = 2,
+	DRAW_ONE_WAY_ONE_LANE = 3,
+	DRAW_ONE_WAY_TWO_LANES = 4,
+	DRAW_ONE_WAY_THREE_LANES = 5
+};
+
 struct Change {
 	AppObject *appObject;
 	int changeId;
@@ -41,10 +50,12 @@ public:
 	explicit DesignArea(QWidget *parent = 0);
 	~DesignArea();
 
+	void dispatchAction(Menu);
+
 private:
 	QOpenGLFunctions *openGLFunctions;
 	QOpenGLContext *context;
-	RoadType currentObjectBrush = OneWayRoadWithOneLane;
+	ElementType currentObjectBrush = OneWayRoadWithOneLane;
 	std::vector<Road*> allRoads;
 	std::vector<Junction*> allJunctions;
 	std::vector<Change> allChanges;
@@ -52,13 +63,12 @@ private:
 	int changeCounter = 0;
 	QTimer timer;
 	int actualScale;
-	QPoint lastPoint;
-	QPoint firstPoint;
-	Point _lastPoint;
-	Point _firstPoint;
+	Point lastPoint;
+	Point firstPoint;
+	QPointF _lastPoint;
+	QPointF _firstPoint;
 	bool constructing = false;
 	bool repainting = false;
-	bool undo = false;
 	QImage image;
 	double x = 10;
 	double y = 10;
@@ -93,4 +103,9 @@ protected:
 	virtual void initializeGL();
 	virtual void resizeGL(int w, int h);
 	virtual void paintGL();
+
+
+public slots:
+	void handleAction();
+
 };

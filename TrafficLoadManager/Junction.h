@@ -18,7 +18,7 @@ struct Connection {
 	//byte direction; //+/- 1 (direction while iterating on index)
 	int previousRoadId;
 	LaneType previousLaneType;
-	Point nextPoint; //junction point
+	int nextPoint; //junction point in road's lane
 	int nextRoadId;
 	LaneType nextLaneType;
 	short direction;
@@ -38,12 +38,12 @@ public:
 	Junction();
 	Junction(Point, Road*, int);
 	~Junction();
-	Point returnCrossPointsForBerm(LineParams, Point);
+	QPointF returnCrossPointsForBerm(QLineF, QPointF);
 	void addRoad(Road*);
 	void deleteRoad(Road*);
 	void makeConnections();
 	void forgetAboutMe();
-	bool isPoint(QPoint);
+	bool isPoint(QPointF);
 	bool isPoint(Point);
 	int numberOfRoads();
 	int getId();

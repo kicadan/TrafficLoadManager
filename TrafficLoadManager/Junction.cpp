@@ -19,93 +19,38 @@ Junction::~Junction()
 {
 }
 
-Point Junction::returnCrossPointsForBerm(LineParams lineParams, Point oppositePoint)
+QPointF Junction::returnCrossPointsForBerm(QLineF theLine, QPointF oppositePoint)
 {
-	std::vector<Point> points;
-	LineParams rightBermParams;
-	LineParams leftBermParams;
-	Point point = Point(0, 0);
-	double x, y;
+	QLineF::IntersectType intersectType;
+	std::vector<QPointF> points;
+	QPointF crossPoint(0,0);
 	for (auto actualRoad : this->roads) {
-		LineParams leftBermParams = actualRoad.road->getLineParams(LEFT_BERM);
-		LineParams rightBermParams = actualRoad.road->getLineParams(RIGHT_BERM);
-			//left point
-			if (!lineParams.upright && !leftBermParams.upright && leftBermParams.a != lineParams.a) { //first and second line are not parallel and not upright
-				x = (leftBermParams.b - lineParams.b) / (lineParams.a - leftBermParams.a);
-				y = x * leftBermParams.a + leftBermParams.b;
-				if (!(x >= min(leftBermParams.firstPoint.x(), leftBermParams.lastPoint.x()) - 1 && x <= max(leftBermParams.firstPoint.x(), leftBermParams.lastPoint.x()) + 1 && y >= min(leftBermParams.firstPoint.y(), leftBermParams.lastPoint.y()) - 1 && y <= max(leftBermParams.firstPoint.y(), leftBermParams.lastPoint.y()) + 1)) { //if not on short
-					x = 0;
-					y = 0;
-				}
-			}
-			else if (lineParams.upright) {
-				x = (leftBermParams.b - lineParams.b) / (lineParams.a - leftBermParams.a);
-				y = x * leftBermParams.a + leftBermParams.b;
-				if (!(x >= min(leftBermParams.firstPoint.x(), leftBermParams.lastPoint.x()) - 1 && x <= max(leftBermParams.firstPoint.x(), leftBermParams.lastPoint.x()) + 1 && y >= min(leftBermParams.firstPoint.y(), leftBermParams.lastPoint.y()) - 1 && y <= max(leftBermParams.firstPoint.y(), leftBermParams.lastPoint.y()) + 1)) { //if not on short
-					x = 0;
-					y = 0;
-				}
-			}
-			else if (leftBermParams.upright) {
-				x = (leftBermParams.b - lineParams.b) / (lineParams.a - leftBermParams.a);
-				y = x * lineParams.a + lineParams.b;
-				if (!(x >= min(leftBermParams.firstPoint.x(), leftBermParams.lastPoint.x()) - 1 && x <= max(leftBermParams.firstPoint.x(), leftBermParams.lastPoint.x()) + 1 && y >= min(leftBermParams.firstPoint.y(), leftBermParams.lastPoint.y()) - 1 && y <= max(leftBermParams.firstPoint.y(), leftBermParams.lastPoint.y()) + 1)) { //if not on short
-					x = 0;
-					y = 0;
-				}
-			}
-			else { //lines are parallel
-				continue;
-			}
-			if (x != 0 && y != 0)
-				points.push_back(Point(x, y));
-
-			//right point
-			if (!lineParams.upright && !rightBermParams.upright && rightBermParams.a != lineParams.a) { //first and second line are not parallel and not upright
-				x = (rightBermParams.b - lineParams.b) / (lineParams.a - rightBermParams.a);
-				y = x * rightBermParams.a + rightBermParams.b;
-				if (!(x >= min(rightBermParams.firstPoint.x(), rightBermParams.lastPoint.x()) - 1 && x <= max(rightBermParams.firstPoint.x(), rightBermParams.lastPoint.x()) + 1 && y >= min(rightBermParams.firstPoint.y(), rightBermParams.lastPoint.y()) - 1 && y <= max(rightBermParams.firstPoint.y(), rightBermParams.lastPoint.y()) + 1)) { //if not on short
-					x = 0;
-					y = 0;
-				}
-			}
-			else if (lineParams.upright) {
-				x = (rightBermParams.b - lineParams.b) / (lineParams.a - rightBermParams.a);
-				y = x * rightBermParams.a + rightBermParams.b;
-				if (!(x >= min(rightBermParams.firstPoint.x(), rightBermParams.lastPoint.x()) - 1 && x <= max(rightBermParams.firstPoint.x(), rightBermParams.lastPoint.x()) + 1 && y >= min(rightBermParams.firstPoint.y(), rightBermParams.lastPoint.y()) - 1 && y <= max(rightBermParams.firstPoint.y(), rightBermParams.lastPoint.y()) + 1)) { //if not on short
-					x = 0;
-					y = 0;
-				}
-			}
-			else if (rightBermParams.upright) {
-				x = (rightBermParams.b - lineParams.b) / (lineParams.a - rightBermParams.a);
-				y = x * lineParams.a + lineParams.b;
-				if (!(x >= min(rightBermParams.firstPoint.x(), rightBermParams.lastPoint.x()) - 1 && x <= max(rightBermParams.firstPoint.x(), rightBermParams.lastPoint.x()) + 1 && y >= min(rightBermParams.firstPoint.y(), rightBermParams.lastPoint.y()) - 1 && y <= max(rightBermParams.firstPoint.y(), rightBermParams.lastPoint.y()) + 1)) { //if not on short
-					x = 0;
-					y = 0;
-				}
-			}
-			else { //lines are parallel
-				continue;
-			}
-			if (x != 0 && y != 0)
-				points.push_back(Point(x, y));
+		QLineF leftBerm = actualRoad.road->getLineParams(LEFT_BERM);
+		QLineF rightBerm = actualRoad.road->getLineParams(RIGHT_BERM);
+		
+		intersectType = theLine.intersect(rightBerm, &crossPoint);
+		if (intersectType == QLineF::BoundedIntersection)
+			points.push_back(crossPoint);
+		intersectType = theLine.intersect(leftBerm, &crossPoint);
+		if (intersectType == QLineF::BoundedIntersection)
+			points.push_back(crossPoint);
 	}
 	double minimumDistance = 9999999.0, minimumRightDistance = 9999999.0;
 	double dist;
+	crossPoint = QPointF(0, 0);
 	for (auto _point : points) {
 		dist = sqrt(pow(oppositePoint.x() - _point.x(), 2) + pow(oppositePoint.y() - _point.y(), 2));
 		if (dist < minimumDistance) {
 			minimumDistance = dist;
-			point = _point;
+			crossPoint = _point;
 		}
 	}
-	return point;
+	return crossPoint;
 }
 
 void Junction::addRoad(Road *road)
 {
-	roads.push_back(ConnectedRoad{ roads[0].road->getCloserBerm(road->getOppositePoint(point)), road });
+	roads.push_back(ConnectedRoad{ roads[0].road->getCloserBerm(road->getFurtherPoint(point)), road }); //if in the middle, getCloserBerm returns RIGHT_LANE or LEFT_LANE, based on which side it's closer to be, or LANE if it is exactly in the middle
 	roadIds.push_back(road->id);
 }
 
@@ -123,7 +68,7 @@ void Junction::deleteRoad(Road * deletedRoad)
 		}
 }
 
-bool Junction::isPoint(QPoint point)
+bool Junction::isPoint(QPointF point)
 {
 	return this->point == point;
 }
@@ -199,7 +144,7 @@ void Junction::connectOneWayOneLane(Road *newRoad, LaneType previousType, int pr
 	newConnection.nextLaneType = LANE;
 	newConnection.nextRoadId = newRoad->id;
 	newConnection.direction = 1;
-	newConnection.nextPoint = point;
+	newConnection.nextPoint = pointIndexOnTheRoad;
 	if (pointIndexOnTheRoad > -1) {
 		newConnection.nextJunction = (Junction*)newRoad->getNextJunction(LANE, pointIndexOnTheRoad);
 		newConnection.distanceToNextJunction = pointIndexOnTheRoad;

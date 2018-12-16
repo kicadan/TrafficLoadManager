@@ -18,7 +18,7 @@ void OneWayOneLane::addPoint(Point point, LaneType pointType)
 	}
 }
 
-void OneWayOneLane::setRoad(Point firstPoint, Point lastPoint, bool endingToOtherRoad, Junction* startJunction, Junction* endJunction)//std::vector<Road*> startRoads, std::vector<Road*> endRoads)//LineParams startBermParams, LineParams endBermParams)//, int beginRoad, int endRoad)
+void OneWayOneLane::setRoad(QPointF firstPoint, QPointF lastPoint, bool endingToOtherRoad, Junction* startJunction, Junction* endJunction)//std::vector<Road*> startRoads, std::vector<Road*> endRoads)//LineParams startBermParams, LineParams endBermParams)//, int beginRoad, int endRoad)
 {
 	this->parallel_segments = calc_vectors(lastPoint, firstPoint);
 	double x, y, A, B, bermLeftA, bermLeftB, bermRightA, bermRightB;
@@ -49,6 +49,10 @@ void OneWayOneLane::setRoad(Point firstPoint, Point lastPoint, bool endingToOthe
 	this->Road::bermRParams.a = bermRightA;
 	this->Road::bermRParams.b = bermRightB;
 	this->Road::bermRParams.upright = upright;
+	
+	this->Road::leftBerm = QLineF(firstPoint.x() + parallel_segments.xl, firstPoint.y() + parallel_segments.yl, lastPoint.x() + parallel_segments.xl, lastPoint.y() + parallel_segments.yl);
+	this->Road::rightBerm = QLineF(firstPoint.x() + parallel_segments.xr, firstPoint.y() + parallel_segments.yr, lastPoint.x() + parallel_segments.xr, lastPoint.y() + parallel_segments.yr);
+	this->Road::coreLine = QLineF(firstPoint.x(), firstPoint.y(), lastPoint.x(), lastPoint.y());
 
 
 	//if ( (A == startBermParams.a && upright == startBermParams.upright) || (A == endBermParams.a && upright == endBermParams.upright) )
@@ -134,15 +138,15 @@ void OneWayOneLane::setRoad(Point firstPoint, Point lastPoint, bool endingToOthe
 		lastPoint = QPoint(_x, _y);
 	}
 
-	Point _firstBermLeftPoint(0, 0), _firstBermRightPoint(0, 0), _lastBermLeftPoint(0, 0), _lastBermRightPoint(0, 0);
+	QPointF _firstBermLeftPoint(0, 0), _firstBermRightPoint(0, 0), _lastBermLeftPoint(0, 0), _lastBermRightPoint(0, 0);
 	if (startJunction != NULL) {
-		_firstBermLeftPoint = startJunction->returnCrossPointsForBerm(bermLParams, lastPoint);
-		_firstBermRightPoint = startJunction->returnCrossPointsForBerm(bermRParams, lastPoint);
+		_firstBermLeftPoint = startJunction->returnCrossPointsForBerm(leftBerm, lastPoint);
+		_firstBermRightPoint = startJunction->returnCrossPointsForBerm(rightBerm, lastPoint);
 		lane[0].junction = startJunction;
 	}
 	if (endJunction != NULL) {
-		_lastBermLeftPoint = endJunction->returnCrossPointsForBerm(bermLParams, firstPoint);
-		_lastBermRightPoint = endJunction->returnCrossPointsForBerm(bermRParams, firstPoint);
+		_lastBermLeftPoint = endJunction->returnCrossPointsForBerm(leftBerm, firstPoint);
+		_lastBermRightPoint = endJunction->returnCrossPointsForBerm(rightBerm, firstPoint);
 		lane[lane.size() - 1].junction = endJunction;
 	}
 	//main lane's points
@@ -231,6 +235,11 @@ int OneWayOneLane::getPointIndex(Point point) //if not found returns -1
 	return -1;
 }
 
+int OneWayOneLane::getUsageOfLane(LaneType)
+{//only one lane
+	return percentageLaneUsage = 0;
+}
+
 Point OneWayOneLane::getLastPointOf(LaneType laneType)
 {
 	switch (laneType) {
@@ -276,6 +285,27 @@ void OneWayOneLane::deleteFromJunctions()
 	}
 }
 
+void OneWayOneLane::freePoint(LaneType, int index)
+{
+	lane[index].point.setFree();
+}
+
+bool OneWayOneLane::reservePoint(LaneType, int index)
+{
+	return lane[index].point.occupy();
+}
+
+void OneWayOneLane::updateLane()
+{
+	//update lane usage
+	percentageLaneUsage = 0;
+	for (auto laneIt = lane.begin(); laneIt < lane.end(); laneIt++) {
+		if (!(*laneIt).point.isFree())
+			percentageLaneUsage++;
+	}
+	percentageLaneUsage = percentageLaneUsage / lane.size();
+}
+
 Point OneWayOneLane::getFirstPointOf(LaneType laneType)
 {
 	switch (laneType) {
@@ -283,7 +313,7 @@ Point OneWayOneLane::getFirstPointOf(LaneType laneType)
 	}
 }
 
-vectors OneWayOneLane::calc_vectors(Point A, Point B)
+vectors OneWayOneLane::calc_vectors(QPointF A, QPointF B)
 {
 	//int xa = A.x() - B.x();
 	//int ya = A.y() - B.y();

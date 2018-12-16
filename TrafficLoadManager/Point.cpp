@@ -30,6 +30,20 @@ double Point::y()
 	return this->_y;
 }
 
+void Point::setFree()
+{
+	free = true;
+}
+
+bool Point::occupy()
+{
+	bool succesfull = free;
+	if (free) {
+		free = false;
+	}
+	return succesfull;
+}
+
 bool Point::isFree()
 {
 	return this->free;
@@ -50,7 +64,7 @@ bool Point::operator==(Point other)
 	return this->_x == other._x && this->_y == other._y;
 }
 
-bool Point::operator==(QPoint other)
+bool Point::operator==(QPointF other)
 {
 	return this->_x == other.x() && this->_y == other.y();
 }

@@ -3,11 +3,19 @@
 #include "Point.h"
 #include <string>
 #include <QPoint>
+#include <QLineF>
+#include <QtCore/qmath.h>
 
 #define distance 20
 
-enum RoadType {
-	OneWayRoadWithOneLane = 0
+enum ElementType {
+	OneWayRoadWithOneLane = 0,
+	OneWayRoadWithTwoLanes = 1,
+	OneWayRoadWithThreeLanes = 2,
+	TwoWayRoadWithOneLane = 3,
+	TwoWayRoadWithTwoLanes = 4,
+	CarSpawn = 5,
+	TrafficLights = 6
 };
 
 struct vectors {
@@ -40,7 +48,7 @@ class Road :
 	public AppObject
 {
 public:
-	Road(RoadType);
+	Road(ElementType);
 
 	int id;
 
@@ -48,29 +56,33 @@ public:
 	Point searchPoint(Point);
 	void addOtherRoad(int);
 	LaneType getCloserBerm(Point); //returns berm basing on distance calculated on opposite point to connecting to this road (if _firstPoint connecting, _lastPoint is the calculation base)
-	bool doLineCrosses(LineParams);
-	Point getOppositePoint(Point); //returns lastPoint if parameter point is firstPoint and firstPoint if parameter is lastPoint
+	bool doLineCrosses(QLineF);
+	Point getFurtherPoint(Point); //returns lastPoint if parameter point is firstPoint and firstPoint if parameter is lastPoint
 	
 
 	virtual Point getPoint(int, LaneType) = 0;
 	virtual Point getLastPointOf(LaneType) = 0;
 	virtual Point getFirstPointOf(LaneType) = 0;
 	virtual int getPointIndex(Point) = 0;
+	virtual int getUsageOfLane(LaneType) = 0;
 	virtual void* getNextJunction(LaneType, int&) = 0;
 	virtual void addJunction(Point, LaneType, void*) = 0;
 	virtual void deleteJunction(void*) = 0;
 	virtual void deleteFromJunctions() = 0;
-	RoadType getRoadType();
+	virtual void freePoint(LaneType, int) = 0;
+	virtual bool reservePoint(LaneType, int) = 0;
+	ElementType getRoadType();
 	ObjectType getObjectType();
-	LineParams getLineParams(LaneType);
+	QLineF getLineParams(LaneType);
 protected:
-	RoadType _roadType;
+	ElementType _roadType;
 	std::vector<Point> mid, bermL, bermR;
 	std::vector<int> otherRoads;
 	vectors parallel_segments;
 	LineParams coreLineParams, bermLParams, bermRParams;
+	QLineF leftBerm, rightBerm, coreLine;
 	bool horizontal;
 
 	virtual void addPoint(Point, LaneType) = 0;
-	virtual vectors calc_vectors(Point, Point) = 0;
+	virtual vectors calc_vectors(QPointF, QPointF) = 0;
 };

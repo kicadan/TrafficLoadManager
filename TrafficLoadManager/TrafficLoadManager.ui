@@ -33,6 +33,53 @@
      <height>18</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuPliki">
+    <property name="title">
+     <string>Pliki</string>
+    </property>
+    <addaction name="actionWczytaj_plansz_z_pliku"/>
+    <addaction name="actionZapisz_plansz_do_pliku"/>
+   </widget>
+   <widget class="QMenu" name="menuCzynno_ci">
+    <property name="title">
+     <string>Czynności</string>
+    </property>
+    <widget class="QMenu" name="menuRysuj">
+     <property name="title">
+      <string>Rysuj</string>
+     </property>
+     <addaction name="actionDroga_jednokierunkowa_z_jednym_pasem"/>
+     <addaction name="actionDroga_jednokierunkowa_z_dwoma_pasami_ruchu"/>
+     <addaction name="actionDroga_jednokierunkowa_z_trzema_pasami_ruchu"/>
+     <addaction name="actionDroga_dwukierunkowa_z_jednym_pasem_ruchu"/>
+     <addaction name="actionDroga_dwukierunkowa_z_dwoma_pasami_ruchu"/>
+     <addaction name="actionPunkt_odradzania_pojazd_w"/>
+     <addaction name="action_wiat_a"/>
+    </widget>
+    <widget class="QMenu" name="menuEdytuj">
+     <property name="title">
+      <string>Edytuj</string>
+     </property>
+     <addaction name="action_wiat_a_drogowe"/>
+     <addaction name="actionPunkt_odradzania_pojazd_w_2"/>
+    </widget>
+    <addaction name="actionCofnij"/>
+    <addaction name="separator"/>
+    <addaction name="menuRysuj"/>
+    <addaction name="menuEdytuj"/>
+    <addaction name="separator"/>
+    <addaction name="actionSymuluj"/>
+    <addaction name="actionGeneruj_statystyki"/>
+   </widget>
+   <widget class="QMenu" name="menuUstawienia">
+    <property name="title">
+     <string>Ustawienia</string>
+    </property>
+    <addaction name="actionKonfiguracja"/>
+   </widget>
+   <addaction name="menuPliki"/>
+   <addaction name="menuCzynno_ci"/>
+   <addaction name="menuUstawienia"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
@@ -42,6 +89,81 @@
     <bool>false</bool>
    </attribute>
   </widget>
+  <action name="actionDroga_jednokierunkowa_z_jednym_pasem">
+   <property name="text">
+    <string>Droga jednokierunkowa z jednym pasem ruchu</string>
+   </property>
+  </action>
+  <action name="actionDroga_jednokierunkowa_z_dwoma_pasami_ruchu">
+   <property name="text">
+    <string>Droga jednokierunkowa z dwoma pasami ruchu</string>
+   </property>
+  </action>
+  <action name="actionDroga_jednokierunkowa_z_trzema_pasami_ruchu">
+   <property name="text">
+    <string>Droga jednokierunkowa z trzema pasami ruchu</string>
+   </property>
+  </action>
+  <action name="actionDroga_dwukierunkowa_z_jednym_pasem_ruchu">
+   <property name="text">
+    <string>Droga dwukierunkowa z jednym pasem ruchu</string>
+   </property>
+  </action>
+  <action name="actionDroga_dwukierunkowa_z_dwoma_pasami_ruchu">
+   <property name="text">
+    <string>Droga dwukierunkowa z dwoma pasami ruchu</string>
+   </property>
+  </action>
+  <action name="actionCofnij">
+   <property name="text">
+    <string>Cofnij</string>
+   </property>
+  </action>
+  <action name="actionKonfiguracja">
+   <property name="text">
+    <string>Konfiguracja</string>
+   </property>
+  </action>
+  <action name="actionWczytaj_plansz_z_pliku">
+   <property name="text">
+    <string>Wczytaj planszę z pliku</string>
+   </property>
+  </action>
+  <action name="actionZapisz_plansz_do_pliku">
+   <property name="text">
+    <string>Zapisz planszę do pliku</string>
+   </property>
+  </action>
+  <action name="actionSymuluj">
+   <property name="text">
+    <string>Symuluj</string>
+   </property>
+  </action>
+  <action name="actionPunkt_odradzania_pojazd_w">
+   <property name="text">
+    <string>Punkt odradzania pojazdów</string>
+   </property>
+  </action>
+  <action name="action_wiat_a">
+   <property name="text">
+    <string>Sygnalizacja świetlna</string>
+   </property>
+  </action>
+  <action name="action_wiat_a_drogowe">
+   <property name="text">
+    <string>Sygnalizacja świetlna</string>
+   </property>
+  </action>
+  <action name="actionPunkt_odradzania_pojazd_w_2">
+   <property name="text">
+    <string>Punkt odradzania pojazdów</string>
+   </property>
+  </action>
+  <action name="actionGeneruj_statystyki">
+   <property name="text">
+    <string>Generuj statystyki</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
@@ -49,10 +171,62 @@
    <class>DesignArea</class>
    <extends>QOpenGLWidget</extends>
    <header location="global">DesignArea.h</header>
+   <slots>
+    <slot>handleAction()</slot>
+   </slots>
   </customwidget>
  </customwidgets>
  <resources>
   <include location="TrafficLoadManager.qrc"/>
  </resources>
- <connections/>
+ <connections>
+  <connection>
+   <sender>actionDroga_jednokierunkowa_z_jednym_pasem</sender>
+   <signal>triggered()</signal>
+   <receiver>designArea</receiver>
+   <slot>handleAction()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>440</x>
+     <y>370</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionCofnij</sender>
+   <signal>triggered()</signal>
+   <receiver>designArea</receiver>
+   <slot>handleAction()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>440</x>
+     <y>370</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionDroga_jednokierunkowa_z_dwoma_pasami_ruchu</sender>
+   <signal>triggered()</signal>
+   <receiver>designArea</receiver>
+   <slot>handleAction()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>440</x>
+     <y>370</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

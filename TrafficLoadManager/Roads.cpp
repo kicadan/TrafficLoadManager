@@ -1,6 +1,6 @@
 #include "Roads.h"
 
-Road::Road(RoadType roadType):AppObject(ROAD), _roadType(roadType)
+Road::Road(ElementType roadType):AppObject(ROAD), _roadType(roadType)
 {
 }
 
@@ -18,12 +18,12 @@ void Road::addOtherRoad(int roadNumber)
 	this->otherRoads.push_back(roadNumber);
 }
 
-LineParams Road::getLineParams(LaneType laneType)
+QLineF Road::getLineParams(LaneType laneType)
 {
 	switch (laneType) {
-	case LEFT_BERM: return bermLParams;
-	case RIGHT_BERM: return bermRParams;
-	case LANE: return coreLineParams;
+	case LEFT_BERM: return leftBerm;
+	case RIGHT_BERM: return rightBerm;
+	case LANE: return coreLine;
 	}
 }
 
@@ -31,12 +31,22 @@ LineParams Road::getLineParams(LaneType laneType)
 {
 	double distanceFromLeftBerm = 0.0;
 	double distanceFromRightBerm = 0.0;
-	distanceFromLeftBerm = fabs(-bermLParams.a*point.x() + point.y() - bermLParams.b) / (double)sqrt(pow(bermLParams.a, 2) + 1);
-	distanceFromRightBerm = fabs(-bermRParams.a*point.x() + point.y() - bermRParams.b) / (double)sqrt(pow(bermRParams.a, 2) + 1);
+
+	LaneType returnedLane;
+	QPointF pointF(point.x(), point.y());
+	QLineF perpendicularLine;
+	perpendicularLine.setP1(pointF);
+	perpendicularLine.setAngle(leftBerm.angle() + 90.0);
+	QPointF intersectLeft, intersectRight;
+	leftBerm.intersect(perpendicularLine, &intersectLeft);
+	rightBerm.intersect(perpendicularLine, &intersectRight);
+	qreal distancy = intersectLeft.x() - point.x();
+	distanceFromLeftBerm = qSqrt(qPow(intersectLeft.x() - point.x(), 2) + qPow(intersectLeft.y() - point.y(), 2));
+	distanceFromRightBerm = qSqrt(qPow(intersectRight.x() - point.x(), 2) + qPow(intersectRight.y() - point.y(), 2));
 	return distanceFromLeftBerm > distanceFromRightBerm ? RIGHT_BERM : LEFT_BERM;
 }
 
- RoadType Road::getRoadType()
+ ElementType Road::getRoadType()
  {
 	 return _roadType;
  }
@@ -46,99 +56,29 @@ LineParams Road::getLineParams(LaneType laneType)
 	 return _objectType;
  }
 
- bool Road::doLineCrosses(LineParams lineParams)
+ bool Road::doLineCrosses(QLineF theLine)
  {
-	 bool crossing = false;
-	 double x = 0, y = 0;
-	 //avoid zero dividing
-	 if (lineParams.a == bermLParams.a || lineParams.a == bermRParams.a || lineParams.a == coreLineParams.a)
-		 return false;
-	 //cross point with left berm
-	 if (!lineParams.upright && !bermLParams.upright && bermLParams.a != lineParams.a) { //first and second line are not parallel and not upright
-		 x = (bermLParams.b - lineParams.b) / (lineParams.a - bermLParams.a);
-		 y = x * bermLParams.a + bermLParams.b;
-		 if ( (x >= min(bermLParams.firstPoint.x(), bermLParams.lastPoint.x()) - 1 && x <= max(bermLParams.firstPoint.x(), bermLParams.lastPoint.x()) + 1 && y >= min(bermLParams.firstPoint.y(), bermLParams.lastPoint.y()) - 1 && y <= max(bermLParams.firstPoint.y(), bermLParams.lastPoint.y()) + 1) 
-			&& (x >= min(lineParams.firstPoint.x(), lineParams.lastPoint.x()) - 1 && x <= max(lineParams.firstPoint.x(), lineParams.lastPoint.x()) + 1 && y >= min(lineParams.firstPoint.y(), lineParams.lastPoint.y()) - 1 && y <= max(lineParams.firstPoint.y(), lineParams.lastPoint.y()) + 1) ) { //if is on both! shorts
-			 crossing = true;
-		 }
-	 }
-	 else if (lineParams.upright) {
-		 x = (bermLParams.b - lineParams.b) / (lineParams.a - bermLParams.a);
-		 y = x * bermLParams.a + bermLParams.b;
-		 if ((x >= min(bermLParams.firstPoint.x(), bermLParams.lastPoint.x()) - 1 && x <= max(bermLParams.firstPoint.x(), bermLParams.lastPoint.x()) + 1 && y >= min(bermLParams.firstPoint.y(), bermLParams.lastPoint.y()) - 1 && y <= max(bermLParams.firstPoint.y(), bermLParams.lastPoint.y()) + 1)
-			 && (x >= min(lineParams.firstPoint.x(), lineParams.lastPoint.x()) - 1 && x <= max(lineParams.firstPoint.x(), lineParams.lastPoint.x()) + 1 && y >= min(lineParams.firstPoint.y(), lineParams.lastPoint.y()) - 1 && y <= max(lineParams.firstPoint.y(), lineParams.lastPoint.y()) + 1)) { //if is on both! shorts
-			 crossing = true;
-		 }
-	 }
-	 else {  //if (bermLParams.upright)
-		 x = (bermLParams.b - lineParams.b) / (lineParams.a - bermLParams.a);
-		 y = x * lineParams.a + lineParams.b;
-		 if ((x >= min(bermLParams.firstPoint.x(), bermLParams.lastPoint.x()) - 1 && x <= max(bermLParams.firstPoint.x(), bermLParams.lastPoint.x()) + 1 && y >= min(bermLParams.firstPoint.y(), bermLParams.lastPoint.y()) - 1 && y <= max(bermLParams.firstPoint.y(), bermLParams.lastPoint.y()) + 1)
-			 && (x >= min(lineParams.firstPoint.x(), lineParams.lastPoint.x()) - 1 && x <= max(lineParams.firstPoint.x(), lineParams.lastPoint.x()) + 1 && y >= min(lineParams.firstPoint.y(), lineParams.lastPoint.y()) - 1 && y <= max(lineParams.firstPoint.y(), lineParams.lastPoint.y()) + 1)) { //if is on both! shorts
-			 crossing = true;
-		 }
-	 }
-
-	 //cross point with right berm
-	 if (!lineParams.upright && !bermRParams.upright && bermRParams.a != lineParams.a) { //first and second line are not parallel and not upright
-		 x = (bermRParams.b - lineParams.b) / (lineParams.a - bermRParams.a);
-		 y = x * bermRParams.a + bermRParams.b;
-		 if ((x >= min(bermLParams.firstPoint.x(), bermLParams.lastPoint.x()) - 1 && x <= max(bermLParams.firstPoint.x(), bermLParams.lastPoint.x()) + 1 && y >= min(bermLParams.firstPoint.y(), bermLParams.lastPoint.y()) - 1 && y <= max(bermLParams.firstPoint.y(), bermLParams.lastPoint.y()) + 1)
-			 && (x >= min(lineParams.firstPoint.x(), lineParams.lastPoint.x()) - 1 && x <= max(lineParams.firstPoint.x(), lineParams.lastPoint.x()) + 1 && y >= min(lineParams.firstPoint.y(), lineParams.lastPoint.y()) - 1 && y <= max(lineParams.firstPoint.y(), lineParams.lastPoint.y()) + 1)) { //if is on both! shorts
-			 crossing = true;
-		 }
-	 }
-	 else if (lineParams.upright) {
-		 x = (bermRParams.b - lineParams.b) / (lineParams.a - bermRParams.a);
-		 y = x * bermRParams.a + bermRParams.b;
-		 if ((x >= min(bermLParams.firstPoint.x(), bermLParams.lastPoint.x()) - 1 && x <= max(bermLParams.firstPoint.x(), bermLParams.lastPoint.x()) + 1 && y >= min(bermLParams.firstPoint.y(), bermLParams.lastPoint.y()) - 1 && y <= max(bermLParams.firstPoint.y(), bermLParams.lastPoint.y()) + 1)
-			 && (x >= min(lineParams.firstPoint.x(), lineParams.lastPoint.x()) - 1 && x <= max(lineParams.firstPoint.x(), lineParams.lastPoint.x()) + 1 && y >= min(lineParams.firstPoint.y(), lineParams.lastPoint.y()) - 1 && y <= max(lineParams.firstPoint.y(), lineParams.lastPoint.y()) + 1)) { //if is on both! shorts
-			 crossing = true;
-		 }
-	 }
-	 else {  //if (bermRParams.upright)
-		 x = (bermRParams.b - lineParams.b) / (lineParams.a - bermRParams.a);
-		 y = x * lineParams.a + lineParams.b;
-		 if ((x >= min(bermLParams.firstPoint.x(), bermLParams.lastPoint.x()) - 1 && x <= max(bermLParams.firstPoint.x(), bermLParams.lastPoint.x()) + 1 && y >= min(bermLParams.firstPoint.y(), bermLParams.lastPoint.y()) - 1 && y <= max(bermLParams.firstPoint.y(), bermLParams.lastPoint.y()) + 1)
-			 && (x >= min(lineParams.firstPoint.x(), lineParams.lastPoint.x()) - 1 && x <= max(lineParams.firstPoint.x(), lineParams.lastPoint.x()) + 1 && y >= min(lineParams.firstPoint.y(), lineParams.lastPoint.y()) - 1 && y <= max(lineParams.firstPoint.y(), lineParams.lastPoint.y()) + 1)) { //if is on both! shorts
-			 crossing = true;
-		 }
-	 }
-
-	 //cross point with core lane
-	 if (!lineParams.upright && !coreLineParams.upright && coreLineParams.a != lineParams.a) { //first and second line are not parallel and not upright
-		 x = (coreLineParams.b - lineParams.b) / (lineParams.a - coreLineParams.a);
-		 y = x * coreLineParams.a + coreLineParams.b;
-		 if ((x >= min(bermLParams.firstPoint.x(), bermLParams.lastPoint.x()) - 1 && x <= max(bermLParams.firstPoint.x(), bermLParams.lastPoint.x()) + 1 && y >= min(bermLParams.firstPoint.y(), bermLParams.lastPoint.y()) - 1 && y <= max(bermLParams.firstPoint.y(), bermLParams.lastPoint.y()) + 1)
-			 && (x >= min(lineParams.firstPoint.x(), lineParams.lastPoint.x()) - 1 && x <= max(lineParams.firstPoint.x(), lineParams.lastPoint.x()) + 1 && y >= min(lineParams.firstPoint.y(), lineParams.lastPoint.y()) - 1 && y <= max(lineParams.firstPoint.y(), lineParams.lastPoint.y()) + 1)) { //if is on both! shorts
-			 crossing = true;
-		 }
-	 }
-	 else if (lineParams.upright) {
-		 x = (coreLineParams.b - lineParams.b) / (lineParams.a - coreLineParams.a);
-		 y = x * coreLineParams.a + coreLineParams.b;
-		 if ((x >= min(bermLParams.firstPoint.x(), bermLParams.lastPoint.x()) - 1 && x <= max(bermLParams.firstPoint.x(), bermLParams.lastPoint.x()) + 1 && y >= min(bermLParams.firstPoint.y(), bermLParams.lastPoint.y()) - 1 && y <= max(bermLParams.firstPoint.y(), bermLParams.lastPoint.y()) + 1)
-			 && (x >= min(lineParams.firstPoint.x(), lineParams.lastPoint.x()) - 1 && x <= max(lineParams.firstPoint.x(), lineParams.lastPoint.x()) + 1 && y >= min(lineParams.firstPoint.y(), lineParams.lastPoint.y()) - 1 && y <= max(lineParams.firstPoint.y(), lineParams.lastPoint.y()) + 1)) { //if is on both! shorts
-			 crossing = true;
-		 }
-	 }
-	 else {  //if (bermLParams.upright)
-		 x = (coreLineParams.b - lineParams.b) / (lineParams.a - coreLineParams.a);
-		 y = x * lineParams.a + lineParams.b;
-		 if ((x >= min(bermLParams.firstPoint.x(), bermLParams.lastPoint.x()) - 1 && x <= max(bermLParams.firstPoint.x(), bermLParams.lastPoint.x()) + 1 && y >= min(bermLParams.firstPoint.y(), bermLParams.lastPoint.y()) - 1 && y <= max(bermLParams.firstPoint.y(), bermLParams.lastPoint.y()) + 1)
-			 && (x >= min(lineParams.firstPoint.x(), lineParams.lastPoint.x()) - 1 && x <= max(lineParams.firstPoint.x(), lineParams.lastPoint.x()) + 1 && y >= min(lineParams.firstPoint.y(), lineParams.lastPoint.y()) - 1 && y <= max(lineParams.firstPoint.y(), lineParams.lastPoint.y()) + 1)) { //if is on both! shorts
-			 crossing = true;
-		 }
-	 }
-	 return crossing;
+	bool crossing = false;
+	QPointF crossPoint;
+	QLineF::IntersectType intersectType;
+	intersectType = theLine.intersect(rightBerm, &crossPoint);
+	if (intersectType == QLineF::BoundedIntersection)
+		crossing = true;
+	intersectType = theLine.intersect(leftBerm, &crossPoint);
+	if (intersectType == QLineF::BoundedIntersection)
+		crossing = true;
+	intersectType = theLine.intersect(coreLine, &crossPoint);
+	if (intersectType == QLineF::BoundedIntersection)
+		crossing = true;
+	return crossing;
  }
 
- Point Road::getOppositePoint(Point point)
+ Point Road::getFurtherPoint(Point point)
  {
 	 Point oppositePoint;
 	 if (point == coreLineParams.firstPoint)
-		 oppositePoint = coreLineParams.lastPoint;
+		 oppositePoint = mid[mid.size()-1];
 	 else
-		 oppositePoint = coreLineParams.firstPoint;
+		 oppositePoint = mid[0];
 	 return oppositePoint;
  }

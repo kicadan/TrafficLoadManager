@@ -16,11 +16,13 @@ public:
 
 	double x();
 	double y();
+	void setFree();
+	bool occupy();
 	bool isFree();
 	int junctionNumber();
 	ObjectType getObjectType();
 
 	bool operator ==(Point);
-	bool operator ==(QPoint);
+	bool operator ==(QPointF);
 };
 

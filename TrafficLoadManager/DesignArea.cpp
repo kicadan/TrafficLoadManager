@@ -19,6 +19,39 @@ DesignArea::DesignArea(QWidget *parent) : QOpenGLWidget(parent)
 DesignArea::~DesignArea()
 {
 }
+
+void DesignArea::handleAction() {
+	auto action = qobject_cast<QAction*>(QObject::sender())->objectName();
+
+	if (action == "actionCofnij") {
+		dispatchAction(UNDO);
+	}
+	else if (action == "actionDroga_jednokierunkowa_z_jednym_pasem") {
+		dispatchAction(DRAW_ONE_WAY_ONE_LANE);
+	}
+	else if (action == "actionDroga_jednokierunkowa_z_dwoma_pasami_ruchu") {
+		dispatchAction(DRAW_ONE_WAY_TWO_LANES);
+	}
+}
+
+void DesignArea::dispatchAction(Menu menuAction)
+{
+	switch (menuAction) {
+	case UNDO: {
+		undoChanges();
+		repainting = true;
+		repaint();
+		break;
+	}
+	case DRAW_ONE_WAY_ONE_LANE: {
+		currentObjectBrush = OneWayRoadWithOneLane;
+		break;
+	}
+	case DRAW_ONE_WAY_TWO_LANES: {
+		currentObjectBrush = OneWayRoadWithTwoLanes;
+	}
+	}
+}
 /*
 void DesignArea::drawLineTo(const QPoint & endPoint)
 {
@@ -58,9 +91,6 @@ void DesignArea::paintGL()
 	else if (repainting) {
 		repaintScene();
 	}
-	else if (undo) {
-		undoChanges();
-	}
 }
 
 void DesignArea::resizeEvent(QResizeEvent * event)
@@ -79,13 +109,9 @@ void DesignArea::paintEvent(QPaintEvent * event)
 void DesignArea::mousePressEvent(QMouseEvent * event)
 {
 	if (event->button() == Qt::LeftButton) {
-		firstPoint = event->pos();
-		_firstPoint = Point(firstPoint.x(), firstPoint.y());
+		_firstPoint = event->pos();
+		firstPoint = Point(_firstPoint.x(), _firstPoint.y());
 		constructing = true;
-	}
-	else if (event->button() == Qt::RightButton) {
-		undo = true;
-		repaint();
 	}
 }
 /*
@@ -100,9 +126,9 @@ void DesignArea::mouseMoveEvent(QMouseEvent * event)
 void DesignArea::mouseReleaseEvent(QMouseEvent * event)
 {
 	if (event->button() == Qt::LeftButton && constructing == true) {
-		lastPoint = event->pos();
-		_lastPoint = Point(lastPoint.x(), lastPoint.y());
-		if(lastPoint != firstPoint) 
+		_lastPoint = event->pos();
+		lastPoint = Point(_lastPoint.x(), _lastPoint.y());
+		if(!(lastPoint == firstPoint)) 
 			repaint();
 	}
 	else if (event->button() == Qt::RightButton) {
@@ -155,16 +181,18 @@ void DesignArea::drawRoad()
 	// search all roads
 	for (auto road : this->allRoads)
 	{
-		point = road->searchPoint(_lastPoint);
+		point = road->searchPoint(lastPoint);
 		if (point.x() != 0 && endRoad == NULL) {
 			endRoad = road;
-			_lastPoint = point;
+			_lastPoint = QPointF(point.x(), point.y());
+			lastPoint = point;
 			//endBermParams = road->getLineParams(road->getCloserBerm(_firstPoint));
 		}
-		point = road->searchPoint(_firstPoint);
+		point = road->searchPoint(firstPoint);
 		if (point.x() != 0 && startRoad == NULL) {
 			startRoad = road;
-			_firstPoint = point;
+			_firstPoint = QPointF(point.x(), point.y());
+			firstPoint = point;
 			//startBermParams = road->getLineParams(road->getCloserBerm(_lastPoint));
 		}
 	}
@@ -177,13 +205,13 @@ void DesignArea::drawRoad()
 		OneWayOneLane *road = new OneWayOneLane(currentRoadId);
 		if (startRoad != NULL) {
 			for (auto junction : this->allJunctions)
-				if (junction->isPoint(_firstPoint)) {
+				if (junction->isPoint(firstPoint)) {
 					startJunction = junction;
 					startJunctionExists = true;
 					break;
 				}
 			if (!startJunctionExists) {
-				startJunction = new Junction(_firstPoint, startRoad, allJunctions.size());
+				startJunction = new Junction(firstPoint, startRoad, allJunctions.size());
 				allJunctions.push_back(startJunction);
 			}
 			std::vector<int> roadIds = startJunction->getRoadIds();
@@ -191,13 +219,13 @@ void DesignArea::drawRoad()
 		}
 		if (endRoad != NULL) {
 			for (auto junction : this->allJunctions)
-				if (junction->isPoint(_lastPoint)) {
+				if (junction->isPoint(lastPoint)) {
 					endJunction = junction;
 					endJunctionExists = true;
 					break;
 				}
 			if (!endJunctionExists) {
-				endJunction = new Junction(_lastPoint, endRoad, allJunctions.size());
+				endJunction = new Junction(lastPoint, endRoad, allJunctions.size());
 				allJunctions.push_back(endJunction);
 			}
 			std::vector<int> roadIds = endJunction->getRoadIds();
@@ -207,11 +235,11 @@ void DesignArea::drawRoad()
 		if (!checkIfCollidingWithOtherRoad(road, connectedRoads)) { //road can be added
 			road->drawRoad();
 			if (startRoad != NULL) {
-				startRoad->addJunction(_firstPoint, LANE, startJunction); 
+				startRoad->addJunction(firstPoint, LANE, startJunction); 
 				startJunction->addRoad(road);
 			}
 			if (endRoad != NULL) {
-				endRoad->addJunction(_lastPoint, LANE, endJunction); 
+				endRoad->addJunction(lastPoint, LANE, endJunction); 
 				endJunction->addRoad(road);
 			}
 			allRoads.push_back(road);
@@ -232,10 +260,10 @@ void DesignArea::drawRoad()
 			else if (startRoad != NULL && startJunction->numberOfRoads() > 2)
 				startJunction->deleteRoad(road);
 		}
-		constructing = false;
 		break;
 	}
 	}
+	constructing = false;
 	makeConnections();
 	if (allJunctions.size() == 5) allWays.push_back(findWay(*allJunctions[0], *allJunctions[4]));
 }
@@ -275,7 +303,6 @@ void DesignArea::undoChanges()
 		change = allChanges.end();
 	}
 	if (done) changeCounter--;
-	undo = false;
 }
 
 void DesignArea::addChanges(std::vector<AppObject*> addedObjects)
@@ -456,12 +483,14 @@ Way DesignArea::makeWayFromNodes(std::vector<Node> allNodes, Junction startJunct
 				if ((*connectionIt).nextLaneType == RIGHT_LANE || (*connectionIt).nextLaneType == RIGHT_BACK_LANE)
 					connectionNumber = connectionIt - connections.begin();
 			}
-		//if connection not matched
-		if (connectionNumber == -1) {
+		//if connection not matched and exists any connection
+		if (connectionNumber == -1 && connections.size() > 0) {
 			connectionNumber = qrand() % connections.size();
 		}
-		theWay.steps.push_back(connections[connectionNumber]);
-		length += connections[connectionNumber].distanceToNextJunction;
+		if (connectionNumber != -1) {
+			theWay.steps.push_back(connections[connectionNumber]);
+			length += connections[connectionNumber].distanceToNextJunction;
+		}
 		//car can change the lane so expectedLaneType is not needed during next iterations
 		expectedLaneType = connections[connectionNumber].previousLaneType;
 	}
