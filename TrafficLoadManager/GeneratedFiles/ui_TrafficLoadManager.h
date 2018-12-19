@@ -40,6 +40,7 @@ public:
     QAction *action_wiat_a_drogowe;
     QAction *actionPunkt_odradzania_pojazd_w_2;
     QAction *actionGeneruj_statystyki;
+    QAction *actionPo_czenia_na_skrzy_owaniu;
     QWidget *centralWidget;
     QHBoxLayout *horizontalLayout;
     DesignArea *designArea;
@@ -86,6 +87,8 @@ public:
         actionPunkt_odradzania_pojazd_w_2->setObjectName(QStringLiteral("actionPunkt_odradzania_pojazd_w_2"));
         actionGeneruj_statystyki = new QAction(TrafficLoadManagerClass);
         actionGeneruj_statystyki->setObjectName(QStringLiteral("actionGeneruj_statystyki"));
+        actionPo_czenia_na_skrzy_owaniu = new QAction(TrafficLoadManagerClass);
+        actionPo_czenia_na_skrzy_owaniu->setObjectName(QStringLiteral("actionPo_czenia_na_skrzy_owaniu"));
         centralWidget = new QWidget(TrafficLoadManagerClass);
         centralWidget->setObjectName(QStringLiteral("centralWidget"));
         horizontalLayout = new QHBoxLayout(centralWidget);
@@ -130,19 +133,20 @@ public:
         menuCzynno_ci->addAction(actionGeneruj_statystyki);
         menuRysuj->addAction(actionDroga_jednokierunkowa_z_jednym_pasem);
         menuRysuj->addAction(actionDroga_jednokierunkowa_z_dwoma_pasami_ruchu);
-        menuRysuj->addAction(actionDroga_jednokierunkowa_z_trzema_pasami_ruchu);
         menuRysuj->addAction(actionDroga_dwukierunkowa_z_jednym_pasem_ruchu);
         menuRysuj->addAction(actionDroga_dwukierunkowa_z_dwoma_pasami_ruchu);
         menuRysuj->addAction(actionPunkt_odradzania_pojazd_w);
         menuRysuj->addAction(action_wiat_a);
         menuEdytuj->addAction(action_wiat_a_drogowe);
         menuEdytuj->addAction(actionPunkt_odradzania_pojazd_w_2);
+        menuEdytuj->addAction(actionPo_czenia_na_skrzy_owaniu);
         menuUstawienia->addAction(actionKonfiguracja);
 
         retranslateUi(TrafficLoadManagerClass);
         QObject::connect(actionDroga_jednokierunkowa_z_jednym_pasem, SIGNAL(triggered()), designArea, SLOT(handleAction()));
         QObject::connect(actionCofnij, SIGNAL(triggered()), designArea, SLOT(handleAction()));
         QObject::connect(actionDroga_jednokierunkowa_z_dwoma_pasami_ruchu, SIGNAL(triggered()), designArea, SLOT(handleAction()));
+        QObject::connect(actionPo_czenia_na_skrzy_owaniu, SIGNAL(triggered()), designArea, SLOT(handleAction()));
 
         QMetaObject::connectSlotsByName(TrafficLoadManagerClass);
     } // setupUi
@@ -165,6 +169,7 @@ public:
         action_wiat_a_drogowe->setText(QApplication::translate("TrafficLoadManagerClass", "Sygnalizacja \305\233wietlna", nullptr));
         actionPunkt_odradzania_pojazd_w_2->setText(QApplication::translate("TrafficLoadManagerClass", "Punkt odradzania pojazd\303\263w", nullptr));
         actionGeneruj_statystyki->setText(QApplication::translate("TrafficLoadManagerClass", "Generuj statystyki", nullptr));
+        actionPo_czenia_na_skrzy_owaniu->setText(QApplication::translate("TrafficLoadManagerClass", "Po\305\202\304\205czenia na skrzy\305\274owaniu", nullptr));
 #ifndef QT_NO_ACCESSIBILITY
         designArea->setAccessibleName(QApplication::translate("TrafficLoadManagerClass", "designAreaWidget", nullptr));
 #endif // QT_NO_ACCESSIBILITY

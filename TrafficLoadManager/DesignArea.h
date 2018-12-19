@@ -13,6 +13,7 @@
 #include <algorithm>
 #include "Roads.h"
 #include "OneWayOneLane.h"
+#include "OneWayTwoLanes.h"
 
 enum Menu {
 	LOAD_FROM_FILE = 0,
@@ -20,7 +21,9 @@ enum Menu {
 	UNDO = 2,
 	DRAW_ONE_WAY_ONE_LANE = 3,
 	DRAW_ONE_WAY_TWO_LANES = 4,
-	DRAW_ONE_WAY_THREE_LANES = 5
+	DRAW_TWO_WAY_ONE_LANE = 5,
+	DRAW_TWO_WAY_TWO_LANES = 6,
+	MAKE_CONNECTION = 7
 };
 
 struct Change {
@@ -38,8 +41,8 @@ struct Way {
 struct Node {
 	Junction junction;
 	int cost = 999999;
-	std::vector<Connection> connections;
 	Junction previousJunction;
+	std::vector<Connection> connections;
 };
 
 class DesignArea : public QOpenGLWidget
@@ -75,11 +78,12 @@ private:
 	GLUquadric * object;
 
 	//void drawLineTo(const QPoint &endPoint);
+	void drawElement();
 	void drawRoad();
+	void makeConnection();
 	void repaintScene();
 	void undoChanges();
 	void addChanges(std::vector<AppObject*>);
-	void makeConnections();
 	Point searchPoint(QPoint);
 	bool checkIfCollidingWithOtherRoad(Road*, std::vector<int>);
 	void deleteJunction(Junction*);

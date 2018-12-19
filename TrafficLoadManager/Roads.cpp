@@ -6,11 +6,12 @@ Road::Road(ElementType roadType):AppObject(ROAD), _roadType(roadType)
 
 Point Road::searchPoint(Point point)
 {
+	Point foundPoint(0, 0);
 	for (auto &existingPoint : this->mid) {
 		if ((point.x() > floor(existingPoint.x() - distance / 2) && point.x() < ceil(existingPoint.x() + distance / 2)) && (point.y() > floor(existingPoint.y() - distance / 2) && point.y() < ceil(existingPoint.y() + distance / 2)))
-			return Point(existingPoint);
+			foundPoint = existingPoint;
 	}
-	return Point(0, 0);
+	return foundPoint;
 }
 
 void Road::addOtherRoad(int roadNumber)
@@ -73,12 +74,12 @@ QLineF Road::getLineParams(LaneType laneType)
 	return crossing;
  }
 
- Point Road::getFurtherPoint(Point point)
+ Point Road::getFurtherPoint(Point point) //!!sprawdziæ czy dzia³a porównanie Point z QPointF
  {
 	 Point oppositePoint;
-	 if (point == coreLineParams.firstPoint)
-		 oppositePoint = mid[mid.size()-1];
+	 if (point == coreLine.p1())
+		 oppositePoint = Point(coreLine.x2(), coreLine.y2());
 	 else
-		 oppositePoint = mid[0];
+		 oppositePoint = Point(coreLine.x1(), coreLine.y1());
 	 return oppositePoint;
  }

@@ -1,14 +1,13 @@
 #pragma once
-
+#include "Roads.h"
 #include "Junction.h"
 
-
-class OneWayOneLane :
+class OneWayTwoLanes :
 	public Road
 {
 public:
-	OneWayOneLane(int);
-	~OneWayOneLane();
+	OneWayTwoLanes(int);
+	~OneWayTwoLanes();
 
 	void setRoad(QPointF, QPointF, bool, Junction*, Junction*);// LineParams startBermParams = LineParams{ 0.0, 0.0, false }, LineParams endBermParams = LineParams{ 0.0, 0.0, false }); // , int, int);
 	void drawRoad();
@@ -32,9 +31,11 @@ public:
 	void updateLane();
 
 private:
-	std::vector<LanePoint> lane;
-	int percentageLaneUsage = 0;
+	std::vector<LanePoint> leftLane, rightLane;
+	int percentageLeftLaneUsage = 0;
+	int percentageRightLaneUsage = 0;
 
 	void addPoint(Point, LaneType);
 	vectors calc_vectors(QPointF, QPointF);
 };
+

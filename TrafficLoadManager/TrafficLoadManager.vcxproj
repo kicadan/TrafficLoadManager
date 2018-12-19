@@ -118,6 +118,7 @@
     <ClCompile Include="Junction.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="OneWayOneLane.cpp" />
+    <ClCompile Include="OneWayTwoLanes.cpp" />
     <ClCompile Include="Point.cpp" />
     <ClCompile Include="Roads.cpp" />
     <ClCompile Include="TrafficLoadManager.cpp" />
@@ -135,6 +136,7 @@
     <ClInclude Include="AppObject.h" />
     <ClInclude Include="Junction.h" />
     <ClInclude Include="OneWayOneLane.h" />
+    <ClInclude Include="OneWayTwoLanes.h" />
     <ClInclude Include="Point.h" />
     <ClInclude Include="Roads.h" />
     <QtMoc Include="DesignArea.h">

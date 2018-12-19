@@ -10,18 +10,11 @@ struct LanePoint {
 };
 
 struct Connection {
-	//int roadActualIndex;
-	//LaneType actualLaneType;
-	//int roadNextIndex;
-	//LaneType nextLaneType;
-	//int nextLaneIndex;
-	//byte direction; //+/- 1 (direction while iterating on index)
-	int previousRoadId;
+	Road* previousRoad;
 	LaneType previousLaneType;
 	int nextPoint; //junction point in road's lane
-	int nextRoadId;
+	Road* nextRoad;
 	LaneType nextLaneType;
-	short direction;
 	Junction* nextJunction = NULL;
 	int distanceToNextJunction;
 };
@@ -36,17 +29,20 @@ class Junction :
 {
 public:
 	Junction();
+	Junction(int);
 	Junction(Point, Road*, int);
 	~Junction();
 	QPointF returnCrossPointsForBerm(QLineF, QPointF);
+	bool connectRoads(Road* roadFrom, LaneType laneFrom, Road* roadTo, LaneType laneTo);
 	void addRoad(Road*);
 	void deleteRoad(Road*);
-	void makeConnections();
+	void drawConnections();
 	void forgetAboutMe();
 	bool isPoint(QPointF);
 	bool isPoint(Point);
 	int numberOfRoads();
 	int getId();
+	Point getPoint();
 	ObjectType getObjectType();
 	std::vector<int> getRoadIds();
 	std::vector<Connection> getConnectionsFrom(int);
@@ -57,11 +53,13 @@ private:
 	std::vector<ConnectedRoad> roads;
 	std::vector<int> roadIds;
 
-	void connectRoad(ConnectedRoad, ConnectedRoad);
-	void connectOneWayOneLane(Road*, LaneType, int);
-	void connectFromOneWayOneLane(Road*);
-	void connectToOneWayOneLane(Road*);
+	std::vector<Point> getPointsToDrawConnection(Connection);
+	void connectToOneWayOneLane(Road*, LaneType, Road*);
+	void connectToOneWayTwoLanes(Road*, LaneType, Road*);
+	void drawConnection(std::vector<Point>);
+	bool checkIfBelongs(int);
 };
 
-void copyLanePointVectorToPointVector(std::vector<LanePoint>, std::vector<Point>&);
+void drawBezierCurve(Point, Point, Point);
+void copyLanePointVectorToPointVector(std::vector<LanePoint>, std::vector<Point>&); //deprecated
 

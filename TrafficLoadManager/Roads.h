@@ -11,11 +11,11 @@
 enum ElementType {
 	OneWayRoadWithOneLane = 0,
 	OneWayRoadWithTwoLanes = 1,
-	OneWayRoadWithThreeLanes = 2,
-	TwoWayRoadWithOneLane = 3,
-	TwoWayRoadWithTwoLanes = 4,
-	CarSpawn = 5,
-	TrafficLights = 6
+	TwoWayRoadWithOneLane = 2,
+	TwoWayRoadWithTwoLanes = 3,
+	CarSpawn = 4,
+	TrafficLights = 5,
+	JunctionConnection = 6
 };
 
 struct vectors {
@@ -40,8 +40,11 @@ enum LaneType
 	LANE = 2,
 	LEFT_LANE = 3,
 	RIGHT_LANE = 4,
-	LEFT_BACK_LANE = 5,
-	RIGHT_BACK_LANE = 6
+	BACK_LANE = 5,
+	LEFT_BACK_LANE = 6,
+	RIGHT_BACK_LANE = 7,
+	MID = 8,
+	NOTHING = 9
 };
 
 class Road :
@@ -63,10 +66,14 @@ public:
 	virtual Point getPoint(int, LaneType) = 0;
 	virtual Point getLastPointOf(LaneType) = 0;
 	virtual Point getFirstPointOf(LaneType) = 0;
-	virtual int getPointIndex(Point) = 0;
+	virtual Point getStartPointForConnection(int, LaneType) = 0;
+	virtual Point getEndPointForConnection(int, LaneType) = 0;
+	virtual LaneType searchPointForLaneType(Point) = 0;
+	virtual int getPointIndex(Point, LaneType) = 0;
 	virtual int getUsageOfLane(LaneType) = 0;
 	virtual void* getNextJunction(LaneType, int&) = 0;
-	virtual void addJunction(Point, LaneType, void*) = 0;
+	virtual void* searchForClosestJunction(Point, LaneType) = 0;
+	virtual void addJunction(Point, void*) = 0;
 	virtual void deleteJunction(void*) = 0;
 	virtual void deleteFromJunctions() = 0;
 	virtual void freePoint(LaneType, int) = 0;
@@ -76,10 +83,9 @@ public:
 	QLineF getLineParams(LaneType);
 protected:
 	ElementType _roadType;
-	std::vector<Point> mid, bermL, bermR;
+	std::vector<Point> mid;
 	std::vector<int> otherRoads;
 	vectors parallel_segments;
-	LineParams coreLineParams, bermLParams, bermRParams;
 	QLineF leftBerm, rightBerm, coreLine;
 	bool horizontal;
 
