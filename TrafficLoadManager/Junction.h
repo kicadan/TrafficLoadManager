@@ -17,6 +17,7 @@ struct Connection {
 	LaneType nextLaneType;
 	Junction* nextJunction = NULL;
 	int distanceToNextJunction;
+	float red, green, blue;
 };
 
 struct ConnectedRoad {
@@ -33,13 +34,20 @@ public:
 	Junction(Point, Road*, int);
 	~Junction();
 	QPointF returnCrossPointsForBerm(QLineF, QPointF);
-	bool connectRoads(Road* roadFrom, LaneType laneFrom, Road* roadTo, LaneType laneTo);
 	void addRoad(Road*);
 	void deleteRoad(Road*);
-	void drawConnections();
+	void updateConnectionsForRoad(int);
+	void updateOtherJunctionsOnMainRoad();
+	void drawJunction();
 	void forgetAboutMe();
+	void validateConnections();
+	void setAsCarSpawn();
+	void notCarSpawn();
+	void makeConnectionsForCarSpawn(); //makes connections if CarSpawn has 1 road in it
+	bool connectRoads(Road* roadFrom, LaneType laneFrom, Road* roadTo, LaneType laneTo);
 	bool isPoint(QPointF);
 	bool isPoint(Point);
+	bool isCarSpawn();
 	int numberOfRoads();
 	int getId();
 	Point getPoint();
@@ -49,17 +57,24 @@ public:
 private:
 	Point point;
 	int id;
+	bool _isCarSpawn = false;
 	std::vector<Connection> connections;
 	std::vector<ConnectedRoad> roads;
 	std::vector<int> roadIds;
+	float red = 0.6, green = 0.0, blue = 0.45;
 
 	std::vector<Point> getPointsToDrawConnection(Connection);
-	void connectToOneWayOneLane(Road*, LaneType, Road*);
-	void connectToOneWayTwoLanes(Road*, LaneType, Road*);
-	void drawConnection(std::vector<Point>);
+	std::vector<Point> getPointsToClearJunctionArea();
+	void connectToOneWayOneLane(Road*, LaneType, Road*);//deprecated
+	void connectToOneWayTwoLanes(Road*, LaneType, Road*);//deprecated
+	void clearJunctionArea();
+	void drawConnection(std::vector<Point>, float, float, float);
 	bool checkIfBelongs(int);
 };
 
-void drawBezierCurve(Point, Point, Point);
+void drawBezierCurve(Point, Point, Point, float, float, float);
+void drawLine(Point, Point, float, float, float);
+void drawCircle(Point);
+void drawWhiteQuads(std::vector<Point>);
 void copyLanePointVectorToPointVector(std::vector<LanePoint>, std::vector<Point>&); //deprecated
 

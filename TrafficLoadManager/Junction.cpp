@@ -2,7 +2,7 @@
 
 
 
-Junction::Junction():AppObject(JUNCTION)
+Junction::Junction() :AppObject(JUNCTION)
 {
 }
 
@@ -10,7 +10,7 @@ Junction::Junction(int id) : AppObject(JUNCTION), id(id)
 {
 }
 
-Junction::Junction(Point _point, Road* mainRoad, int id): AppObject(JUNCTION)
+Junction::Junction(Point _point, Road* mainRoad, int id) : AppObject(JUNCTION)
 {
 	this->point = _point;
 	this->id = id;
@@ -27,11 +27,11 @@ QPointF Junction::returnCrossPointsForBerm(QLineF theLine, QPointF oppositePoint
 {
 	QLineF::IntersectType intersectType;
 	std::vector<QPointF> points;
-	QPointF crossPoint(0,0);
+	QPointF crossPoint(0, 0);
 	for (auto actualRoad : this->roads) {
 		QLineF leftBerm = actualRoad.road->getLineParams(LEFT_BERM);
 		QLineF rightBerm = actualRoad.road->getLineParams(RIGHT_BERM);
-		
+
 		intersectType = theLine.intersect(rightBerm, &crossPoint);
 		if (intersectType == QLineF::BoundedIntersection)
 			points.push_back(crossPoint);
@@ -54,6 +54,10 @@ QPointF Junction::returnCrossPointsForBerm(QLineF theLine, QPointF oppositePoint
 
 void Junction::addRoad(Road *road)
 {
+	//clear default connections made for car spawn while any other roads connected
+	if (roads.size() == 1 && _isCarSpawn) {
+		connections.clear();
+	}
 	roads.push_back(ConnectedRoad{ roads[0].road->getCloserBerm(road->getFurtherPoint(point)), road }); //getCloserBerm returns RIGHT_LANE or LEFT_LANE, based on which side it's closer to be
 	roadIds.push_back(road->id);
 }
@@ -70,17 +74,44 @@ void Junction::deleteRoad(Road * deletedRoad)
 			roads.erase(roadIt);
 			break;
 		}
-	for (auto connIt = connections.begin(); connIt < connections.end(); connIt) {
-		if ((*connIt).nextRoad == deletedRoad|| (*connIt).previousRoad == deletedRoad)
+	auto connIt = connections.begin();
+	while (connIt < connections.end()) {
+		if ((*connIt).nextRoad == deletedRoad || (*connIt).previousRoad == deletedRoad) {
 			connections.erase(connIt);
+			connIt = connections.begin();
+			continue;
+		}
+		connIt++;
 	}
 }
 
-void Junction::drawConnections()
+void Junction::updateConnectionsForRoad(int roadId)
 {
+	int pointIdx;
+	Junction* nextJunction = NULL;
 	for (auto connIt = connections.begin(); connIt < connections.end(); connIt++) {
-		drawConnection(getPointsToDrawConnection(*connIt));
+		if ((*connIt).nextRoad->id == roadId) {
+			pointIdx = (*connIt).nextRoad->getPointIndex(point, MID);
+			nextJunction = (Junction*)(*connIt).nextRoad->getNextJunction((*connIt).nextLaneType, pointIdx);
+			if (nextJunction != NULL) {
+				(*connIt).nextJunction = nextJunction;
+				(*connIt).distanceToNextJunction = pointIdx;
+			}
+			nextJunction = NULL;
+		}
 	}
+}
+
+void Junction::drawJunction()
+{
+	if (!(_isCarSpawn && roads.size() == 1)) {
+		clearJunctionArea();
+		for (auto connIt = connections.begin(); connIt < connections.end(); connIt++) {
+			drawConnection(getPointsToDrawConnection(*connIt), (*connIt).red, (*connIt).green, (*connIt).blue);
+		}
+	}
+	if (_isCarSpawn)
+		drawCircle(point);
 }
 
 bool Junction::isPoint(QPointF point)
@@ -91,6 +122,11 @@ bool Junction::isPoint(QPointF point)
 bool Junction::isPoint(Point point)
 {
 	return this->point == point;
+}
+
+bool Junction::isCarSpawn()
+{
+	return _isCarSpawn;
 }
 
 int Junction::numberOfRoads()
@@ -150,8 +186,10 @@ bool Junction::connectRoads(Road* roadFrom, LaneType laneFrom, Road* roadTo, Lan
 		newConnection.distanceToNextJunction = pointIndexOnTheRoad;
 	}
 	if (newConnection.nextJunction != NULL) {
+		newConnection.red = red, newConnection.green = green, newConnection.blue = blue;
+		red = (red + 0.15) <= 1 ? red + 0.15 : red + 0.15 - 1; green = (green + 0.25) <= 1 ? green + 0.25 : green + 0.25 - 1; blue = (blue + 0.35) <= 1 ? blue + 0.35 : blue + 0.35 - 1;
 		connections.push_back(newConnection);
-		drawConnection(getPointsToDrawConnection(connections[connections.size() - 1]));
+		drawConnection(getPointsToDrawConnection(connections[connections.size() - 1]), newConnection.red, newConnection.green, newConnection.blue);
 		return true;
 	}
 	return false;
@@ -164,6 +202,94 @@ void Junction::forgetAboutMe()
 		(*roadIt).road->deleteJunction(this);
 }
 
+void Junction::validateConnections()
+{
+	int pointIndexOnTheRoad;
+	auto connIt = connections.begin();
+	while (connIt < connections.end()) {
+		pointIndexOnTheRoad = (*connIt).nextRoad->getPointIndex(point, MID);
+		if ((*connIt).nextRoad->getNextJunction((*connIt).nextLaneType, pointIndexOnTheRoad) == NULL) {
+			connections.erase(connIt);
+			connIt = connections.begin();
+			continue;
+		}
+		connIt++;
+	}
+}
+
+void Junction::setAsCarSpawn()
+{
+	_isCarSpawn = true;
+}
+
+void Junction::notCarSpawn()
+{
+	_isCarSpawn = false;
+}
+
+void Junction::makeConnectionsForCarSpawn()
+{
+	Road* road;
+	if (roads.size() == 1 && _isCarSpawn) {
+		connections.clear();
+		Connection newConnection;
+		road = roads[0].road;
+		int pointIndexOnTheRoad;
+		switch (road->getRoadType()) {
+		case OneWayRoadWithOneLane: case TwoWayRoadWithOneLane: {
+			pointIndexOnTheRoad = road->getPointIndex(point, MID);
+			newConnection.nextPoint = pointIndexOnTheRoad;
+			newConnection.nextJunction = (Junction*)road->getNextJunction(LANE, pointIndexOnTheRoad);
+			newConnection.distanceToNextJunction = pointIndexOnTheRoad;
+			newConnection.previousLaneType = LANE;
+			newConnection.previousRoad = road;
+			newConnection.nextLaneType = LANE;
+			newConnection.nextRoad = road;
+			newConnection.red = 1; newConnection.green = 1; newConnection.blue = 1;
+			if(newConnection.nextJunction != NULL) connections.push_back(newConnection);
+			if (road->getRoadType() == TwoWayRoadWithOneLane) {
+				pointIndexOnTheRoad = road->getPointIndex(point, MID);
+				newConnection.nextPoint = pointIndexOnTheRoad;
+				newConnection.nextJunction = (Junction*)road->getNextJunction(BACK_LANE, pointIndexOnTheRoad);
+				newConnection.distanceToNextJunction = pointIndexOnTheRoad;
+				newConnection.previousLaneType = BACK_LANE;
+				newConnection.previousRoad = road;
+				newConnection.nextLaneType = BACK_LANE;
+				newConnection.nextRoad = road;
+				newConnection.red = 1; newConnection.green = 1; newConnection.blue = 1;
+				if (newConnection.nextJunction != NULL) connections.push_back(newConnection);
+			}
+			break;
+		}
+		case OneWayRoadWithTwoLanes: {
+			//leftLane
+			pointIndexOnTheRoad = road->getPointIndex(point, MID);
+			newConnection.nextPoint = pointIndexOnTheRoad;
+			newConnection.nextJunction = (Junction*)road->getNextJunction(LEFT_LANE, pointIndexOnTheRoad);
+			newConnection.distanceToNextJunction = pointIndexOnTheRoad;
+			newConnection.previousLaneType = LEFT_LANE;
+			newConnection.previousRoad = road;
+			newConnection.nextLaneType = LEFT_LANE;
+			newConnection.nextRoad = road;
+			newConnection.red = 1; newConnection.green = 1; newConnection.blue = 1;
+			if (newConnection.nextJunction != NULL) connections.push_back(newConnection);
+			//right lane
+			pointIndexOnTheRoad = road->getPointIndex(point, MID);
+			newConnection.nextPoint = pointIndexOnTheRoad;
+			newConnection.nextJunction = (Junction*)road->getNextJunction(RIGHT_LANE, pointIndexOnTheRoad);
+			newConnection.distanceToNextJunction = pointIndexOnTheRoad;
+			newConnection.previousLaneType = RIGHT_LANE;
+			newConnection.previousRoad = road;
+			newConnection.nextLaneType = RIGHT_LANE;
+			newConnection.nextRoad = road;
+			newConnection.red = 1; newConnection.green = 1; newConnection.blue = 1;
+			if (newConnection.nextJunction != NULL) connections.push_back(newConnection);
+		}
+		}
+	}
+}
+
+//deprecated
 void Junction::connectToOneWayOneLane(Road *newRoad, LaneType previousType, Road* previousRoad) //to OneWayOneLane
 {
 	Connection newConnection;
@@ -179,36 +305,111 @@ void Junction::connectToOneWayOneLane(Road *newRoad, LaneType previousType, Road
 		newConnection.nextJunction = (Junction*)newRoad->getNextJunction(LANE, pointIndexOnTheRoad);
 		newConnection.distanceToNextJunction = pointIndexOnTheRoad;
 	}
-	if(newConnection.nextJunction != NULL)
+	if (newConnection.nextJunction != NULL)
 		connections.push_back(newConnection);
 }
 
+//deprecated
 void Junction::connectToOneWayTwoLanes(Road *, LaneType, Road* previousRoad)
 {
 }
 
-void Junction::drawConnection(std::vector<Point> points)
+void Junction::updateOtherJunctionsOnMainRoad()
 {
-	if (points.size() > 0) drawBezierCurve(points[0], points[1], points[2]);
+	Road* mainRoad = roads[0].road;
+	int pointIdx = mainRoad->getPointIndex(point, MID);
+	if (mainRoad->getRoadType() == TwoWayRoadWithOneLane) {
+		Junction* nextJunction = (Junction*)mainRoad->getNextJunction(LANE, pointIdx);
+		if (nextJunction != NULL) {
+			if (nextJunction->isCarSpawn() && nextJunction->numberOfRoads() == 1)
+				nextJunction->makeConnectionsForCarSpawn();
+			else {
+				nextJunction->updateConnectionsForRoad(mainRoad->id);
+			}
+		}
+	}
+	pointIdx = mainRoad->getPointIndex(point, MID);
+	Junction* previousJunction = (Junction*)mainRoad->getPreviousJunction( mainRoad->getRoadType() == TwoWayRoadWithOneLane || mainRoad->getRoadType() == OneWayRoadWithOneLane ? LANE : LEFT_LANE, pointIdx );
+	if (previousJunction != NULL) {
+		if (previousJunction->isCarSpawn() && previousJunction->numberOfRoads() == 1)
+			previousJunction->makeConnectionsForCarSpawn();
+		else {
+			previousJunction->updateConnectionsForRoad(mainRoad->id);
+		}
+	}
+}
+
+void Junction::clearJunctionArea()
+{
+	drawWhiteQuads(getPointsToClearJunctionArea());
+}
+
+void Junction::drawConnection(std::vector<Point> points, float red, float green , float blue)
+{
+	if (points.size() > 0) {
+		if (points[1].x() != 0)
+			drawBezierCurve(points[0], points[1], points[2], red, green, blue);
+		else
+			drawLine(points[0], points[2], red, green, blue);
+	}
 }
 
 std::vector<Point> Junction::getPointsToDrawConnection(Connection connection)
 {
 	std::vector<Point> pointsToDraw;
-	for (auto connIt = connections.begin(); connIt < connections.end(); connIt++) {
-		if ((*connIt).previousRoad == connection.previousRoad && (*connIt).nextRoad == connection.nextRoad)
-			connection = *connIt;
-	}
 	int index = connection.previousRoad->getPointIndex(point, MID);
 	Point start = connection.previousRoad->getStartPointForConnection(index, connection.previousLaneType);
 	index = connection.nextRoad->getPointIndex(point, MID);
 	Point end = connection.nextRoad->getEndPointForConnection(index, connection.nextLaneType);
 	if (start.x() != 0 && end.x() != 0) {
 		pointsToDraw.push_back(start);
-		pointsToDraw.push_back(point);
+		//if connecting road with itself
+		if (connection.previousRoad->id == connection.nextRoad->id)
+			pointsToDraw.push_back(Point(0, 0));
+		else
+			pointsToDraw.push_back(point);
 		pointsToDraw.push_back(end);
 	}
 	return pointsToDraw;
+}
+
+std::vector<Point> Junction::getPointsToClearJunctionArea()
+{
+	QLineF rightBerm, leftBerm;
+	std::vector<Point> pointsToPass;
+	bool start = false;
+	for (auto roadIt = roads.begin(); roadIt < roads.end(); roadIt++) {
+		if ((*roadIt).whichSide != LANE) {
+			rightBerm = (*roadIt).road->getLineParams(RIGHT_BERM);
+			leftBerm = (*roadIt).road->getLineParams(LEFT_BERM);
+			if ((*roadIt).road->getPointIndex(point, MID) == 0) {
+				pointsToPass.push_back(Point(rightBerm.p1().x(), rightBerm.p1().y()));
+				pointsToPass.push_back(Point(leftBerm.p1().x(), leftBerm.p1().y()));
+			}
+			else {
+				pointsToPass.push_back(Point(rightBerm.p2().x(), rightBerm.p2().y()));
+				pointsToPass.push_back(Point(leftBerm.p2().x(), leftBerm.p2().y()));
+			}
+		}
+	}
+	if (pointsToPass.size() == 2) {
+		int multiplier = 0;
+		switch (roads[0].road->getRoadType()) {
+		case OneWayRoadWithOneLane: { multiplier = 2; break; }
+		case OneWayRoadWithTwoLanes: case TwoWayRoadWithOneLane: {multiplier = 4; break; }
+		}
+		vectors parallel_vectors = roads[0].road->getParallelVectors();
+
+		if (roads[1].whichSide == LEFT_BERM) {
+			pointsToPass.push_back(Point(pointsToPass[1].x() + parallel_vectors.xr*multiplier, pointsToPass[1].y() + parallel_vectors.yr*multiplier));
+			pointsToPass.push_back(Point(pointsToPass[0].x() + parallel_vectors.xr*multiplier, pointsToPass[0].y() + parallel_vectors.yr*multiplier));
+		}
+		else {
+			pointsToPass.push_back(Point(pointsToPass[1].x() + parallel_vectors.xl*multiplier, pointsToPass[1].y() + parallel_vectors.yl*multiplier));
+			pointsToPass.push_back(Point(pointsToPass[0].x() + parallel_vectors.xl*multiplier, pointsToPass[0].y() + parallel_vectors.yl*multiplier));
+		}
+	}
+	return pointsToPass;
 }
 
 void copyLanePointVectorToPointVector(std::vector<LanePoint> vectorFrom, std::vector<Point> &vectorTo)
@@ -234,9 +435,9 @@ QPointF getBezierPoint(QPointF point1, QPointF point2, QPointF point3, double t)
 	return point;
 }
 
-void drawBezierCurve(Point _point1/*first*/, Point _point2/*control*/, Point _point3/*last*/) {
+void drawBezierCurve(Point _point1/*first*/, Point _point2/*control*/, Point _point3/*last*/, float red, float green, float blue) {
 	QPointF p1(_point1.x(), _point1.y()), p2, point1(_point1.x(), _point1.y()), point2(_point2.x(), _point2.y()), point3(_point3.x(), _point3.y());
-	glColor3f(0.0f, 1.0f, 0.0f);
+	glColor3f(red, green, blue);
 	for (double t = 0.0; t <= 1.0; t += 0.02)
 	{
 		QPointF p2 = getBezierPoint(point1, point2, point3, t);
@@ -247,4 +448,36 @@ void drawBezierCurve(Point _point1/*first*/, Point _point2/*control*/, Point _po
 		glFlush();
 		p1 = p2;
 	}
+}
+
+void drawLine(Point p1, Point p2, float red, float green, float blue)
+{
+	glBegin(GL_LINES);
+	glColor3f(red, green, blue);
+	glVertex2f(p1.x(), p1.y());
+	glVertex2f(p2.x(), p2.y());
+	glEnd();
+	glFlush();
+}
+
+void drawCircle(Point point) {
+	GLfloat twicePi = 2.0f * M_PI;
+
+	glColor3f(1.0f, 0.0f, 0.0f);
+	glBegin(GL_LINE_LOOP);
+	for (int i = 0; i <= 360; i++) {
+		glVertex2f(point.x() + (2*distance * cos(i *  twicePi / 360)), point.y() + (2*distance* sin(i * twicePi / 360)));
+	}
+	glEnd();
+}
+
+void drawWhiteQuads(std::vector<Point> points)
+{
+	glBegin(GL_QUADS);
+	glColor3f(1.0f, 1.0f, 1.0f);
+	for (auto pointIt = points.begin(); pointIt < points.end(); pointIt++) {
+		glVertex2f((*pointIt).x(), (*pointIt).y());
+	}
+	glEnd();
+	glFlush();
 }

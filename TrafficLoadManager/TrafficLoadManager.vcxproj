@@ -122,6 +122,7 @@
     <ClCompile Include="Point.cpp" />
     <ClCompile Include="Roads.cpp" />
     <ClCompile Include="TrafficLoadManager.cpp" />
+    <ClCompile Include="TwoWayOneLane.cpp" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="TrafficLoadManager.h" />
@@ -139,6 +140,7 @@
     <ClInclude Include="OneWayTwoLanes.h" />
     <ClInclude Include="Point.h" />
     <ClInclude Include="Roads.h" />
+    <ClInclude Include="TwoWayOneLane.h" />
     <QtMoc Include="DesignArea.h">
       <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\GeneratedFiles;.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName)\.;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtOpenGL;$(QTDIR)\include\QtWidgets</IncludePath>
       <Define Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">UNICODE;_UNICODE;WIN32;WIN64;QT_DLL;QT_CORE_LIB;QT_GUI_LIB;QT_OPENGL_LIB;QT_WIDGETS_LIB</Define>

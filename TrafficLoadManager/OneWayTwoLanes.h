@@ -22,6 +22,7 @@ public:
 	int getPointIndex(Point, LaneType);
 	int getUsageOfLane(LaneType);
 	void* getNextJunction(LaneType, int&);
+	void* getPreviousJunction(LaneType, int&);
 	void* searchForClosestJunction(Point, LaneType);
 	void addJunction(Point, void*);
 	void deleteJunction(void*);

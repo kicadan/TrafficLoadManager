@@ -28,6 +28,11 @@ QLineF Road::getLineParams(LaneType laneType)
 	}
 }
 
+vectors Road::getParallelVectors()
+{
+	return parallel_segments;
+}
+
  LaneType Road::getCloserBerm(Point point)
 {
 	double distanceFromLeftBerm = 0.0;

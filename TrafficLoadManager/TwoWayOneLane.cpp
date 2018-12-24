@@ -1,32 +1,32 @@
-#include "OneWayTwoLanes.h"
+#include "TwoWayOneLane.h"
 
 
 
-OneWayTwoLanes::OneWayTwoLanes(int _id) :Road(OneWayRoadWithTwoLanes)
+TwoWayOneLane::TwoWayOneLane(int _id) :Road(TwoWayRoadWithOneLane)
 {
 	this->Road::id = _id;
 }
 
 
-OneWayTwoLanes::~OneWayTwoLanes()
+TwoWayOneLane::~TwoWayOneLane()
 {
 }
 
-void OneWayTwoLanes::addPoint(Point point, LaneType pointType)
+void TwoWayOneLane::addPoint(Point point, LaneType pointType)
 {
 	switch (pointType) {
-	case LEFT_LANE: { leftLane.push_back(LanePoint{ point }); break; }
-	case RIGHT_LANE: { rightLane.push_back(LanePoint{ point }); break; }
+	case BACK_LANE: { backLane.push_back(LanePoint{ point }); break; }
+	case LANE: { lane.push_back(LanePoint{ point }); break; }
 	case MID: mid.push_back(point);
 	}
 }
 
-void OneWayTwoLanes::setRoad(QPointF firstPoint, QPointF lastPoint, bool endingToOtherRoad, Junction* startJunction, Junction* endJunction)
+void TwoWayOneLane::setRoad(QPointF firstPoint, QPointF lastPoint, bool endingToOtherRoad, Junction* startJunction, Junction* endJunction)
 {
 	this->parallel_segments = calc_vectors(lastPoint, firstPoint);
 
-	this->Road::leftBerm = QLineF(firstPoint.x() + 2*parallel_segments.xl, firstPoint.y() + 2*parallel_segments.yl, lastPoint.x() + 2*parallel_segments.xl, lastPoint.y() + 2*parallel_segments.yl);
-	this->Road::rightBerm = QLineF(firstPoint.x() + 2*parallel_segments.xr, firstPoint.y() + 2*parallel_segments.yr, lastPoint.x() + 2*parallel_segments.xr, lastPoint.y() + 2*parallel_segments.yr);
+	this->Road::leftBerm = QLineF(firstPoint.x() + 2 * parallel_segments.xl, firstPoint.y() + 2 * parallel_segments.yl, lastPoint.x() + 2 * parallel_segments.xl, lastPoint.y() + 2 * parallel_segments.yl);
+	this->Road::rightBerm = QLineF(firstPoint.x() + 2 * parallel_segments.xr, firstPoint.y() + 2 * parallel_segments.yr, lastPoint.x() + 2 * parallel_segments.xr, lastPoint.y() + 2 * parallel_segments.yr);
 	this->Road::coreLine = QLineF(firstPoint.x(), firstPoint.y(), lastPoint.x(), lastPoint.y());
 	double A = coreLine.dy() / coreLine.dx();
 	double Bm = (coreLine.y1()*coreLine.x2() - coreLine.y2()*coreLine.x1()) / (coreLine.x2() - coreLine.x1());
@@ -41,8 +41,8 @@ void OneWayTwoLanes::setRoad(QPointF firstPoint, QPointF lastPoint, bool endingT
 	else
 		horizontal = false;
 	//create vectors of the roads
-	addPoint(Point(firstPoint.x() + parallel_segments.xl, firstPoint.y() + parallel_segments.yl), LEFT_LANE);
-	addPoint(Point(firstPoint.x() + parallel_segments.xr, firstPoint.y() + parallel_segments.yr), RIGHT_LANE);
+	addPoint(Point(firstPoint.x() + parallel_segments.xl, firstPoint.y() + parallel_segments.yl), BACK_LANE);
+	addPoint(Point(firstPoint.x() + parallel_segments.xr, firstPoint.y() + parallel_segments.yr), LANE);
 	addPoint(Point(firstPoint.x(), firstPoint.y()), MID);
 	double xl = firstPoint.x() + parallel_segments.xl + distance; //one point later than first
 	double xr = firstPoint.x() + parallel_segments.xr + distance; //one point later than first
@@ -55,14 +55,14 @@ void OneWayTwoLanes::setRoad(QPointF firstPoint, QPointF lastPoint, bool endingT
 		double x_last = lastPoint.x() + parallel_segments.xl;
 		if (lastPoint.x() > firstPoint.x())
 			for (xl; xl < x_last; xm += distance, xl += distance, xr += distance) {
-				addPoint(Point(xl, A*xl + Bl), LEFT_LANE);
-				addPoint(Point(xr, A*xr + Br), RIGHT_LANE);
+				addPoint(Point(xl, A*xl + Bl), BACK_LANE);
+				addPoint(Point(xr, A*xr + Br), LANE);
 				addPoint(Point(xm, A*xm + Bm), MID);
 			}
 		else
 			for (xl; xl > x_last; xm -= distance, xl -= distance, xr -= distance) {
-				addPoint(Point(xl, A*xl + Bl), LEFT_LANE);
-				addPoint(Point(xr, A*xr + Br), RIGHT_LANE);
+				addPoint(Point(xl, A*xl + Bl), BACK_LANE);
+				addPoint(Point(xr, A*xr + Br), LANE);
 				addPoint(Point(xm, A*xm + Bm), MID);
 			}
 	}
@@ -75,33 +75,33 @@ void OneWayTwoLanes::setRoad(QPointF firstPoint, QPointF lastPoint, bool endingT
 		double y_last = lastPoint.y() + parallel_segments.yl;
 		if (lastPoint.y() > firstPoint.y())
 			for (yl; yl < y_last; ym += distance, yl += distance, yr += distance) {
-				addPoint(Point(dx != 0 ? (yl - Bl) / A : xl, yl), LEFT_LANE);
-				addPoint(Point(dx != 0 ? (yr - Br) / A : xr, yr), RIGHT_LANE);
+				addPoint(Point(dx != 0 ? (yl - Bl) / A : xl, yl), BACK_LANE);
+				addPoint(Point(dx != 0 ? (yr - Br) / A : xr, yr), LANE);
 				addPoint(Point(dx != 0 ? (ym - Bm) / A : xm, ym), MID);
 			}
 		else
 			for (yl; yl > y_last; ym -= distance, yl -= distance, yr -= distance) {
-				addPoint(Point(dx != 0 ? (yl - Bl) / A : xl, yl), LEFT_LANE);
-				addPoint(Point(dx != 0 ? (yr - Br) / A : xr, yr), RIGHT_LANE);
+				addPoint(Point(dx != 0 ? (yl - Bl) / A : xl, yl), BACK_LANE);
+				addPoint(Point(dx != 0 ? (yr - Br) / A : xr, yr), LANE);
 				addPoint(Point(dx != 0 ? (ym - Bm) / A : xm, ym), MID);
 			}
 	}
-	addPoint(Point(lastPoint.x() + parallel_segments.xl, lastPoint.y() + parallel_segments.yl), LEFT_LANE);
-	addPoint(Point(lastPoint.x() + parallel_segments.xr, lastPoint.y() + parallel_segments.yr), RIGHT_LANE);
+	addPoint(Point(lastPoint.x() + parallel_segments.xl, lastPoint.y() + parallel_segments.yl), BACK_LANE);
+	addPoint(Point(lastPoint.x() + parallel_segments.xr, lastPoint.y() + parallel_segments.yr), LANE);
 	addPoint(Point(lastPoint.x(), lastPoint.y()), MID);
 
 	QPointF _firstBermLeftPoint(0, 0), _firstBermRightPoint(0, 0), _lastBermLeftPoint(0, 0), _lastBermRightPoint(0, 0);
 	if (startJunction != NULL) {
 		_firstBermLeftPoint = startJunction->returnCrossPointsForBerm(leftBerm, lastPoint);
 		_firstBermRightPoint = startJunction->returnCrossPointsForBerm(rightBerm, lastPoint);
-		leftLane[0].junction = startJunction;
-		rightLane[0].junction = startJunction;
+		backLane[0].junction = startJunction;
+		lane[0].junction = startJunction;
 	}
 	if (endJunction != NULL) {
 		_lastBermLeftPoint = endJunction->returnCrossPointsForBerm(leftBerm, firstPoint);
 		_lastBermRightPoint = endJunction->returnCrossPointsForBerm(rightBerm, firstPoint);
-		leftLane[leftLane.size() - 1].junction = endJunction;
-		rightLane[rightLane.size() - 1].junction = endJunction;
+		backLane[backLane.size() - 1].junction = endJunction;
+		lane[lane.size() - 1].junction = endJunction;
 	}
 	if (_firstBermLeftPoint.x() != 0) leftBerm.setP1(_firstBermLeftPoint);
 	if (_firstBermRightPoint.x() != 0) rightBerm.setP1(_firstBermRightPoint);
@@ -109,7 +109,7 @@ void OneWayTwoLanes::setRoad(QPointF firstPoint, QPointF lastPoint, bool endingT
 	if (_lastBermRightPoint.x() != 0) rightBerm.setP2(_lastBermRightPoint);
 }
 
-void OneWayTwoLanes::drawRoad() //poprawiæ na dwie drogi
+void TwoWayOneLane::drawRoad() //poprawiæ na dwie drogi
 {
 	//fulfill with colour 2 polygons
 	glBegin(GL_POLYGON);
@@ -153,16 +153,16 @@ void OneWayTwoLanes::drawRoad() //poprawiæ na dwie drogi
 	glEnd();
 }
 
-Point OneWayTwoLanes::getPoint(int index, LaneType laneType)
+Point TwoWayOneLane::getPoint(int index, LaneType laneType)
 {
 	Point point;
-	if (laneType == LEFT_LANE) {
-		if (index < leftLane.size())
-			point = leftLane[index].point;
+	if (laneType == BACK_LANE) {
+		if (index < backLane.size())
+			point = backLane[index].point;
 	}
-	else if (laneType == RIGHT_LANE) {
-		if (index < rightLane.size())
-			point = rightLane[index].point;
+	else if (laneType == LANE) {
+		if (index < lane.size())
+			point = lane[index].point;
 	}
 	else if (laneType == MID) {
 		if (index < mid.size())
@@ -173,17 +173,17 @@ Point OneWayTwoLanes::getPoint(int index, LaneType laneType)
 	return point;
 }
 
-int OneWayTwoLanes::getPointIndex(Point point, LaneType laneType) //if not found returns -1
+int TwoWayOneLane::getPointIndex(Point point, LaneType laneType) //if not found returns -1
 {
 	int index = 0;
-	if(laneType == LEFT_LANE)
-		for (auto pointIt = leftLane.begin(); pointIt < leftLane.end(); pointIt++) {
+	if (laneType == BACK_LANE)
+		for (auto pointIt = backLane.begin(); pointIt < backLane.end(); pointIt++) {
 			if ((*pointIt).point == point)
 				return index;
 			index++;
 		}
-	else if (laneType == RIGHT_LANE)
-		for (auto pointIt = rightLane.begin(); pointIt < rightLane.end(); pointIt++) {
+	else if (laneType == LANE)
+		for (auto pointIt = lane.begin(); pointIt < lane.end(); pointIt++) {
 			if ((*pointIt).point == point)
 				return index;
 			index++;
@@ -197,103 +197,103 @@ int OneWayTwoLanes::getPointIndex(Point point, LaneType laneType) //if not found
 	return -1;
 }
 
-int OneWayTwoLanes::getUsageOfLane(LaneType laneType)
+int TwoWayOneLane::getUsageOfLane(LaneType laneType)
 {//only one lane
 	int usage = 0;
-	if (laneType == LEFT_LANE)
-		usage = percentageLeftLaneUsage;
-	else if (laneType == RIGHT_LANE)
-		usage = percentageRightLaneUsage;
+	if (laneType == BACK_LANE)
+		usage = percentageBackLaneUsage;
+	else if (laneType == LANE)
+		usage = percentageLaneUsage;
 	return usage;
 }
 
-Point OneWayTwoLanes::getLastPointOf(LaneType laneType)
+Point TwoWayOneLane::getLastPointOf(LaneType laneType)
 {
 	switch (laneType) {
-	case LEFT_LANE: return leftLane[leftLane.size() - 1].point;
-	case RIGHT_LANE: return rightLane[rightLane.size() - 1].point;
+	case BACK_LANE: return backLane[backLane.size() - 1].point;
+	case LANE: return lane[lane.size() - 1].point;
 	case MID: return mid[mid.size() - 1];
 	}
 }
 
-Point OneWayTwoLanes::getStartPointForConnection(int index, LaneType laneType)
+Point TwoWayOneLane::getStartPointForConnection(int index, LaneType laneType)
 {
-	if (laneType == RIGHT_LANE) {
+	if (laneType == LANE) {
 		int range = -3;
 		for (int i = range; i <= 0; i++) {
-			if (index + range < rightLane.size() - 1 && index + range >= 0) {
-				return rightLane[index + range].point;
+			if (index + range < lane.size() - 1 && index + range >= 0) {
+				return lane[index + range].point;
 			}
 		}
 	}
-	else if (laneType == LEFT_LANE) {
-		int range = -3;
-		for (int i = range; i <= 0; i++) {
-			if (index + range < leftLane.size() - 1 && index + range >= 0) {
-				return leftLane[index + range].point;
+	else if (laneType == BACK_LANE) {
+		int range = 3;
+		for (int i = range; i >= 0; i--) {
+			if (index + range < backLane.size() - 1 && index + range >= 0) {
+				return backLane[index + range].point;
 			}
 		}
 	}
 	return Point(0, 0);
 }
 
-Point OneWayTwoLanes::getEndPointForConnection(int index, LaneType laneType)
+Point TwoWayOneLane::getEndPointForConnection(int index, LaneType laneType)
 {
-	if (laneType == RIGHT_LANE) {
+	if (laneType == LANE) {
 		int range = 3;
 		for (int i = range; i >= 0; i--) {
-			if (index + range < rightLane.size() - 1 && index + range >= 0) {
-				return rightLane[index + range].point;
+			if (index + range < lane.size() - 1 && index + range >= 0) {
+				return lane[index + range].point;
 			}
 		}
 	}
-	else if (laneType == LEFT_LANE) {
-		int range = 3;
-		for (int i = range; i >= 0; i--) {
-			if (index + range < leftLane.size() - 1 && index + range >= 0) {
-				return leftLane[index + range].point;
+	else if (laneType == BACK_LANE) {
+		int range = -3;
+		for (int i = range; i <= 0; i++) {
+			if (index + range < backLane.size() - 1 && index + range >= 0) {
+				return backLane[index + range].point;
 			}
 		}
 	}
 	return Point(0, 0);
 }
 
-LaneType OneWayTwoLanes::searchPointForLaneType(Point point)
+LaneType TwoWayOneLane::searchPointForLaneType(Point point)
 {
 	LaneType foundLaneType;
-	for (auto &existingPoint : leftLane) {
+	for (auto &existingPoint : backLane) {
 		if ((point.x() > floor(existingPoint.point.x() - distance / 2) && point.x() < ceil(existingPoint.point.x() + distance / 2)) && (point.y() > floor(existingPoint.point.y() - distance / 2) && point.y() < ceil(existingPoint.point.y() + distance / 2)))
-			return LEFT_LANE;
+			return BACK_LANE;
 	}
-	for (auto &existingPoint : rightLane) {
+	for (auto &existingPoint : lane) {
 		if ((point.x() > floor(existingPoint.point.x() - distance / 2) && point.x() < ceil(existingPoint.point.x() + distance / 2)) && (point.y() > floor(existingPoint.point.y() - distance / 2) && point.y() < ceil(existingPoint.point.y() + distance / 2)))
-			return RIGHT_LANE;
+			return LANE;
 	}
 	return NOTHING;
 }
 
-void* OneWayTwoLanes::getNextJunction(LaneType laneType, int &pointIdx)
+void* TwoWayOneLane::getNextJunction(LaneType laneType, int &pointIdx)
 {
 	bool found = false;
 	Junction* junction;
-	if (laneType == LEFT_LANE) {
-		auto pointIt = leftLane.begin() + pointIdx;
-		while (pointIt < leftLane.end() - 1 && !found) {
-			pointIt++;
+	if (laneType == BACK_LANE) {
+		auto pointIt = backLane.begin() + pointIdx;
+		while (pointIt > backLane.begin() && !found) {
+			pointIt--;
 			if ((*pointIt).junction != NULL) {
-				pointIdx = pointIt - (leftLane.begin() + pointIdx);
+				pointIdx = (backLane.begin() + pointIdx) - pointIt;
 				found = true;
 				junction = (*pointIt).junction;
 				break;
 			}
 		}
 	}
-	else if (laneType == RIGHT_LANE) {
-		auto pointIt = rightLane.begin() + pointIdx;
-		while (pointIt < rightLane.end() - 1 && !found) {
+	else if (laneType == LANE) {
+		auto pointIt = lane.begin() + pointIdx;
+		while (pointIt < lane.end() - 1 && !found) {
 			pointIt++;
 			if ((*pointIt).junction != NULL) {
-				pointIdx = pointIt - (rightLane.begin() + pointIdx);
+				pointIdx = pointIt - (lane.begin() + pointIdx);
 				found = true;
 				junction = (*pointIt).junction;
 				break;
@@ -303,28 +303,28 @@ void* OneWayTwoLanes::getNextJunction(LaneType laneType, int &pointIdx)
 	return found ? junction : NULL;
 }
 
-void * OneWayTwoLanes::getPreviousJunction(LaneType laneType, int &pointIdx)
+void * TwoWayOneLane::getPreviousJunction(LaneType laneType, int &pointIdx)
 {
 	bool found = false;
 	Junction* junction;
-	if (laneType == LEFT_LANE) {
-		auto pointIt = leftLane.begin() + pointIdx;
-		while (pointIt > leftLane.begin() && !found) {
-			pointIt--;
+	if (laneType == BACK_LANE) {
+		auto pointIt = backLane.begin() + pointIdx;
+		while (pointIt < backLane.end() - 1 && !found) {
+			pointIt++;
 			if ((*pointIt).junction != NULL) {
-				pointIdx = (leftLane.begin() + pointIdx) - pointIt;
+				pointIdx = pointIt - (backLane.begin() + pointIdx);
 				found = true;
 				junction = (*pointIt).junction;
 				break;
 			}
 		}
 	}
-	else if (laneType == RIGHT_LANE) {
-		auto pointIt = rightLane.begin() + pointIdx;
-		while (pointIt > rightLane.begin() && !found) {
+	else if (laneType == LANE) {
+		auto pointIt = lane.begin() + pointIdx;
+		while (pointIt > lane.begin() && !found) {
 			pointIt--;
 			if ((*pointIt).junction != NULL) {
-				pointIdx = (rightLane.begin() + pointIdx) - pointIt;
+				pointIdx = (lane.begin() + pointIdx) - pointIt;
 				found = true;
 				junction = (*pointIt).junction;
 				break;
@@ -334,19 +334,19 @@ void * OneWayTwoLanes::getPreviousJunction(LaneType laneType, int &pointIdx)
 	return found ? junction : NULL;
 }
 
-void * OneWayTwoLanes::searchForClosestJunction(Point point, LaneType laneType)
+void * TwoWayOneLane::searchForClosestJunction(Point point, LaneType laneType)
 { //algorithm is searching for junctions untill it finds exactly ONE junction in a specified range
 	Point foundPoint(0, 0);
-	if (laneType == LEFT_LANE) {
-		for (auto &existingPoint : leftLane) {
+	if (laneType == BACK_LANE) {
+		for (auto &existingPoint : backLane) {
 			if ((point.x() > floor(existingPoint.point.x() - distance / 2) && point.x() < ceil(existingPoint.point.x() + distance / 2)) && (point.y() > floor(existingPoint.point.y() - distance / 2) && point.y() < ceil(existingPoint.point.y() + distance / 2))) {
 				foundPoint = existingPoint.point;
 				break;
 			}
 		}
 	}
-	else if (laneType == RIGHT_LANE) {
-		for (auto &existingPoint : rightLane) {
+	else if (laneType == LANE) {
+		for (auto &existingPoint : lane) {
 			if ((point.x() > floor(existingPoint.point.x() - distance / 2) && point.x() < ceil(existingPoint.point.x() + distance / 2)) && (point.y() > floor(existingPoint.point.y() - distance / 2) && point.y() < ceil(existingPoint.point.y() + distance / 2))) {
 				foundPoint = existingPoint.point;
 				break;
@@ -360,8 +360,8 @@ void * OneWayTwoLanes::searchForClosestJunction(Point point, LaneType laneType)
 		int pointIdx = getPointIndex(foundPoint, laneType);
 		while (foundJunction == NULL && range <= 40 && pointIdx != -1) {
 			for (int i = range; i <= -range; i++) {
-				if(laneType == LEFT_LANE) foundJunction = leftLane[(pointIdx + i >= 0) && (pointIdx + i < leftLane.size()) ? pointIdx + i : pointIdx].junction;
-				if(laneType == RIGHT_LANE) foundJunction = rightLane[(pointIdx + i >= 0) && (pointIdx + i < rightLane.size()) ? pointIdx + i : pointIdx].junction;
+				if (laneType == BACK_LANE) foundJunction = backLane[(pointIdx + i >= 0) && (pointIdx + i < backLane.size()) ? pointIdx + i : pointIdx].junction;
+				if (laneType == LANE) foundJunction = lane[(pointIdx + i >= 0) && (pointIdx + i < lane.size()) ? pointIdx + i : pointIdx].junction;
 				if (foundJunction != NULL) { foundJunctions++; resultJunction = foundJunction; }
 				foundJunction = NULL;
 			}
@@ -376,83 +376,83 @@ void * OneWayTwoLanes::searchForClosestJunction(Point point, LaneType laneType)
 	return resultJunction;
 }
 
-void OneWayTwoLanes::addJunction(Point point, void* junction)
+void TwoWayOneLane::addJunction(Point point, void* junction)
 {
 	int idx = getPointIndex(point, MID);
-	rightLane[idx].junction = (Junction*)junction;
-	leftLane[idx].junction = (Junction*)junction;
+	lane[idx].junction = (Junction*)junction;
+	backLane[idx].junction = (Junction*)junction;
 }
 
-void OneWayTwoLanes::deleteJunction(void *junction)
+void TwoWayOneLane::deleteJunction(void *junction)
 {
 	//right and left are same length
-	auto leftLaneIt = leftLane.begin();
-	auto rightLaneIt = rightLane.begin();
-	while (leftLaneIt < leftLane.end() && rightLaneIt < rightLane.end()) {
-		if ((*leftLaneIt).junction == junction)
-			(*leftLaneIt).junction = NULL;
-		if ((*rightLaneIt).junction == junction)
-			(*rightLaneIt).junction = NULL;
-		leftLaneIt++;
-		rightLaneIt++;
+	auto backLaneIt = backLane.begin();
+	auto laneIt = lane.begin();
+	while (backLaneIt < backLane.end() && laneIt < lane.end()) {
+		if ((*backLaneIt).junction == junction)
+			(*backLaneIt).junction = NULL;
+		if ((*laneIt).junction == junction)
+			(*laneIt).junction = NULL;
+		backLaneIt++;
+		laneIt++;
 	}
 }
 
-void OneWayTwoLanes::deleteFromJunctions()
+void TwoWayOneLane::deleteFromJunctions()
 {
 	//right and left are same length
-	auto rightLaneIt = rightLane.begin();
-	for (auto leftLaneIt = leftLane.begin(); leftLaneIt < leftLane.end(); leftLaneIt++, rightLaneIt++) {
-		if ((*leftLaneIt).junction != NULL)
-			(*leftLaneIt).junction->deleteRoad(this);
-		if ((*rightLaneIt).junction != NULL)
-			(*rightLaneIt).junction->deleteRoad(this);
+	auto laneIt = lane.begin();
+	for (auto backLaneIt = backLane.begin(); backLaneIt < backLane.end(); backLaneIt++, laneIt++) {
+		if ((*backLaneIt).junction != NULL)
+			(*backLaneIt).junction->deleteRoad(this);
+		if ((*laneIt).junction != NULL)
+			(*laneIt).junction->deleteRoad(this);
 	}
 }
 
-void OneWayTwoLanes::freePoint(LaneType laneType, int index)
+void TwoWayOneLane::freePoint(LaneType laneType, int index)
 {
-	if (laneType == LEFT_LANE)
-		leftLane[index].point.setFree();
-	else if (laneType == RIGHT_LANE)
-		rightLane[index].point.setFree();
+	if (laneType == BACK_LANE)
+		backLane[index].point.setFree();
+	else if (laneType == LANE)
+		lane[index].point.setFree();
 }
 
-bool OneWayTwoLanes::reservePoint(LaneType laneType, int index)
+bool TwoWayOneLane::reservePoint(LaneType laneType, int index)
 {
 	bool success = false;
-	if (laneType == LEFT_LANE)
-		success = leftLane[index].point.occupy();
-	else if (laneType == RIGHT_LANE)
-		success = rightLane[index].point.occupy();
+	if (laneType == BACK_LANE)
+		success = backLane[index].point.occupy();
+	else if (laneType == LANE)
+		success = lane[index].point.occupy();
 	return success;
 }
 
-void OneWayTwoLanes::updateLane()
+void TwoWayOneLane::updateLane()
 {
 	//update lane usage
-	percentageLeftLaneUsage = 0;
-	percentageRightLaneUsage = 0;
-	auto rightLaneIt = rightLane.begin();
-	for (auto leftLaneIt = leftLane.begin(); leftLaneIt < leftLane.end(); leftLaneIt++, rightLaneIt++) {
-		if (!(*leftLaneIt).point.isFree())
-			percentageLeftLaneUsage++;
-		if (!(*rightLaneIt).point.isFree())
-			percentageRightLaneUsage++;
+	percentageBackLaneUsage = 0;
+	percentageLaneUsage = 0;
+	auto laneIt = lane.begin();
+	for (auto backLaneIt = backLane.begin(); backLaneIt < backLane.end(); backLaneIt++, laneIt++) {
+		if (!(*backLaneIt).point.isFree())
+			percentageBackLaneUsage++;
+		if (!(*laneIt).point.isFree())
+			percentageLaneUsage++;
 	}
-	percentageLeftLaneUsage = (percentageLeftLaneUsage * 100) / leftLane.size();
-	percentageRightLaneUsage = (percentageRightLaneUsage * 100) / rightLane.size();
+	percentageBackLaneUsage = (percentageBackLaneUsage * 100) / backLane.size();
+	percentageLaneUsage = (percentageLaneUsage * 100) / lane.size();
 }
 
-Point OneWayTwoLanes::getFirstPointOf(LaneType laneType)
+Point TwoWayOneLane::getFirstPointOf(LaneType laneType)
 {
 	switch (laneType) {
-	case LEFT_LANE: return leftLane[0].point;
-	case RIGHT_LANE: return rightLane[0].point;
+	case BACK_LANE: return backLane[0].point;
+	case LANE: return lane[0].point;
 	}
 }
 
-vectors OneWayTwoLanes::calc_vectors(QPointF A, QPointF B)
+vectors TwoWayOneLane::calc_vectors(QPointF A, QPointF B)
 {
 	//int xa = A.x() - B.x();
 	//int ya = A.y() - B.y();

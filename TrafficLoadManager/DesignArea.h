@@ -14,21 +14,23 @@
 #include "Roads.h"
 #include "OneWayOneLane.h"
 #include "OneWayTwoLanes.h"
+#include "TwoWayOneLane.h"
 
-enum Menu {
+enum Action {
 	LOAD_FROM_FILE = 0,
 	WRITE_TO_FILE = 1,
 	UNDO = 2,
 	DRAW_ONE_WAY_ONE_LANE = 3,
 	DRAW_ONE_WAY_TWO_LANES = 4,
 	DRAW_TWO_WAY_ONE_LANE = 5,
-	DRAW_TWO_WAY_TWO_LANES = 6,
+	DRAW_SPAWN_POINT = 6,
 	MAKE_CONNECTION = 7
 };
 
 struct Change {
 	AppObject *appObject;
 	int changeId;
+	Action action;
 };
 
 struct Way {
@@ -53,8 +55,8 @@ public:
 	explicit DesignArea(QWidget *parent = 0);
 	~DesignArea();
 
-	void dispatchAction(Menu);
-
+	void dispatchAction(Action);
+	
 private:
 	QOpenGLFunctions *openGLFunctions;
 	QOpenGLContext *context;
@@ -81,9 +83,12 @@ private:
 	void drawElement();
 	void drawRoad();
 	void makeConnection();
+	void renewConnectionsForSpawnPoints(); //deprecated
+	void addCarSpawn();
 	void repaintScene();
 	void undoChanges();
-	void addChanges(std::vector<AppObject*>);
+	void validateConnections();
+	void addChanges(std::vector<AppObject*>); //deprecated
 	Point searchPoint(QPoint);
 	bool checkIfCollidingWithOtherRoad(Road*, std::vector<int>);
 	void deleteJunction(Junction*);

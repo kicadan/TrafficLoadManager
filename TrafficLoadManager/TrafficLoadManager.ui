@@ -51,7 +51,6 @@
      <addaction name="actionDroga_jednokierunkowa_z_jednym_pasem"/>
      <addaction name="actionDroga_jednokierunkowa_z_dwoma_pasami_ruchu"/>
      <addaction name="actionDroga_dwukierunkowa_z_jednym_pasem_ruchu"/>
-     <addaction name="actionDroga_dwukierunkowa_z_dwoma_pasami_ruchu"/>
      <addaction name="actionPunkt_odradzania_pojazd_w"/>
      <addaction name="action_wiat_a"/>
     </widget>
@@ -235,6 +234,38 @@
   </connection>
   <connection>
    <sender>actionPo_czenia_na_skrzy_owaniu</sender>
+   <signal>triggered()</signal>
+   <receiver>designArea</receiver>
+   <slot>handleAction()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>440</x>
+     <y>370</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionPunkt_odradzania_pojazd_w</sender>
+   <signal>triggered()</signal>
+   <receiver>designArea</receiver>
+   <slot>handleAction()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>440</x>
+     <y>370</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionDroga_dwukierunkowa_z_jednym_pasem_ruchu</sender>
    <signal>triggered()</signal>
    <receiver>designArea</receiver>
    <slot>handleAction()</slot>

@@ -134,7 +134,6 @@ public:
         menuRysuj->addAction(actionDroga_jednokierunkowa_z_jednym_pasem);
         menuRysuj->addAction(actionDroga_jednokierunkowa_z_dwoma_pasami_ruchu);
         menuRysuj->addAction(actionDroga_dwukierunkowa_z_jednym_pasem_ruchu);
-        menuRysuj->addAction(actionDroga_dwukierunkowa_z_dwoma_pasami_ruchu);
         menuRysuj->addAction(actionPunkt_odradzania_pojazd_w);
         menuRysuj->addAction(action_wiat_a);
         menuEdytuj->addAction(action_wiat_a_drogowe);
@@ -147,6 +146,8 @@ public:
         QObject::connect(actionCofnij, SIGNAL(triggered()), designArea, SLOT(handleAction()));
         QObject::connect(actionDroga_jednokierunkowa_z_dwoma_pasami_ruchu, SIGNAL(triggered()), designArea, SLOT(handleAction()));
         QObject::connect(actionPo_czenia_na_skrzy_owaniu, SIGNAL(triggered()), designArea, SLOT(handleAction()));
+        QObject::connect(actionPunkt_odradzania_pojazd_w, SIGNAL(triggered()), designArea, SLOT(handleAction()));
+        QObject::connect(actionDroga_dwukierunkowa_z_jednym_pasem_ruchu, SIGNAL(triggered()), designArea, SLOT(handleAction()));
 
         QMetaObject::connectSlotsByName(TrafficLoadManagerClass);
     } // setupUi

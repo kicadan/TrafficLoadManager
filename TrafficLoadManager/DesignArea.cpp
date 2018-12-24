@@ -32,16 +32,23 @@ void DesignArea::handleAction() {
 	else if (action == "actionDroga_jednokierunkowa_z_dwoma_pasami_ruchu") {
 		dispatchAction(DRAW_ONE_WAY_TWO_LANES);
 	}
+	else if (action == "actionDroga_dwukierunkowa_z_jednym_pasem_ruchu") {
+		dispatchAction(DRAW_TWO_WAY_ONE_LANE);
+	}
+	else if (action == "actionPunkt_odradzania_pojazd_w") {
+		dispatchAction(DRAW_SPAWN_POINT);
+	}
 	else if (action == "actionPo_czenia_na_skrzy_owaniu") {
 		dispatchAction(MAKE_CONNECTION);
 	}
 }
 
-void DesignArea::dispatchAction(Menu menuAction)
+void DesignArea::dispatchAction(Action menuAction)
 {
 	switch (menuAction) {
 	case UNDO: {
 		undoChanges();
+		validateConnections();
 		repainting = true;
 		repaint();
 		break;
@@ -58,8 +65,8 @@ void DesignArea::dispatchAction(Menu menuAction)
 		currentObjectBrush = TwoWayRoadWithOneLane;
 		break;
 	}
-	case DRAW_TWO_WAY_TWO_LANES: {
-		currentObjectBrush = TwoWayRoadWithTwoLanes;
+	case DRAW_SPAWN_POINT: {
+		currentObjectBrush = CarSpawn;
 		break;
 	}
 	case MAKE_CONNECTION: {
@@ -144,8 +151,7 @@ void DesignArea::mouseReleaseEvent(QMouseEvent * event)
 	if (event->button() == Qt::LeftButton && constructing == true) {
 		_lastPoint = event->pos();
 		lastPoint = Point(_lastPoint.x(), _lastPoint.y());
-		if(!(lastPoint == firstPoint)) 
-			repaint();
+		repaint();
 	}
 	else if (event->button() == Qt::RightButton) {
 		repainting = true;
@@ -156,8 +162,12 @@ void DesignArea::mouseReleaseEvent(QMouseEvent * event)
 void DesignArea::drawElement()
 {
 	switch (currentObjectBrush) {
-	case OneWayRoadWithOneLane: case OneWayRoadWithTwoLanes: case TwoWayRoadWithOneLane: case TwoWayRoadWithTwoLanes: {
+	case OneWayRoadWithOneLane: case OneWayRoadWithTwoLanes: case TwoWayRoadWithOneLane: {
 		drawRoad(); 
+		break;
+	}
+	case CarSpawn: {
+		addCarSpawn();
 		break;
 	}
 	case JunctionConnection: {
@@ -191,6 +201,57 @@ void DesignArea::makeConnection()
 	}
 	if (startPointJunction != NULL && startPointJunction == endPointJunction && endRoad != NULL && startRoad != NULL && endLaneType != NOTHING && startLaneType != NOTHING) {
 		startPointJunction->connectRoads(startRoad, startLaneType, endRoad, endLaneType);
+		startPointJunction->drawJunction();
+	}
+	constructing = false;
+}
+
+//deprecated
+void DesignArea::renewConnectionsForSpawnPoints()
+{
+	for (auto junctionIt = allJunctions.begin(); junctionIt < allJunctions.end(); junctionIt++) {
+		if ((*junctionIt)->isCarSpawn() && (*junctionIt)->numberOfRoads() == 1 && (*junctionIt)->getConnectionsFrom(-1).size() == 0) {
+			(*junctionIt)->makeConnectionsForCarSpawn();
+		}
+	}
+}
+
+void DesignArea::addCarSpawn()
+{
+	Road* startRoad = NULL;
+	Junction* junction = NULL;
+	Point point(0, 0);
+	// search all roads
+	for (auto road : this->allRoads)
+	{
+		point = road->searchPoint(firstPoint);
+		if (point.x() != 0 && startRoad == NULL) {
+			startRoad = road;
+			_firstPoint = QPointF(point.x(), point.y());
+			firstPoint = point;
+			break;
+		}
+	}
+	for (auto junctionIt = allJunctions.begin(); junctionIt < allJunctions.end(); junctionIt++) {
+		if ((*junctionIt)->isPoint(point)) {
+			junction = *junctionIt;
+			junction->setAsCarSpawn();
+			junction->drawJunction();
+			allChanges.push_back(Change{ junction, changeCounter, DRAW_SPAWN_POINT });
+			changeCounter++;
+			break;
+		}
+	}
+	if (junction == NULL && startRoad != NULL) {
+		junction = new Junction(firstPoint, startRoad, allJunctions.size());
+		startRoad->addJunction(firstPoint, junction);
+		junction->updateOtherJunctionsOnMainRoad();
+		junction->setAsCarSpawn();
+		junction->makeConnectionsForCarSpawn();
+		allJunctions.push_back(junction);
+		allChanges.push_back(Change{ junction, changeCounter, DRAW_SPAWN_POINT });
+		changeCounter++;
+		junction->drawJunction();
 	}
 	constructing = false;
 }
@@ -263,17 +324,21 @@ void DesignArea::drawRoad()
 			if (startRoad != NULL) {
 				startRoad->addJunction(firstPoint, startJunction); 
 				startJunction->addRoad(road);
+				startJunction->updateOtherJunctionsOnMainRoad();
+				startJunction->drawJunction();
 			}
 			if (endRoad != NULL) {
 				endRoad->addJunction(lastPoint, endJunction); 
 				endJunction->addRoad(road);
+				endJunction->updateOtherJunctionsOnMainRoad();
+				endJunction->drawJunction();
 			}
 			allRoads.push_back(road);
 			std::vector<AppObject*> changes;
 			//add changes
-			allChanges.push_back(Change{ road, changeCounter });
-			if (endJunction != NULL && endJunction->numberOfRoads() == 2) allChanges.push_back(Change{ endJunction, changeCounter });
-			if (startJunction != NULL && startJunction->numberOfRoads() == 2) allChanges.push_back(Change{ startJunction, changeCounter });
+			allChanges.push_back(Change{ road, changeCounter, DRAW_ONE_WAY_ONE_LANE });
+			if (endJunction != NULL && endJunction->numberOfRoads() == 2) allChanges.push_back(Change{ endJunction, changeCounter, DRAW_ONE_WAY_ONE_LANE });
+			if (startJunction != NULL && startJunction->numberOfRoads() == 2) allChanges.push_back(Change{ startJunction, changeCounter, DRAW_ONE_WAY_ONE_LANE });
 			changeCounter++;
 		}
 		else {
@@ -296,17 +361,58 @@ void DesignArea::drawRoad()
 			if (startRoad != NULL) {
 				startRoad->addJunction(firstPoint, startJunction);
 				startJunction->addRoad(road);
+				startJunction->updateOtherJunctionsOnMainRoad();
+				startJunction->drawJunction();
 			}
 			if (endRoad != NULL) {
 				endRoad->addJunction(lastPoint, endJunction);
 				endJunction->addRoad(road);
+				endJunction->updateOtherJunctionsOnMainRoad();
+				endJunction->drawJunction();
 			}
 			allRoads.push_back(road);
 			std::vector<AppObject*> changes;
 			//add changes
-			allChanges.push_back(Change{ road, changeCounter });
-			if (endJunction != NULL && endJunction->numberOfRoads() == 2) allChanges.push_back(Change{ endJunction, changeCounter });
-			if (startJunction != NULL && startJunction->numberOfRoads() == 2) allChanges.push_back(Change{ startJunction, changeCounter });
+			allChanges.push_back(Change{ road, changeCounter, DRAW_ONE_WAY_TWO_LANES });
+			if (endJunction != NULL && endJunction->numberOfRoads() == 2) allChanges.push_back(Change{ endJunction, changeCounter, DRAW_ONE_WAY_TWO_LANES });
+			if (startJunction != NULL && startJunction->numberOfRoads() == 2) allChanges.push_back(Change{ startJunction, changeCounter, DRAW_ONE_WAY_TWO_LANES });
+			changeCounter++;
+		}
+		else {
+			if (endRoad != NULL && endJunction->numberOfRoads() == 2) // only if two roads in junction - it is brand new one -> delete whole junction
+				deleteJunction(endJunction);
+			else if (endRoad != NULL && endJunction->numberOfRoads() > 2) // if more roads in junction -> delete only this road from junction
+				endJunction->deleteRoad(road);
+			if (startRoad != NULL && startJunction->numberOfRoads() == 2)
+				deleteJunction(startJunction);
+			else if (startRoad != NULL && startJunction->numberOfRoads() > 2)
+				startJunction->deleteRoad(road);
+		}
+		break;
+	}
+	case TwoWayRoadWithOneLane: {
+		TwoWayOneLane *road = new TwoWayOneLane(currentRoadId);
+		road->setRoad(_firstPoint, _lastPoint, endRoad != NULL, startJunction, endJunction);
+		if (!checkIfCollidingWithOtherRoad(road, connectedRoads)) { //road can be added
+			road->drawRoad();
+			if (startRoad != NULL) {
+				startRoad->addJunction(firstPoint, startJunction);
+				startJunction->addRoad(road);
+				startJunction->updateOtherJunctionsOnMainRoad();
+				startJunction->drawJunction();
+			}
+			if (endRoad != NULL) {
+				endRoad->addJunction(lastPoint, endJunction);
+				endJunction->addRoad(road);
+				endJunction->updateOtherJunctionsOnMainRoad();
+				endJunction->drawJunction();
+			}
+			allRoads.push_back(road);
+			std::vector<AppObject*> changes;
+			//add changes
+			allChanges.push_back(Change{ road, changeCounter, DRAW_TWO_WAY_ONE_LANE });
+			if (endJunction != NULL && endJunction->numberOfRoads() == 2) allChanges.push_back(Change{ endJunction, changeCounter, DRAW_TWO_WAY_ONE_LANE });
+			if (startJunction != NULL && startJunction->numberOfRoads() == 2) allChanges.push_back(Change{ startJunction, changeCounter, DRAW_TWO_WAY_ONE_LANE });
 			changeCounter++;
 		}
 		else {
@@ -323,6 +429,7 @@ void DesignArea::drawRoad()
 	}
 	}
 	constructing = false;
+
 	if (allJunctions.size() == 5) allWays.push_back(findWay(*allJunctions[0], *allJunctions[4]));
 }
 
@@ -340,10 +447,14 @@ void DesignArea::repaintScene()
 			OneWayTwoLanes *road = (OneWayTwoLanes*)_road;
 			road->drawRoad();
 		}
+		case TwoWayRoadWithOneLane: {
+			TwoWayOneLane *road = (TwoWayOneLane*)_road;
+			road->drawRoad();
+		}
 		}
 	}
 	for (auto _junction : allJunctions) {
-		_junction->drawConnections();
+		_junction->drawJunction();
 	}
 	repainting = false;
 }
@@ -357,8 +468,18 @@ void DesignArea::undoChanges()
 		if ((*change).changeId == changeCounter - 1) {
 			if ((*change).appObject->getObjectType() == ROAD)
 				deleteRoad(dynamic_cast<Road*>((*change).appObject));
-			if ((*change).appObject->getObjectType() == JUNCTION)
-				deleteJunction(dynamic_cast<Junction*>((*change).appObject));
+			if ((*change).appObject->getObjectType() == JUNCTION) {
+				Junction* junction = dynamic_cast<Junction*>((*change).appObject);
+				if ((*change).action != DRAW_SPAWN_POINT)
+					deleteJunction(junction);
+				else {
+					if (junction->numberOfRoads() == 1)
+						deleteJunction(junction);
+					else
+						junction->notCarSpawn();
+				}
+
+			}
 			done = true;
 		}
 		else {
@@ -370,10 +491,18 @@ void DesignArea::undoChanges()
 	if (done) changeCounter--;
 }
 
+void DesignArea::validateConnections()
+{
+	for (auto junctionIt = allJunctions.begin(); junctionIt < allJunctions.end(); junctionIt++) {
+		(*junctionIt)->validateConnections();
+	}
+}
+
+//deprecated
 void DesignArea::addChanges(std::vector<AppObject*> addedObjects)
 {
 	for (auto objectIt = addedObjects.begin(); objectIt <= addedObjects.end(); objectIt++)
-		allChanges.push_back(Change{ (*objectIt), changeCounter });
+		allChanges.push_back(Change{ (*objectIt), changeCounter});
 	changeCounter++;
 }
 
@@ -405,9 +534,10 @@ bool DesignArea::checkIfCollidingWithOtherRoad(Road *actual, std::vector<int> ac
 
 void DesignArea::deleteJunction(Junction *deletedJunction)
 {
-	for(auto junctionIt = allJunctions.begin(); junctionIt <= allJunctions.end(); junctionIt++)
+	for(auto junctionIt = allJunctions.begin(); junctionIt < allJunctions.end(); junctionIt++)
 		if ((*junctionIt) == deletedJunction) {
 			(*junctionIt)->forgetAboutMe();
+			(*junctionIt)->updateOtherJunctionsOnMainRoad();
 			allJunctions.erase(junctionIt);
 			break;
 		}
@@ -415,7 +545,7 @@ void DesignArea::deleteJunction(Junction *deletedJunction)
 
 void DesignArea::deleteRoad(Road *deletedRoad)
 {
-	for(auto roadIt = allRoads.begin(); roadIt <= allRoads.end(); roadIt++)
+	for(auto roadIt = allRoads.begin(); roadIt < allRoads.end(); roadIt++)
 		if ((*roadIt)->id == deletedRoad->id) {
 			deletedRoad->deleteFromJunctions();
 			allRoads.erase(roadIt);

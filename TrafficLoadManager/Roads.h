@@ -12,10 +12,9 @@ enum ElementType {
 	OneWayRoadWithOneLane = 0,
 	OneWayRoadWithTwoLanes = 1,
 	TwoWayRoadWithOneLane = 2,
-	TwoWayRoadWithTwoLanes = 3,
-	CarSpawn = 4,
-	TrafficLights = 5,
-	JunctionConnection = 6
+	CarSpawn = 3,
+	TrafficLights = 4,
+	JunctionConnection = 5
 };
 
 struct vectors {
@@ -72,6 +71,7 @@ public:
 	virtual int getPointIndex(Point, LaneType) = 0;
 	virtual int getUsageOfLane(LaneType) = 0;
 	virtual void* getNextJunction(LaneType, int&) = 0;
+	virtual void* getPreviousJunction(LaneType, int&) = 0;
 	virtual void* searchForClosestJunction(Point, LaneType) = 0;
 	virtual void addJunction(Point, void*) = 0;
 	virtual void deleteJunction(void*) = 0;
@@ -81,6 +81,7 @@ public:
 	ElementType getRoadType();
 	ObjectType getObjectType();
 	QLineF getLineParams(LaneType);
+	vectors getParallelVectors();
 protected:
 	ElementType _roadType;
 	std::vector<Point> mid;

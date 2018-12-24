@@ -95,29 +95,30 @@ void OneWayOneLane::setRoad(QPointF firstPoint, QPointF lastPoint, bool endingTo
 void OneWayOneLane::drawRoad() //poprawiæ na jedn¹ drogê
 {
 	//fulfill with colour 2 polygons
-	/*glBegin(GL_POLYGON);
+	glBegin(GL_POLYGON);
 	glColor3f(1.0f, 1.0f, 1.0f);
-	glVertex2f(bermLParams._lastPoint.x(), bermLParams._lastPoint.y());
-	glVertex2f(bermLParams._firstPoint.x(), bermLParams._firstPoint.y());
-	glVertex2f(coreLineParams._firstPoint.x(), coreLineParams._firstPoint.y());
-	glVertex2f(coreLineParams._lastPoint.x(), coreLineParams._lastPoint.y());
-	glEnd;
+	glVertex2f(leftBerm.p2().x(), leftBerm.p2().y());
+	glVertex2f(leftBerm.p1().x(), leftBerm.p1().y());
+	glVertex2f(coreLine.p1().x(), coreLine.p1().y());
+	glVertex2f(coreLine.p2().x(), coreLine.p2().y());
+	glEnd();
 
 	glBegin(GL_POLYGON);
 	glColor3f(1.0f, 1.0f, 1.0f);
-	glVertex2f(coreLineParams._lastPoint.x(), coreLineParams._lastPoint.y());
-	glVertex2f(coreLineParams._firstPoint.x(), coreLineParams._firstPoint.y());
-	glVertex2f(bermRParams._firstPoint.x(), bermRParams._firstPoint.y());
-	glVertex2f(bermRParams._lastPoint.x(), bermRParams._lastPoint.y());
-	glEnd;*/
+	glVertex2f(coreLine.p1().x(), coreLine.p1().y());
+	glVertex2f(coreLine.p2().x(), coreLine.p2().y());
+	glVertex2f(rightBerm.p2().x(), rightBerm.p2().y());
+	glVertex2f(rightBerm.p1().x(), rightBerm.p1().y());
+	glEnd();
+	glFlush();
 
 	glLineWidth(3);
 
-	//main lane
-	glBegin(GL_LINES); 
-	glColor3f(0.0f, 0.0f, 1.0f);
-	glVertex2f(coreLine.p2().x(), coreLine.p2().y());
-	glVertex2f(coreLine.p1().x(), coreLine.p1().y());
+	//berm right
+	glBegin(GL_LINES);
+	glColor3f(1.0f, 0.0f, 0.0f);
+	glVertex2f(rightBerm.p2().x(), rightBerm.p2().y());
+	glVertex2f(rightBerm.p1().x(), rightBerm.p1().y());
 	glEnd();
 
 	//berm left
@@ -127,11 +128,11 @@ void OneWayOneLane::drawRoad() //poprawiæ na jedn¹ drogê
 	glVertex2f(leftBerm.p1().x(), leftBerm.p1().y());
 	glEnd();
 
-	//berm right
+	//main lane
 	glBegin(GL_LINES);
-	glColor3f(1.0f, 0.0f, 0.0f);
-	glVertex2f(rightBerm.p2().x(), rightBerm.p2().y());
-	glVertex2f(rightBerm.p1().x(), rightBerm.p1().y());
+	glColor3f(0.0f, 0.0f, 1.0f);
+	glVertex2f(coreLine.p2().x(), coreLine.p2().y());
+	glVertex2f(coreLine.p1().x(), coreLine.p1().y());
 	glEnd();
 }
 
@@ -172,7 +173,7 @@ Point OneWayOneLane::getLastPointOf(LaneType laneType)
 Point OneWayOneLane::getStartPointForConnection(int index, LaneType laneType)
 {
 	int range = -3;
-	for (int i = range; i < 0; i++) {
+	for (int i = range; i <= 0; i++) {
 		if (index + range < lane.size() - 1 && index + range >= 0) {
 			return lane[index + range].point;
 		}
@@ -183,7 +184,7 @@ Point OneWayOneLane::getStartPointForConnection(int index, LaneType laneType)
 Point OneWayOneLane::getEndPointForConnection(int index, LaneType laneType)
 {
 	int range = 3;
-	for (int i = range; i > 0; i--) {
+	for (int i = range; i >= 0; i--) {
 		if (index + range < lane.size() - 1 && index + range >= 0) {
 			return lane[index + range].point;
 		}
@@ -209,6 +210,19 @@ void* OneWayOneLane::getNextJunction(LaneType laneType, int &pointIdx)
 		pointIt++;
 		if ((*pointIt).junction != NULL) {
 			pointIdx = pointIt - (lane.begin() + pointIdx);
+			return (*pointIt).junction;
+		}
+	}
+	return NULL;
+}
+
+void * OneWayOneLane::getPreviousJunction(LaneType laneType, int &pointIdx)
+{
+	auto pointIt = lane.begin() + pointIdx;
+	while (pointIt > lane.begin()) {
+		pointIt--;
+		if ((*pointIt).junction != NULL) {
+			pointIdx = (lane.begin() + pointIdx) - pointIt;
 			return (*pointIt).junction;
 		}
 	}
