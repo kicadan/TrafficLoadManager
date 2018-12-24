@@ -3,6 +3,7 @@
 #include <QOpenGLFunctions>
 #include <QtOpenGL>
 #include <gl\GLU.h>
+#include <string>
 
 enum ObjectType {
 	ROAD = 0,

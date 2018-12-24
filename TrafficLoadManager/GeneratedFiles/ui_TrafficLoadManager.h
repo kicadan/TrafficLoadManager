@@ -148,6 +148,7 @@ public:
         QObject::connect(actionPo_czenia_na_skrzy_owaniu, SIGNAL(triggered()), designArea, SLOT(handleAction()));
         QObject::connect(actionPunkt_odradzania_pojazd_w, SIGNAL(triggered()), designArea, SLOT(handleAction()));
         QObject::connect(actionDroga_dwukierunkowa_z_jednym_pasem_ruchu, SIGNAL(triggered()), designArea, SLOT(handleAction()));
+        QObject::connect(actionPunkt_odradzania_pojazd_w_2, SIGNAL(triggered()), designArea, SLOT(handleAction()));
 
         QMetaObject::connectSlotsByName(TrafficLoadManagerClass);
     } // setupUi

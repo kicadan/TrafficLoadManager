@@ -335,7 +335,7 @@ void * TwoWayOneLane::getPreviousJunction(LaneType laneType, int &pointIdx)
 }
 
 void * TwoWayOneLane::searchForClosestJunction(Point point, LaneType laneType)
-{ //algorithm is searching for junctions untill it finds exactly ONE junction in a specified range
+{ //algorithm is searching for possibleJunctions untill it finds exactly ONE junction in a specified range
 	Point foundPoint(0, 0);
 	if (laneType == BACK_LANE) {
 		for (auto &existingPoint : backLane) {
@@ -354,23 +354,25 @@ void * TwoWayOneLane::searchForClosestJunction(Point point, LaneType laneType)
 		}
 	}
 	void *foundJunction = NULL, *resultJunction = NULL;
-	int foundJunctions = 0;
-	int range = -40;
-	if (point.x() != 0) {
-		int pointIdx = getPointIndex(foundPoint, laneType);
-		while (foundJunction == NULL && range <= 40 && pointIdx != -1) {
-			for (int i = range; i <= -range; i++) {
-				if (laneType == BACK_LANE) foundJunction = backLane[(pointIdx + i >= 0) && (pointIdx + i < backLane.size()) ? pointIdx + i : pointIdx].junction;
-				if (laneType == LANE) foundJunction = lane[(pointIdx + i >= 0) && (pointIdx + i < lane.size()) ? pointIdx + i : pointIdx].junction;
-				if (foundJunction != NULL) { foundJunctions++; resultJunction = foundJunction; }
-				foundJunction = NULL;
+	if (foundPoint.x() != 0) {
+		int foundJunctions = 0;
+		int range = -40;
+		if (point.x() != 0) {
+			int pointIdx = getPointIndex(foundPoint, laneType);
+			while (foundJunction == NULL && range <= 40 && pointIdx != -1) {
+				for (int i = range; i <= -range; i++) {
+					if (laneType == BACK_LANE) foundJunction = backLane[(pointIdx + i >= 0) && (pointIdx + i < backLane.size()) ? pointIdx + i : pointIdx].junction;
+					if (laneType == LANE) foundJunction = lane[(pointIdx + i >= 0) && (pointIdx + i < lane.size()) ? pointIdx + i : pointIdx].junction;
+					if (foundJunction != NULL) { foundJunctions++; resultJunction = foundJunction; }
+					foundJunction = NULL;
+				}
+				if (foundJunctions != 1) //if zero or more than 1 junction found; set it NULL and closer range
+					resultJunction = NULL;
+				else
+					break;
+				foundJunctions = 0;
+				range++;
 			}
-			if (foundJunctions != 1) //if zero or more than 1 junction found; set it NULL and closer range
-				resultJunction = NULL;
-			else
-				break;
-			foundJunctions = 0;
-			range++;
 		}
 	}
 	return resultJunction;

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>882</width>
-    <height>715</height>
+    <height>732</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -266,6 +266,22 @@
   </connection>
   <connection>
    <sender>actionDroga_dwukierunkowa_z_jednym_pasem_ruchu</sender>
+   <signal>triggered()</signal>
+   <receiver>designArea</receiver>
+   <slot>handleAction()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>440</x>
+     <y>370</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionPunkt_odradzania_pojazd_w_2</sender>
    <signal>triggered()</signal>
    <receiver>designArea</receiver>
    <slot>handleAction()</slot>

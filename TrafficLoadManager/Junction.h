@@ -20,6 +20,11 @@ struct Connection {
 	float red, green, blue;
 };
 
+struct CarSpawnSettings {
+	int carsPerMinute = 0;
+	std::vector<Junction*> junctions;
+};
+
 struct ConnectedRoad {
 	LaneType whichSide;
 	Road* road;
@@ -43,6 +48,7 @@ public:
 	void validateConnections();
 	void setAsCarSpawn();
 	void notCarSpawn();
+	void editCarSpawn(CarSpawnSettings);
 	void makeConnectionsForCarSpawn(); //makes connections if CarSpawn has 1 road in it
 	bool connectRoads(Road* roadFrom, LaneType laneFrom, Road* roadTo, LaneType laneTo);
 	bool isPoint(QPointF);
@@ -52,12 +58,15 @@ public:
 	int getId();
 	Point getPoint();
 	ObjectType getObjectType();
+	char* getName();
 	std::vector<int> getRoadIds();
 	std::vector<Connection> getConnectionsFrom(int);
 private:
-	Point point;
 	int id;
 	bool _isCarSpawn = false;
+	Point point;
+	CarSpawnSettings carSpawnSettings;
+	char name[100];
 	std::vector<Connection> connections;
 	std::vector<ConnectedRoad> roads;
 	std::vector<int> roadIds;

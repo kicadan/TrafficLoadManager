@@ -63,6 +63,9 @@
     <ClCompile Include="TwoWayOneLane.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="SpawnSettingsEditor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="TrafficLoadManager.h">
@@ -71,9 +74,15 @@
     <QtMoc Include="DesignArea.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="SpawnSettingsEditor.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="TrafficLoadManager.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="SpawnSettingsEditor.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -102,6 +111,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TwoWayOneLane.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_SpawnSettingsEditor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

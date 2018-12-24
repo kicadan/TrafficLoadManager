@@ -11,6 +11,7 @@
 #include <QPoint>
 #include <gl\GLU.h>
 #include <algorithm>
+#include "SpawnSettingsEditor.h"
 #include "Roads.h"
 #include "OneWayOneLane.h"
 #include "OneWayTwoLanes.h"
@@ -24,7 +25,8 @@ enum Action {
 	DRAW_ONE_WAY_TWO_LANES = 4,
 	DRAW_TWO_WAY_ONE_LANE = 5,
 	DRAW_SPAWN_POINT = 6,
-	MAKE_CONNECTION = 7
+	EDIT_SPAWN_POINT = 7,
+	MAKE_CONNECTION = 8
 };
 
 struct Change {
@@ -73,6 +75,7 @@ private:
 	QPointF _lastPoint;
 	QPointF _firstPoint;
 	bool constructing = false;
+	bool editing = false;
 	bool repainting = false;
 	QImage image;
 	double x = 10;
@@ -85,6 +88,7 @@ private:
 	void makeConnection();
 	void renewConnectionsForSpawnPoints(); //deprecated
 	void addCarSpawn();
+	void editCarSpawn();
 	void repaintScene();
 	void undoChanges();
 	void validateConnections();

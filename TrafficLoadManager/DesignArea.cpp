@@ -1,4 +1,5 @@
 #include "DesignArea.h"
+#include "SpawnSettingsEditor.h"
 
 DesignArea::DesignArea(QWidget *parent) : QOpenGLWidget(parent)
 {/*
@@ -38,6 +39,9 @@ void DesignArea::handleAction() {
 	else if (action == "actionPunkt_odradzania_pojazd_w") {
 		dispatchAction(DRAW_SPAWN_POINT);
 	}
+	else if (action == "actionPunkt_odradzania_pojazd_w_2") {
+		dispatchAction(EDIT_SPAWN_POINT);
+	}
 	else if (action == "actionPo_czenia_na_skrzy_owaniu") {
 		dispatchAction(MAKE_CONNECTION);
 	}
@@ -45,6 +49,9 @@ void DesignArea::handleAction() {
 
 void DesignArea::dispatchAction(Action menuAction)
 {
+	editing = false;
+	constructing = false;
+	repainting = false;
 	switch (menuAction) {
 	case UNDO: {
 		undoChanges();
@@ -67,6 +74,11 @@ void DesignArea::dispatchAction(Action menuAction)
 	}
 	case DRAW_SPAWN_POINT: {
 		currentObjectBrush = CarSpawn;
+		break;
+	}
+	case EDIT_SPAWN_POINT: {
+		currentObjectBrush = CarSpawn;
+		editing = true;
 		break;
 	}
 	case MAKE_CONNECTION: {
@@ -167,7 +179,10 @@ void DesignArea::drawElement()
 		break;
 	}
 	case CarSpawn: {
-		addCarSpawn();
+		if (!editing)
+			addCarSpawn();
+		else
+			editCarSpawn();
 		break;
 	}
 	case JunctionConnection: {
@@ -254,6 +269,35 @@ void DesignArea::addCarSpawn()
 		junction->drawJunction();
 	}
 	constructing = false;
+}
+
+void DesignArea::editCarSpawn()
+{
+	constructing = false;
+	Road* startRoad = NULL;
+	Junction* junction = NULL;
+	Point point(0, 0);
+	//search all roads to find point
+	for (auto road : this->allRoads)
+	{
+		point = road->searchPoint(firstPoint);
+		if (point.x() != 0 && startRoad == NULL) {
+			startRoad = road;
+			_firstPoint = QPointF(point.x(), point.y());
+			firstPoint = point;
+			break;
+		}
+	}
+	if (startRoad != NULL) {
+		junction = (Junction*)startRoad->searchForClosestJunction(point, startRoad->getRoadType() == OneWayRoadWithOneLane || startRoad->getRoadType() == TwoWayRoadWithOneLane ? LANE : LEFT_LANE);
+		//open dialog
+		if (junction != NULL && junction->isCarSpawn()) {
+			SpawnSettingsEditor spawnEditor(this, junction);
+			spawnEditor.setJunctionVector(allJunctions);
+			spawnEditor.setModal(true);
+			spawnEditor.exec();
+		}
+	}
 }
 
 void DesignArea::drawRoad()

@@ -230,7 +230,7 @@ void * OneWayOneLane::getPreviousJunction(LaneType laneType, int &pointIdx)
 }
 
 void * OneWayOneLane::searchForClosestJunction(Point point, LaneType)
-{ //algorithm is searching for junctions untill it finds exactly ONE junction in a specified range
+{ //algorithm is searching for possibleJunctions untill it finds exactly ONE junction in a specified range
 	void *foundJunction = NULL, *resultJunction = NULL;
 	int foundJunctions = 0;
 	int range = -40;

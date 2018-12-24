@@ -16,6 +16,9 @@ Junction::Junction(Point _point, Road* mainRoad, int id) : AppObject(JUNCTION)
 	this->id = id;
 	roads.push_back(ConnectedRoad{ LANE, mainRoad }); //main actualRoad could be lane, the rest have right or left berm param
 	roadIds.push_back(mainRoad->id);
+	char name[100];
+	sprintf(name, "Wêze³ numer: %d", id);
+	strcpy(this->name, name);
 }
 
 
@@ -149,6 +152,11 @@ ObjectType Junction::getObjectType()
 	return _objectType;
 }
 
+char* Junction::getName()
+{
+	return name;
+}
+
 std::vector<int> Junction::getRoadIds()
 {
 	return roadIds;
@@ -225,6 +233,11 @@ void Junction::setAsCarSpawn()
 void Junction::notCarSpawn()
 {
 	_isCarSpawn = false;
+}
+
+void Junction::editCarSpawn(CarSpawnSettings settings)
+{
+	carSpawnSettings = settings;
 }
 
 void Junction::makeConnectionsForCarSpawn()
