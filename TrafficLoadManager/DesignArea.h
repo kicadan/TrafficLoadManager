@@ -89,7 +89,7 @@ private:
 
 	//void drawLineTo(const QPoint &endPoint);
 	void updateNode(Junction, Junction, Connection);
-	void recursiveDijkstra(std::vector<Junction>, Connection, Junction);
+	void recursiveDijkstra(std::vector<Junction>, Connection, int);
 	void drawElement();
 	void drawRoad();
 	void makeConnection();

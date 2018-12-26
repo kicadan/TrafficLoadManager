@@ -828,12 +828,12 @@ Way DesignArea::findWay(Junction startJunction, Junction endJunction) {
 	passedNodes.push_back(startJunction);
 	for (auto connIt = connections.begin(); connIt < connections.end(); connIt++) {
 		updateNode(startJunction, *(*connIt).nextJunction, *connIt);
-		recursiveDijkstra(passedNodes, *connIt, endJunction);
+		recursiveDijkstra(passedNodes, *connIt, endJunction.getId());
 	}
 	return theWay;
 }
 
-void DesignArea::recursiveDijkstra(std::vector<Junction> passedNodes, Connection previousConnection, Junction endJunction) {
+void DesignArea::recursiveDijkstra(std::vector<Junction> passedNodes, Connection previousConnection, int endJunctionId) {
 	std::vector<Connection> connections;
 	Junction actual = *previousConnection.nextJunction;
 	//dont go further if u were in this node in this recursion before (it shouldn't be closer cause recursion still adds more cost in deeper steps)
@@ -841,14 +841,14 @@ void DesignArea::recursiveDijkstra(std::vector<Junction> passedNodes, Connection
 		if ((*junctionIt).getId() == actual.getId())
 			return;
 	//if it's finish - end recursion
-	if (actual.getId() == endJunction.getId())
+	if (actual.getId() == endJunctionId)
 		return;
 	connections = actual.getConnectionsFrom(-1); //next->getConnectionsFrom(-1)
 	//deleteNode(passedNodes, actual);
 	for (auto connIt = connections.begin(); connIt < connections.end(); connIt++) {
 		if ((*connIt).previousRoad->id == previousConnection.nextRoad->id) {
 			updateNode(actual, *(*connIt).nextJunction, *connIt);
-			recursiveDijkstra(passedNodes, *connIt, endJunction);
+			recursiveDijkstra(passedNodes, *connIt, endJunctionId);
 		}
 	}
 }
