@@ -56,7 +56,7 @@ public:
     {
         if (TrafficLoadManagerClass->objectName().isEmpty())
             TrafficLoadManagerClass->setObjectName(QStringLiteral("TrafficLoadManagerClass"));
-        TrafficLoadManagerClass->resize(882, 715);
+        TrafficLoadManagerClass->resize(882, 732);
         actionDroga_jednokierunkowa_z_jednym_pasem = new QAction(TrafficLoadManagerClass);
         actionDroga_jednokierunkowa_z_jednym_pasem->setObjectName(QStringLiteral("actionDroga_jednokierunkowa_z_jednym_pasem"));
         actionDroga_jednokierunkowa_z_dwoma_pasami_ruchu = new QAction(TrafficLoadManagerClass);

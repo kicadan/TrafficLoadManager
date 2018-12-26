@@ -14,7 +14,8 @@ public:
 	SpawnSettingsEditor(QWidget *parent, Junction*);
 	~SpawnSettingsEditor();
 
-	void setJunctionVector(std::vector<Junction*>);
+	void setJunctionComboBox(std::vector<Junction*>);
+	void setSpawnEditorFields();
 
 private:
 	char name[100];
@@ -25,10 +26,13 @@ private:
 	std::vector<Junction*> tableJunctions;
 	QTextCodec *codec;
 
+	std::vector<Junction*> differentialBetweenTwoJunctionVectors(std::vector<Junction*>, std::vector<Junction*>);
 	void putJunctionInTable(Junction*);
+	void deleteJunctionFromTable(int);
 
 public slots:
 	void addToTableAction();
+	void deleteFromTableAction(int, int);
 	void acceptButton();
 	void rejectButton();
 };

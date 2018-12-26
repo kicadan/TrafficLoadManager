@@ -42,11 +42,15 @@ struct Way {
 	int length;
 };
 
+struct Previous {
+	int cost = 999999;
+	Connection connection;
+	Junction junction;
+};
+
 struct Node {
 	Junction junction;
-	int cost = 999999;
-	Junction previousJunction;
-	std::vector<Connection> connections;
+	std::vector<Previous> previousConnections;
 };
 
 class DesignArea : public QOpenGLWidget
@@ -66,6 +70,7 @@ private:
 	std::vector<Road*> allRoads;
 	std::vector<Junction*> allJunctions;
 	std::vector<Change> allChanges;
+	std::vector<Node> allNodes;
 	std::vector<Way> allWays;
 	int changeCounter = 0;
 	QTimer timer;
@@ -83,9 +88,12 @@ private:
 	GLUquadric * object;
 
 	//void drawLineTo(const QPoint &endPoint);
+	void updateNode(Junction, Junction, Connection);
+	void recursiveDijkstra(std::vector<Junction>, Connection, Junction);
 	void drawElement();
 	void drawRoad();
 	void makeConnection();
+	void updateWays();
 	void renewConnectionsForSpawnPoints(); //deprecated
 	void addCarSpawn();
 	void editCarSpawn();

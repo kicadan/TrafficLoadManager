@@ -88,6 +88,19 @@ void Junction::deleteRoad(Road * deletedRoad)
 	}
 }
 
+void Junction::addConnection(Connection added)
+{
+	for (auto connectionIt = connections.begin(); connectionIt < connections.end(); connectionIt++) {
+		if ((*connectionIt).previousRoad->id == added.previousRoad->id && (*connectionIt).previousLaneType == added.previousLaneType
+						&& (*connectionIt).nextRoad->id == added.nextRoad->id && (*connectionIt).nextLaneType == added.nextLaneType) { //if the same connection then update
+			(*connectionIt) = added;
+			return;
+		}
+	}
+	//if couldn't be updated
+	connections.push_back(added);
+}
+
 void Junction::updateConnectionsForRoad(int roadId)
 {
 	int pointIdx;
@@ -132,7 +145,7 @@ bool Junction::isCarSpawn()
 	return _isCarSpawn;
 }
 
-int Junction::numberOfRoads()
+int Junction::getNumberOfRoads()
 {
 	return roadIds.size();
 }
@@ -150,6 +163,14 @@ Point Junction::getPoint()
 ObjectType Junction::getObjectType()
 {
 	return _objectType;
+}
+
+CarSpawnSettings Junction::getCarSpawnSettings()
+{
+	if (_isCarSpawn)
+		return carSpawnSettings;
+	else
+		return CarSpawnSettings();
 }
 
 char* Junction::getName()
@@ -196,7 +217,7 @@ bool Junction::connectRoads(Road* roadFrom, LaneType laneFrom, Road* roadTo, Lan
 	if (newConnection.nextJunction != NULL) {
 		newConnection.red = red, newConnection.green = green, newConnection.blue = blue;
 		red = (red + 0.15) <= 1 ? red + 0.15 : red + 0.15 - 1; green = (green + 0.25) <= 1 ? green + 0.25 : green + 0.25 - 1; blue = (blue + 0.35) <= 1 ? blue + 0.35 : blue + 0.35 - 1;
-		connections.push_back(newConnection);
+		addConnection(newConnection);
 		drawConnection(getPointsToDrawConnection(connections[connections.size() - 1]), newConnection.red, newConnection.green, newConnection.blue);
 		return true;
 	}
@@ -225,6 +246,11 @@ void Junction::validateConnections()
 	}
 }
 
+void Junction::setName(char *name)
+{
+	strcpy(this->name, name);
+}
+
 void Junction::setAsCarSpawn()
 {
 	_isCarSpawn = true;
@@ -240,64 +266,74 @@ void Junction::editCarSpawn(CarSpawnSettings settings)
 	carSpawnSettings = settings;
 }
 
+void Junction::forgetJunction(Junction *deleted)
+{
+	for (auto junctionIt = carSpawnSettings.destinations.begin(); junctionIt < carSpawnSettings.destinations.end(); junctionIt++)
+		if ((*junctionIt)->getId() == deleted->getId()) {
+			carSpawnSettings.destinations.erase(junctionIt);
+			break;
+		}
+}
+
 void Junction::makeConnectionsForCarSpawn()
 {
 	Road* road;
-	if (roads.size() == 1 && _isCarSpawn) {
-		connections.clear();
-		Connection newConnection;
-		road = roads[0].road;
-		int pointIndexOnTheRoad;
-		switch (road->getRoadType()) {
-		case OneWayRoadWithOneLane: case TwoWayRoadWithOneLane: {
-			pointIndexOnTheRoad = road->getPointIndex(point, MID);
-			newConnection.nextPoint = pointIndexOnTheRoad;
-			newConnection.nextJunction = (Junction*)road->getNextJunction(LANE, pointIndexOnTheRoad);
-			newConnection.distanceToNextJunction = pointIndexOnTheRoad;
-			newConnection.previousLaneType = LANE;
-			newConnection.previousRoad = road;
-			newConnection.nextLaneType = LANE;
-			newConnection.nextRoad = road;
-			newConnection.red = 1; newConnection.green = 1; newConnection.blue = 1;
-			if(newConnection.nextJunction != NULL) connections.push_back(newConnection);
-			if (road->getRoadType() == TwoWayRoadWithOneLane) {
+	if (_isCarSpawn) {
+		for (auto roadIt = roads.begin(); roadIt < roads.end(); roadIt++) {
+			Connection newConnection;
+			road = (*roadIt).road;
+			int pointIndexOnTheRoad;
+			switch (road->getRoadType()) {
+			case OneWayRoadWithOneLane: case TwoWayRoadWithOneLane: {
 				pointIndexOnTheRoad = road->getPointIndex(point, MID);
 				newConnection.nextPoint = pointIndexOnTheRoad;
-				newConnection.nextJunction = (Junction*)road->getNextJunction(BACK_LANE, pointIndexOnTheRoad);
+				newConnection.nextJunction = (Junction*)road->getNextJunction(LANE, pointIndexOnTheRoad);
 				newConnection.distanceToNextJunction = pointIndexOnTheRoad;
-				newConnection.previousLaneType = BACK_LANE;
+				newConnection.previousLaneType = LANE;
 				newConnection.previousRoad = road;
-				newConnection.nextLaneType = BACK_LANE;
+				newConnection.nextLaneType = LANE;
 				newConnection.nextRoad = road;
 				newConnection.red = 1; newConnection.green = 1; newConnection.blue = 1;
-				if (newConnection.nextJunction != NULL) connections.push_back(newConnection);
+				if (newConnection.nextJunction != NULL) addConnection(newConnection);
+				if (road->getRoadType() == TwoWayRoadWithOneLane) {
+					pointIndexOnTheRoad = road->getPointIndex(point, MID);
+					newConnection.nextPoint = pointIndexOnTheRoad;
+					newConnection.nextJunction = (Junction*)road->getNextJunction(BACK_LANE, pointIndexOnTheRoad);
+					newConnection.distanceToNextJunction = pointIndexOnTheRoad;
+					newConnection.previousLaneType = BACK_LANE;
+					newConnection.previousRoad = road;
+					newConnection.nextLaneType = BACK_LANE;
+					newConnection.nextRoad = road;
+					newConnection.red = 1; newConnection.green = 1; newConnection.blue = 1;
+					if (newConnection.nextJunction != NULL) addConnection(newConnection);
+				}
+				break;
 			}
-			break;
-		}
-		case OneWayRoadWithTwoLanes: {
-			//leftLane
-			pointIndexOnTheRoad = road->getPointIndex(point, MID);
-			newConnection.nextPoint = pointIndexOnTheRoad;
-			newConnection.nextJunction = (Junction*)road->getNextJunction(LEFT_LANE, pointIndexOnTheRoad);
-			newConnection.distanceToNextJunction = pointIndexOnTheRoad;
-			newConnection.previousLaneType = LEFT_LANE;
-			newConnection.previousRoad = road;
-			newConnection.nextLaneType = LEFT_LANE;
-			newConnection.nextRoad = road;
-			newConnection.red = 1; newConnection.green = 1; newConnection.blue = 1;
-			if (newConnection.nextJunction != NULL) connections.push_back(newConnection);
-			//right lane
-			pointIndexOnTheRoad = road->getPointIndex(point, MID);
-			newConnection.nextPoint = pointIndexOnTheRoad;
-			newConnection.nextJunction = (Junction*)road->getNextJunction(RIGHT_LANE, pointIndexOnTheRoad);
-			newConnection.distanceToNextJunction = pointIndexOnTheRoad;
-			newConnection.previousLaneType = RIGHT_LANE;
-			newConnection.previousRoad = road;
-			newConnection.nextLaneType = RIGHT_LANE;
-			newConnection.nextRoad = road;
-			newConnection.red = 1; newConnection.green = 1; newConnection.blue = 1;
-			if (newConnection.nextJunction != NULL) connections.push_back(newConnection);
-		}
+			case OneWayRoadWithTwoLanes: {
+				//leftLane
+				pointIndexOnTheRoad = road->getPointIndex(point, MID);
+				newConnection.nextPoint = pointIndexOnTheRoad;
+				newConnection.nextJunction = (Junction*)road->getNextJunction(LEFT_LANE, pointIndexOnTheRoad);
+				newConnection.distanceToNextJunction = pointIndexOnTheRoad;
+				newConnection.previousLaneType = LEFT_LANE;
+				newConnection.previousRoad = road;
+				newConnection.nextLaneType = LEFT_LANE;
+				newConnection.nextRoad = road;
+				newConnection.red = 1; newConnection.green = 1; newConnection.blue = 1;
+				if (newConnection.nextJunction != NULL) addConnection(newConnection);
+				//right lane
+				pointIndexOnTheRoad = road->getPointIndex(point, MID);
+				newConnection.nextPoint = pointIndexOnTheRoad;
+				newConnection.nextJunction = (Junction*)road->getNextJunction(RIGHT_LANE, pointIndexOnTheRoad);
+				newConnection.distanceToNextJunction = pointIndexOnTheRoad;
+				newConnection.previousLaneType = RIGHT_LANE;
+				newConnection.previousRoad = road;
+				newConnection.nextLaneType = RIGHT_LANE;
+				newConnection.nextRoad = road;
+				newConnection.red = 1; newConnection.green = 1; newConnection.blue = 1;
+				if (newConnection.nextJunction != NULL) addConnection(newConnection);
+			}
+			}
 		}
 	}
 }
@@ -319,7 +355,7 @@ void Junction::connectToOneWayOneLane(Road *newRoad, LaneType previousType, Road
 		newConnection.distanceToNextJunction = pointIndexOnTheRoad;
 	}
 	if (newConnection.nextJunction != NULL)
-		connections.push_back(newConnection);
+		addConnection(newConnection);
 }
 
 //deprecated
@@ -334,7 +370,7 @@ void Junction::updateOtherJunctionsOnMainRoad()
 	if (mainRoad->getRoadType() == TwoWayRoadWithOneLane) {
 		Junction* nextJunction = (Junction*)mainRoad->getNextJunction(LANE, pointIdx);
 		if (nextJunction != NULL) {
-			if (nextJunction->isCarSpawn() && nextJunction->numberOfRoads() == 1)
+			if (nextJunction->isCarSpawn())
 				nextJunction->makeConnectionsForCarSpawn();
 			else {
 				nextJunction->updateConnectionsForRoad(mainRoad->id);
@@ -344,7 +380,7 @@ void Junction::updateOtherJunctionsOnMainRoad()
 	pointIdx = mainRoad->getPointIndex(point, MID);
 	Junction* previousJunction = (Junction*)mainRoad->getPreviousJunction( mainRoad->getRoadType() == TwoWayRoadWithOneLane || mainRoad->getRoadType() == OneWayRoadWithOneLane ? LANE : LEFT_LANE, pointIdx );
 	if (previousJunction != NULL) {
-		if (previousJunction->isCarSpawn() && previousJunction->numberOfRoads() == 1)
+		if (previousJunction->isCarSpawn())
 			previousJunction->makeConnectionsForCarSpawn();
 		else {
 			previousJunction->updateConnectionsForRoad(mainRoad->id);

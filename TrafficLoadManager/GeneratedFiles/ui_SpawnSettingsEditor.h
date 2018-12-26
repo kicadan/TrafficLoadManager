@@ -18,6 +18,7 @@
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLabel>
+#include <QtWidgets/QLineEdit>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QSpinBox>
 #include <QtWidgets/QTableWidget>
@@ -30,7 +31,7 @@ class Ui_SpawnSettingsEditor
 public:
     QVBoxLayout *verticalLayout_2;
     QVBoxLayout *verticalLayout;
-    QLabel *label_Actual;
+    QLineEdit *lineEdit_Actual;
     QHBoxLayout *horizontalLayout_5;
     QHBoxLayout *horizontalLayout_3;
     QLabel *label;
@@ -58,17 +59,15 @@ public:
         verticalLayout_2->setObjectName(QStringLiteral("verticalLayout_2"));
         verticalLayout = new QVBoxLayout();
         verticalLayout->setObjectName(QStringLiteral("verticalLayout"));
-        label_Actual = new QLabel(SpawnSettingsEditor);
-        label_Actual->setObjectName(QStringLiteral("label_Actual"));
+        lineEdit_Actual = new QLineEdit(SpawnSettingsEditor);
+        lineEdit_Actual->setObjectName(QStringLiteral("lineEdit_Actual"));
         QFont font;
         font.setPointSize(16);
-        label_Actual->setFont(font);
-        label_Actual->setCursor(QCursor(Qt::IBeamCursor));
-        label_Actual->setTextFormat(Qt::AutoText);
-        label_Actual->setAlignment(Qt::AlignCenter);
-        label_Actual->setTextInteractionFlags(Qt::TextEditorInteraction);
+        lineEdit_Actual->setFont(font);
+        lineEdit_Actual->setAutoFillBackground(true);
+        lineEdit_Actual->setAlignment(Qt::AlignCenter);
 
-        verticalLayout->addWidget(label_Actual);
+        verticalLayout->addWidget(lineEdit_Actual);
 
         horizontalLayout_5 = new QHBoxLayout();
         horizontalLayout_5->setObjectName(QStringLiteral("horizontalLayout_5"));
@@ -84,6 +83,7 @@ public:
         gridLayout->setObjectName(QStringLiteral("gridLayout"));
         spinBox_cars = new QSpinBox(SpawnSettingsEditor);
         spinBox_cars->setObjectName(QStringLiteral("spinBox_cars"));
+        spinBox_cars->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
         spinBox_cars->setMaximum(60);
 
         gridLayout->addWidget(spinBox_cars, 0, 0, 1, 1);
@@ -109,6 +109,9 @@ public:
 
         spinBox_smart_drivers = new QSpinBox(SpawnSettingsEditor);
         spinBox_smart_drivers->setObjectName(QStringLiteral("spinBox_smart_drivers"));
+        spinBox_smart_drivers->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
+        spinBox_smart_drivers->setMaximum(100);
+        spinBox_smart_drivers->setSingleStep(10);
 
         horizontalLayout_2->addWidget(spinBox_smart_drivers);
 
@@ -168,6 +171,7 @@ public:
         QObject::connect(buttonBox, SIGNAL(accepted()), SpawnSettingsEditor, SLOT(acceptButton()));
         QObject::connect(buttonBox, SIGNAL(rejected()), SpawnSettingsEditor, SLOT(rejectButton()));
         QObject::connect(pushButton_add, SIGNAL(pressed()), SpawnSettingsEditor, SLOT(addToTableAction()));
+        QObject::connect(tableWidget, SIGNAL(cellDoubleClicked(int,int)), SpawnSettingsEditor, SLOT(deleteFromTableAction(int,int)));
 
         QMetaObject::connectSlotsByName(SpawnSettingsEditor);
     } // setupUi
@@ -175,7 +179,7 @@ public:
     void retranslateUi(QDialog *SpawnSettingsEditor)
     {
         SpawnSettingsEditor->setWindowTitle(QApplication::translate("SpawnSettingsEditor", "Edytor punktu odradzania pojazd\303\263w", nullptr));
-        label_Actual->setText(QApplication::translate("SpawnSettingsEditor", "W\304\231ze\305\202", nullptr));
+        lineEdit_Actual->setText(QApplication::translate("SpawnSettingsEditor", "W\304\231ze\305\202", nullptr));
         label->setText(QApplication::translate("SpawnSettingsEditor", "Liczba pojazd\303\263w na minut\304\231", nullptr));
         label_4->setText(QApplication::translate("SpawnSettingsEditor", "Procent kierowc\303\263w z GPS", nullptr));
         label_3->setText(QApplication::translate("SpawnSettingsEditor", "Dost\304\231pne w\304\231z\305\202y", nullptr));

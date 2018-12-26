@@ -221,16 +221,16 @@ Point OneWayTwoLanes::getStartPointForConnection(int index, LaneType laneType)
 	if (laneType == RIGHT_LANE) {
 		int range = -3;
 		for (int i = range; i <= 0; i++) {
-			if (index + range < rightLane.size() - 1 && index + range >= 0) {
-				return rightLane[index + range].point;
+			if (index + i < rightLane.size() - 1 && index + i >= 0) {
+				return rightLane[index + i].point;
 			}
 		}
 	}
 	else if (laneType == LEFT_LANE) {
 		int range = -3;
 		for (int i = range; i <= 0; i++) {
-			if (index + range < leftLane.size() - 1 && index + range >= 0) {
-				return leftLane[index + range].point;
+			if (index + i < leftLane.size() - 1 && index + i >= 0) {
+				return leftLane[index + i].point;
 			}
 		}
 	}

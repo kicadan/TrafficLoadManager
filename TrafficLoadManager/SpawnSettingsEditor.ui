@@ -23,26 +23,20 @@
    <item>
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
-      <widget class="QLabel" name="label_Actual">
+      <widget class="QLineEdit" name="lineEdit_Actual">
        <property name="font">
         <font>
          <pointsize>16</pointsize>
         </font>
        </property>
-       <property name="cursor">
-        <cursorShape>IBeamCursor</cursorShape>
+       <property name="autoFillBackground">
+        <bool>true</bool>
        </property>
        <property name="text">
         <string>Węzeł</string>
        </property>
-       <property name="textFormat">
-        <enum>Qt::AutoText</enum>
-       </property>
        <property name="alignment">
         <set>Qt::AlignCenter</set>
-       </property>
-       <property name="textInteractionFlags">
-        <set>Qt::TextEditorInteraction</set>
        </property>
       </widget>
      </item>
@@ -64,6 +58,9 @@
           <layout class="QGridLayout" name="gridLayout">
            <item row="0" column="0">
             <widget class="QSpinBox" name="spinBox_cars">
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
              <property name="maximum">
               <number>60</number>
              </property>
@@ -90,7 +87,17 @@
           </layout>
          </item>
          <item>
-          <widget class="QSpinBox" name="spinBox_smart_drivers"/>
+          <widget class="QSpinBox" name="spinBox_smart_drivers">
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="maximum">
+            <number>100</number>
+           </property>
+           <property name="singleStep">
+            <number>10</number>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>
@@ -212,10 +219,28 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>tableWidget</sender>
+   <signal>cellDoubleClicked(int,int)</signal>
+   <receiver>SpawnSettingsEditor</receiver>
+   <slot>deleteFromTableAction(int,int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>399</x>
+     <y>215</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>199</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>addToTableAction()</slot>
   <slot>acceptButton()</slot>
   <slot>rejectButton()</slot>
+  <slot>nameChanged(QString)</slot>
+  <slot>deleteFromTableAction(int,int)</slot>
  </slots>
 </ui>

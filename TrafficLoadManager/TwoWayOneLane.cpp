@@ -221,16 +221,16 @@ Point TwoWayOneLane::getStartPointForConnection(int index, LaneType laneType)
 	if (laneType == LANE) {
 		int range = -3;
 		for (int i = range; i <= 0; i++) {
-			if (index + range < lane.size() - 1 && index + range >= 0) {
-				return lane[index + range].point;
+			if (index + i < lane.size() - 1 && index + i >= 0) {
+				return lane[index + i].point;
 			}
 		}
 	}
 	else if (laneType == BACK_LANE) {
 		int range = 3;
 		for (int i = range; i >= 0; i--) {
-			if (index + range < backLane.size() - 1 && index + range >= 0) {
-				return backLane[index + range].point;
+			if (index + i < backLane.size() - 1 && index + i >= 0) {
+				return backLane[index + i].point;
 			}
 		}
 	}
@@ -242,16 +242,16 @@ Point TwoWayOneLane::getEndPointForConnection(int index, LaneType laneType)
 	if (laneType == LANE) {
 		int range = 3;
 		for (int i = range; i >= 0; i--) {
-			if (index + range < lane.size() - 1 && index + range >= 0) {
-				return lane[index + range].point;
+			if (index + i < lane.size() - 1 && index + i >= 0) {
+				return lane[index + i].point;
 			}
 		}
 	}
 	else if (laneType == BACK_LANE) {
 		int range = -3;
 		for (int i = range; i <= 0; i++) {
-			if (index + range < backLane.size() - 1 && index + range >= 0) {
-				return backLane[index + range].point;
+			if (index + i < backLane.size() - 1 && index + i >= 0) {
+				return backLane[index + i].point;
 			}
 		}
 	}

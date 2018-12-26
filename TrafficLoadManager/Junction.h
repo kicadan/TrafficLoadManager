@@ -22,7 +22,8 @@ struct Connection {
 
 struct CarSpawnSettings {
 	int carsPerMinute = 0;
-	std::vector<Junction*> junctions;
+	int smartDrivers = 0;
+	std::vector<Junction*> destinations;
 };
 
 struct ConnectedRoad {
@@ -38,26 +39,31 @@ public:
 	Junction(int);
 	Junction(Point, Road*, int);
 	~Junction();
+
 	QPointF returnCrossPointsForBerm(QLineF, QPointF);
 	void addRoad(Road*);
 	void deleteRoad(Road*);
+	void addConnection(Connection);
 	void updateConnectionsForRoad(int);
 	void updateOtherJunctionsOnMainRoad();
 	void drawJunction();
 	void forgetAboutMe();
 	void validateConnections();
+	void setName(char*);
 	void setAsCarSpawn();
 	void notCarSpawn();
 	void editCarSpawn(CarSpawnSettings);
+	void forgetJunction(Junction*);
 	void makeConnectionsForCarSpawn(); //makes connections if CarSpawn has 1 road in it
 	bool connectRoads(Road* roadFrom, LaneType laneFrom, Road* roadTo, LaneType laneTo);
 	bool isPoint(QPointF);
 	bool isPoint(Point);
 	bool isCarSpawn();
-	int numberOfRoads();
+	int getNumberOfRoads();
 	int getId();
 	Point getPoint();
 	ObjectType getObjectType();
+	CarSpawnSettings getCarSpawnSettings();
 	char* getName();
 	std::vector<int> getRoadIds();
 	std::vector<Connection> getConnectionsFrom(int);

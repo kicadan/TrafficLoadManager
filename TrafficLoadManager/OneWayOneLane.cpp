@@ -174,8 +174,8 @@ Point OneWayOneLane::getStartPointForConnection(int index, LaneType laneType)
 {
 	int range = -3;
 	for (int i = range; i <= 0; i++) {
-		if (index + range < lane.size() - 1 && index + range >= 0) {
-			return lane[index + range].point;
+		if (index + i < lane.size() - 1 && index + i >= 0) {
+			return lane[index + i].point;
 		}
 	}
 	return Point(0, 0);
@@ -185,8 +185,8 @@ Point OneWayOneLane::getEndPointForConnection(int index, LaneType laneType)
 {
 	int range = 3;
 	for (int i = range; i >= 0; i--) {
-		if (index + range < lane.size() - 1 && index + range >= 0) {
-			return lane[index + range].point;
+		if (index + i < lane.size() - 1 && index + i >= 0) {
+			return lane[index + i].point;
 		}
 	}
 	return Point(0, 0);
