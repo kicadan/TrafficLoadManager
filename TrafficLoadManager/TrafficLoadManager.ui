@@ -52,13 +52,13 @@
      <addaction name="actionDroga_jednokierunkowa_z_dwoma_pasami_ruchu"/>
      <addaction name="actionDroga_dwukierunkowa_z_jednym_pasem_ruchu"/>
      <addaction name="actionPunkt_odradzania_pojazd_w"/>
-     <addaction name="action_wiat_a"/>
+     <addaction name="action_sygnalizacja"/>
     </widget>
     <widget class="QMenu" name="menuEdytuj">
      <property name="title">
       <string>Edytuj</string>
      </property>
-     <addaction name="action_wiat_a_drogowe"/>
+     <addaction name="action_sygnalizacja_edytuj"/>
      <addaction name="actionPunkt_odradzania_pojazd_w_2"/>
      <addaction name="actionPo_czenia_na_skrzy_owaniu"/>
     </widget>
@@ -143,12 +143,12 @@
     <string>Punkt odradzania pojazdów</string>
    </property>
   </action>
-  <action name="action_wiat_a">
+  <action name="action_sygnalizacja">
    <property name="text">
     <string>Sygnalizacja świetlna</string>
    </property>
   </action>
-  <action name="action_wiat_a_drogowe">
+  <action name="action_sygnalizacja_edytuj">
    <property name="text">
     <string>Sygnalizacja świetlna</string>
    </property>
@@ -293,6 +293,22 @@
     <hint type="destinationlabel">
      <x>440</x>
      <y>370</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>action_sygnalizacja</sender>
+   <signal>triggered()</signal>
+   <receiver>designArea</receiver>
+   <slot>handleAction()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>440</x>
+     <y>378</y>
     </hint>
    </hints>
   </connection>

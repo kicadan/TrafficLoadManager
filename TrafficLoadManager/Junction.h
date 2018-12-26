@@ -31,6 +31,21 @@ struct ConnectedRoad {
 	Road* road;
 };
 
+enum Light {
+	RED = 0,
+	GREEN = 1
+};
+
+struct LightSequence {
+	Light light;
+	int time; //seconds
+};
+
+struct TrafficLightsSettings {
+	LightSequence redLight { RED, 0 };
+	LightSequence greenLight{ GREEN, 0 };
+};
+
 class Junction :
 	public AppObject
 {
@@ -39,44 +54,61 @@ public:
 	Junction(int);
 	Junction(Point, Road*, int);
 	~Junction();
+	//appobject
+	ObjectType getObjectType();
 
-	QPointF returnCrossPointsForBerm(QLineF, QPointF);
-	void addRoad(Road*);
-	void deleteRoad(Road*);
+	//connections
+	std::vector<Connection> getConnectionsFrom(int roadId);
 	void addConnection(Connection);
 	void updateConnectionsForRoad(int);
 	void updateOtherJunctionsOnMainRoad();
-	void drawJunction();
-	void forgetAboutMe();
 	void validateConnections();
-	void setName(char*);
+	bool connectRoads(Road* roadFrom, LaneType laneFrom, Road* roadTo, LaneType laneTo);
+
+	//car spawn
+	CarSpawnSettings getCarSpawnSettings();
 	void setAsCarSpawn();
 	void notCarSpawn();
 	void editCarSpawn(CarSpawnSettings);
-	void forgetJunction(Junction*);
 	void makeConnectionsForCarSpawn(); //makes connections if CarSpawn has 1 road in it
-	bool connectRoads(Road* roadFrom, LaneType laneFrom, Road* roadTo, LaneType laneTo);
+	bool isCarSpawn();
+
+	//traffic lights
+	TrafficLightsSettings getTrafficLightsSettings();
+	void setTrafficLights();
+	void notTrafficLights();
+	void setTrafficLightsSettings(TrafficLightsSettings);
+	void drawTrafficLights();
+	bool gotTrafficLights();
+
+	//junction
+	QPointF returnCrossPointsForBerm(QLineF, QPointF);
+	Point getPoint();
+	std::vector<int> getRoadIds();
+	void addRoad(Road*);
+	void deleteRoad(Road*);
+	void drawJunction();
+	void forgetAboutMe();
+	void setName(char*);
+	void forgetJunction(Junction*);
 	bool isPoint(QPointF);
 	bool isPoint(Point);
-	bool isCarSpawn();
+	char* getName();
 	int getNumberOfRoads();
 	int getId();
-	Point getPoint();
-	ObjectType getObjectType();
-	CarSpawnSettings getCarSpawnSettings();
-	char* getName();
-	std::vector<int> getRoadIds();
-	std::vector<Connection> getConnectionsFrom(int roadId);
+
 private:
-	int id;
-	bool _isCarSpawn = false;
-	Point point;
+	TrafficLightsSettings trafficLightsSettings;
 	CarSpawnSettings carSpawnSettings;
-	char name[100];
+	Point point;
 	std::vector<Connection> connections;
 	std::vector<ConnectedRoad> roads;
 	std::vector<int> roadIds;
 	float red = 0.6, green = 0.0, blue = 0.45;
+	bool _isCarSpawn = false;
+	bool _gotTrafficLights = false;
+	char name[100];
+	int id;
 
 	std::vector<Point> getPointsToDrawConnection(Connection);
 	std::vector<Point> getPointsToClearJunctionArea();

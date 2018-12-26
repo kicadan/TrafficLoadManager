@@ -128,6 +128,8 @@ void Junction::drawJunction()
 	}
 	if (_isCarSpawn)
 		drawCircle(point);
+	if (_gotTrafficLights)
+		drawTrafficLights();
 }
 
 bool Junction::isPoint(QPointF point)
@@ -143,6 +145,38 @@ bool Junction::isPoint(Point point)
 bool Junction::isCarSpawn()
 {
 	return _isCarSpawn;
+}
+
+void Junction::setTrafficLights()
+{
+	trafficLightsSettings = TrafficLightsSettings();
+	_gotTrafficLights = true;
+}
+
+void Junction::notTrafficLights()
+{
+	_gotTrafficLights = false;
+}
+
+bool Junction::gotTrafficLights()
+{
+	return _gotTrafficLights;
+}
+
+void Junction::setTrafficLightsSettings(TrafficLightsSettings settings)
+{
+	trafficLightsSettings = settings;
+}
+
+TrafficLightsSettings Junction::getTrafficLightsSettings()
+{
+	return trafficLightsSettings;
+}
+
+void Junction::drawTrafficLights()
+{
+	//draw traffic lights
+	//TO DO
 }
 
 int Junction::getNumberOfRoads()
@@ -201,7 +235,8 @@ bool Junction::connectRoads(Road* roadFrom, LaneType laneFrom, Road* roadTo, Lan
 	if (((laneFrom == LANE || laneFrom == RIGHT_LANE || laneFrom == LEFT_LANE) && roadFrom->getPointIndex(point, MID) == 0)
 		|| ((laneTo == BACK_LANE || laneTo == LEFT_BACK_LANE || laneTo == RIGHT_BACK_LANE) && roadTo->getPointIndex(point, MID) == 0)
 		|| ((laneTo == LANE || laneTo == RIGHT_LANE || laneTo == LEFT_LANE) && roadTo->getLastPointOf(MID) == point)
-		|| ((laneFrom == BACK_LANE || laneFrom == LEFT_BACK_LANE || laneFrom == RIGHT_BACK_LANE) && roadFrom->getLastPointOf(MID) == point))//connection cannot goes in this direction
+		|| ((laneFrom == BACK_LANE || laneFrom == LEFT_BACK_LANE || laneFrom == RIGHT_BACK_LANE) && roadFrom->getLastPointOf(MID) == point)//connection cannot goes in this direction
+		|| ((roadFrom->id == roadTo->id && laneFrom != laneTo))) //cannot turn back or change lanes on junction
 		return false;
 	Connection newConnection;
 	newConnection.previousLaneType = laneFrom;

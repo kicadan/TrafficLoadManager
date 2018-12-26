@@ -36,8 +36,8 @@ public:
     QAction *actionZapisz_plansz_do_pliku;
     QAction *actionSymuluj;
     QAction *actionPunkt_odradzania_pojazd_w;
-    QAction *action_wiat_a;
-    QAction *action_wiat_a_drogowe;
+    QAction *action_sygnalizacja;
+    QAction *action_sygnalizacja_edytuj;
     QAction *actionPunkt_odradzania_pojazd_w_2;
     QAction *actionGeneruj_statystyki;
     QAction *actionPo_czenia_na_skrzy_owaniu;
@@ -79,10 +79,10 @@ public:
         actionSymuluj->setObjectName(QStringLiteral("actionSymuluj"));
         actionPunkt_odradzania_pojazd_w = new QAction(TrafficLoadManagerClass);
         actionPunkt_odradzania_pojazd_w->setObjectName(QStringLiteral("actionPunkt_odradzania_pojazd_w"));
-        action_wiat_a = new QAction(TrafficLoadManagerClass);
-        action_wiat_a->setObjectName(QStringLiteral("action_wiat_a"));
-        action_wiat_a_drogowe = new QAction(TrafficLoadManagerClass);
-        action_wiat_a_drogowe->setObjectName(QStringLiteral("action_wiat_a_drogowe"));
+        action_sygnalizacja = new QAction(TrafficLoadManagerClass);
+        action_sygnalizacja->setObjectName(QStringLiteral("action_sygnalizacja"));
+        action_sygnalizacja_edytuj = new QAction(TrafficLoadManagerClass);
+        action_sygnalizacja_edytuj->setObjectName(QStringLiteral("action_sygnalizacja_edytuj"));
         actionPunkt_odradzania_pojazd_w_2 = new QAction(TrafficLoadManagerClass);
         actionPunkt_odradzania_pojazd_w_2->setObjectName(QStringLiteral("actionPunkt_odradzania_pojazd_w_2"));
         actionGeneruj_statystyki = new QAction(TrafficLoadManagerClass);
@@ -135,8 +135,8 @@ public:
         menuRysuj->addAction(actionDroga_jednokierunkowa_z_dwoma_pasami_ruchu);
         menuRysuj->addAction(actionDroga_dwukierunkowa_z_jednym_pasem_ruchu);
         menuRysuj->addAction(actionPunkt_odradzania_pojazd_w);
-        menuRysuj->addAction(action_wiat_a);
-        menuEdytuj->addAction(action_wiat_a_drogowe);
+        menuRysuj->addAction(action_sygnalizacja);
+        menuEdytuj->addAction(action_sygnalizacja_edytuj);
         menuEdytuj->addAction(actionPunkt_odradzania_pojazd_w_2);
         menuEdytuj->addAction(actionPo_czenia_na_skrzy_owaniu);
         menuUstawienia->addAction(actionKonfiguracja);
@@ -149,6 +149,7 @@ public:
         QObject::connect(actionPunkt_odradzania_pojazd_w, SIGNAL(triggered()), designArea, SLOT(handleAction()));
         QObject::connect(actionDroga_dwukierunkowa_z_jednym_pasem_ruchu, SIGNAL(triggered()), designArea, SLOT(handleAction()));
         QObject::connect(actionPunkt_odradzania_pojazd_w_2, SIGNAL(triggered()), designArea, SLOT(handleAction()));
+        QObject::connect(action_sygnalizacja, SIGNAL(triggered()), designArea, SLOT(handleAction()));
 
         QMetaObject::connectSlotsByName(TrafficLoadManagerClass);
     } // setupUi
@@ -167,8 +168,8 @@ public:
         actionZapisz_plansz_do_pliku->setText(QApplication::translate("TrafficLoadManagerClass", "Zapisz plansz\304\231 do pliku", nullptr));
         actionSymuluj->setText(QApplication::translate("TrafficLoadManagerClass", "Symuluj", nullptr));
         actionPunkt_odradzania_pojazd_w->setText(QApplication::translate("TrafficLoadManagerClass", "Punkt odradzania pojazd\303\263w", nullptr));
-        action_wiat_a->setText(QApplication::translate("TrafficLoadManagerClass", "Sygnalizacja \305\233wietlna", nullptr));
-        action_wiat_a_drogowe->setText(QApplication::translate("TrafficLoadManagerClass", "Sygnalizacja \305\233wietlna", nullptr));
+        action_sygnalizacja->setText(QApplication::translate("TrafficLoadManagerClass", "Sygnalizacja \305\233wietlna", nullptr));
+        action_sygnalizacja_edytuj->setText(QApplication::translate("TrafficLoadManagerClass", "Sygnalizacja \305\233wietlna", nullptr));
         actionPunkt_odradzania_pojazd_w_2->setText(QApplication::translate("TrafficLoadManagerClass", "Punkt odradzania pojazd\303\263w", nullptr));
         actionGeneruj_statystyki->setText(QApplication::translate("TrafficLoadManagerClass", "Generuj statystyki", nullptr));
         actionPo_czenia_na_skrzy_owaniu->setText(QApplication::translate("TrafficLoadManagerClass", "Po\305\202\304\205czenia na skrzy\305\274owaniu", nullptr));

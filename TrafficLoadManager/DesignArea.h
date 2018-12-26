@@ -26,7 +26,9 @@ enum Action {
 	DRAW_TWO_WAY_ONE_LANE = 5,
 	DRAW_SPAWN_POINT = 6,
 	EDIT_SPAWN_POINT = 7,
-	MAKE_CONNECTION = 8
+	MAKE_CONNECTION = 8,
+	SET_TRAFFIC_LIGHTS = 9,
+	EDIT_TRAFFIC_LIGHTS = 10
 };
 
 struct Change {
@@ -39,7 +41,7 @@ struct Way {
 	Junction from;
 	Junction to;
 	std::vector<Connection> steps;
-	int length;
+	int length = 0;
 };
 
 struct Previous {
@@ -90,12 +92,15 @@ private:
 	//void drawLineTo(const QPoint &endPoint);
 	void resetNodeTable(Junction);
 	void updateNode(Junction, Junction, Connection);
-	void recursiveDijkstra(std::vector<Junction>, Connection, int);
+	void recursiveNodeFollow(std::vector<Junction>, Connection, int);
+	void collectWay(Junction, Junction);
+	void collectWayRecursive(Junction, Connection, int, int, Way&);
 	void drawElement();
 	void drawRoad();
 	void makeConnection();
 	void updateWays();
 	void renewConnectionsForSpawnPoints(); //deprecated
+	void setTrafficLights();
 	void addCarSpawn();
 	void editCarSpawn();
 	void repaintScene();
@@ -113,7 +118,7 @@ private:
 	Junction getClosestJunction(std::vector<Node> allNodes, std::vector<Junction> Qset);
 	vectors calc_vectors(QPoint, QPoint);
 	Way makeWayFromNodes(std::vector<Node>, Junction, Junction);
-	Way findWay(Junction, Junction);
+	void findWay(Junction, Junction);
 
 protected:
 	

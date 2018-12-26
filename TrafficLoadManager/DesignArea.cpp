@@ -45,6 +45,9 @@ void DesignArea::handleAction() {
 	else if (action == "actionPo_czenia_na_skrzy_owaniu") {
 		dispatchAction(MAKE_CONNECTION);
 	}
+	else if (action == "actionPo_czenia_na_skrzy_owaniu") {
+		dispatchAction(SET_TRAFFIC_LIGHTS);
+	}
 }
 
 void DesignArea::dispatchAction(Action menuAction)
@@ -83,6 +86,10 @@ void DesignArea::dispatchAction(Action menuAction)
 	}
 	case MAKE_CONNECTION: {
 		currentObjectBrush = JunctionConnection;
+		break;
+	}
+	case SET_TRAFFIC_LIGHTS: {
+		currentObjectBrush = TrafficLights;
 		break;
 	}
 	}
@@ -189,6 +196,10 @@ void DesignArea::drawElement()
 		makeConnection();
 		break;
 	}
+	case TrafficLights: {
+		setTrafficLights();
+		break;
+	}
 	}
 
 	updateWays();
@@ -231,9 +242,7 @@ void DesignArea::updateWays()
 	for (auto junctionIt = allJunctions.begin(); junctionIt < allJunctions.end(); junctionIt++) {
 		destinations = (*junctionIt)->getCarSpawnSettings().destinations;
 		for (auto destinationIt = destinations.begin(); destinationIt < destinations.end(); destinationIt++) {
-			theWay = findWay(**junctionIt, **destinationIt);
-			if (theWay.length != -1)
-				allWays.push_back(theWay);
+			findWay(**junctionIt, **destinationIt);
 		}
 	}
 }
@@ -246,6 +255,36 @@ void DesignArea::renewConnectionsForSpawnPoints()
 			(*junctionIt)->makeConnectionsForCarSpawn();
 		}
 	}
+}
+
+void DesignArea::setTrafficLights()
+{
+	constructing = false; 
+	Road* startRoad = NULL;
+	Junction* junction = NULL;
+	Point point(0, 0);
+	// search all roads
+	for (auto road : this->allRoads)
+	{
+		point = road->searchPoint(firstPoint);
+		if (point.x() != 0 && startRoad == NULL) {
+			startRoad = road;
+			_firstPoint = QPointF(point.x(), point.y());
+			firstPoint = point;
+			break;
+		}
+	}
+	for (auto junctionIt = allJunctions.begin(); junctionIt < allJunctions.end(); junctionIt++) {
+		if ((*junctionIt)->isPoint(point)) {
+			junction = *junctionIt;
+			junction->setTrafficLights();
+			junction->drawTrafficLights();
+			allChanges.push_back(Change{ junction, changeCounter, SET_TRAFFIC_LIGHTS });
+			changeCounter++;
+			break;
+		}
+	}
+	
 }
 
 void DesignArea::addCarSpawn()
@@ -531,13 +570,16 @@ void DesignArea::undoChanges()
 				deleteRoad(dynamic_cast<Road*>((*change).appObject));
 			if ((*change).appObject->getObjectType() == JUNCTION) {
 				Junction* junction = dynamic_cast<Junction*>((*change).appObject);
-				if ((*change).action != DRAW_SPAWN_POINT)
+				if ((*change).action != DRAW_SPAWN_POINT && (*change).action != SET_TRAFFIC_LIGHTS)
 					deleteJunction(junction);
-				else {
+				else if ((*change).action == DRAW_SPAWN_POINT){
 					if (junction->getNumberOfRoads() == 1)
 						deleteJunction(junction);
 					else
 						junction->notCarSpawn();
+				}
+				else {
+					junction->notTrafficLights();
 				}
 
 			}
@@ -845,7 +887,7 @@ void DesignArea::updateNode(Junction actual, Junction next/*updated node*/, Conn
 	}
 }
 
-Way DesignArea::findWay(Junction startJunction, Junction endJunction) {
+void DesignArea::findWay(Junction startJunction, Junction endJunction) {
 	Way theWay;
 	resetNodeTable(startJunction);
 	std::vector<Junction> passedNodes;
@@ -855,12 +897,12 @@ Way DesignArea::findWay(Junction startJunction, Junction endJunction) {
 	passedNodes.push_back(startJunction);
 	for (auto connIt = connections.begin(); connIt < connections.end(); connIt++) {
 		updateNode(startJunction, *(*connIt).nextJunction, *connIt);
-		recursiveDijkstra(passedNodes, *connIt, endJunction.getId());
+		recursiveNodeFollow(passedNodes, *connIt, endJunction.getId());
 	}
-	return theWay;
+	collectWay(startJunction, endJunction);
 }
 
-void DesignArea::recursiveDijkstra(std::vector<Junction> passedNodes, Connection previousConnection, int endJunctionId) {
+void DesignArea::recursiveNodeFollow(std::vector<Junction> passedNodes, Connection previousConnection, int endJunctionId) {
 	std::vector<Connection> connections;
 	Junction actual = *previousConnection.nextJunction;
 	//dont go further if u were in this node in this recursion before (it shouldn't be closer cause recursion still adds more cost in deeper steps)
@@ -870,12 +912,77 @@ void DesignArea::recursiveDijkstra(std::vector<Junction> passedNodes, Connection
 	//if it's finish - end recursion
 	if (actual.getId() == endJunctionId)
 		return;
+	passedNodes.push_back(actual);
 	connections = actual.getConnectionsFrom(-1); //next->getConnectionsFrom(-1)
 	//deleteNode(passedNodes, actual);
 	for (auto connIt = connections.begin(); connIt < connections.end(); connIt++) {
-		if ((*connIt).previousRoad->id == previousConnection.nextRoad->id) {
+		if ((*connIt).previousRoad->id == previousConnection.nextRoad->id && (*connIt).previousLaneType == previousConnection.nextLaneType) {
 			updateNode(actual, *(*connIt).nextJunction, *connIt);
-			recursiveDijkstra(passedNodes, *connIt, endJunctionId);
+			recursiveNodeFollow(passedNodes, *connIt, endJunctionId);
 		}
 	}
 }
+
+//collect way steps from all nodes, following from back to front (last node -> first node); do it recursive, it will let to be more than 1 collected way
+void DesignArea::collectWay(Junction startJunction, Junction endJunction)
+{
+	int deepWatchDog = 0;
+	int length;
+	Node actualNode;
+	for (auto nodeIt = allNodes.begin(); nodeIt < allNodes.end(); nodeIt++) {
+		if ((*nodeIt).junction.getId() == endJunction.getId()) {
+			actualNode = *nodeIt;
+			break;
+		}
+	}
+	for (auto connectionsIt = actualNode.previousConnections.begin(); connectionsIt < actualNode.previousConnections.end(); connectionsIt++) {
+		Way way;
+		way.from = startJunction;
+		way.to = endJunction;
+		way.length += (*connectionsIt).connection.distanceToNextJunction;
+		way.steps.push_back((*connectionsIt).connection);
+		collectWayRecursive((*connectionsIt).junction, (*connectionsIt).connection, startJunction.getId(), deepWatchDog, way);
+		allWays.push_back(way);
+	}
+}
+
+void DesignArea::collectWayRecursive(Junction actualJunction, Connection actualConnection, int firstJunctionId, int deepWatchDog, Way &way)
+{
+	if (deepWatchDog > allNodes.size())
+		return;
+	deepWatchDog++;
+	Node actualNode;
+	for (auto nodeIt = allNodes.begin(); nodeIt < allNodes.end(); nodeIt++) {
+		if ((*nodeIt).junction.getId() == actualJunction.getId()) {
+			actualNode = (*nodeIt);
+			break;
+		}
+	}
+	if (actualNode.junction.getId() == firstJunctionId)
+		return;
+	for (auto nodeConnectionIt = actualNode.previousConnections.begin(); nodeConnectionIt < actualNode.previousConnections.end(); nodeConnectionIt++) {
+		if ((*nodeConnectionIt).connection.nextRoad->id == actualConnection.previousRoad->id && (*nodeConnectionIt).connection.nextLaneType == actualConnection.previousLaneType) { //teraz wszystkie mo¿liwe drogi (szykuje siê implementacja zmiany pasa)
+			way.length += (*nodeConnectionIt).connection.distanceToNextJunction;
+			way.steps.push_back((*nodeConnectionIt).connection);
+			collectWayRecursive((*nodeConnectionIt).junction, (*nodeConnectionIt).connection, firstJunctionId, deepWatchDog, way);
+		}
+	}
+}
+
+//struct Way {
+//	Junction from;
+//	Junction to;
+//	std::vector<Connection> steps;
+//	int length;
+//};
+
+//struct Previous {
+//	int cost = 999999;
+//	Connection connection;
+//	Junction junction;
+//};
+//
+//struct Node {
+//	Junction junction;
+//	std::vector<Previous> previousConnections;
+//};

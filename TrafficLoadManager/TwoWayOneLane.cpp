@@ -353,12 +353,17 @@ void * TwoWayOneLane::searchForClosestJunction(Point point, LaneType laneType)
 			}
 		}
 	}
+	int pointIdx = -1;
+	if (foundPoint.x() == 0)
+		pointIdx = getPointIndex(point, MID);
+	else
+		pointIdx = getPointIndex(foundPoint, laneType);
 	void *foundJunction = NULL, *resultJunction = NULL;
-	if (foundPoint.x() != 0) {
+	if (pointIdx != -1) {
 		int foundJunctions = 0;
 		int range = -40;
 		if (point.x() != 0) {
-			int pointIdx = getPointIndex(foundPoint, laneType);
+			//int pointIdx = getPointIndex(foundPoint, laneType);
 			while (foundJunction == NULL && range <= 40 && pointIdx != -1) {
 				for (int i = range; i <= -range; i++) {
 					if (laneType == BACK_LANE) foundJunction = backLane[(pointIdx + i >= 0) && (pointIdx + i < backLane.size()) ? pointIdx + i : pointIdx].junction;
