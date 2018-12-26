@@ -794,6 +794,32 @@ void deleteNode(std::vector<Node> &deleteFrom, Junction deleted) {
 	}
 }
 
+void DesignArea::resetNodeTable(Junction startJunction)
+{
+	allNodes.clear();
+	std::vector<Connection> initialConnections;
+	for (auto junctionIt = allJunctions.begin(); junctionIt < allJunctions.end(); junctionIt++) {
+		if ((*junctionIt)->getId() == startJunction.getId()) {
+			Node addedNode;
+			addedNode.junction = startJunction;
+			initialConnections = startJunction.getConnectionsFrom(-1);
+			for (auto connIt = initialConnections.begin(); connIt < initialConnections.end(); connIt++) {
+				Previous initialPreviousConnection;
+				Connection connection;
+				//it's only needed { previous.connection.nextRoad and previous.cost } for all start node's previousConnections (node's previous.connection.nextRoad = junction's connection.previousRoad)
+				connection.nextRoad = (*connIt).previousRoad;
+				initialPreviousConnection.connection = connection;
+				initialPreviousConnection.cost = 0;
+				addedNode.previousConnections.push_back(initialPreviousConnection);
+			}
+			allNodes.push_back(addedNode);
+		}
+		else {
+			allNodes.push_back(Node{ *(*junctionIt) });
+		}
+	}
+}
+
 void DesignArea::updateNode(Junction actual, Junction next/*updated node*/, Connection connection) {
 	int cost = 0;
 	//take cost from Previous vector, where previous (nextRoad) == actual_connection (previousRoad)
@@ -821,6 +847,7 @@ void DesignArea::updateNode(Junction actual, Junction next/*updated node*/, Conn
 
 Way DesignArea::findWay(Junction startJunction, Junction endJunction) {
 	Way theWay;
+	resetNodeTable(startJunction);
 	std::vector<Junction> passedNodes;
 	std::vector<Connection> connections;
 	connections = startJunction.getConnectionsFrom(-1);

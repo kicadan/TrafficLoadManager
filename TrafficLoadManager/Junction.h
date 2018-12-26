@@ -66,7 +66,7 @@ public:
 	CarSpawnSettings getCarSpawnSettings();
 	char* getName();
 	std::vector<int> getRoadIds();
-	std::vector<Connection> getConnectionsFrom(int);
+	std::vector<Connection> getConnectionsFrom(int roadId);
 private:
 	int id;
 	bool _isCarSpawn = false;

@@ -88,6 +88,7 @@ private:
 	GLUquadric * object;
 
 	//void drawLineTo(const QPoint &endPoint);
+	void resetNodeTable(Junction);
 	void updateNode(Junction, Junction, Connection);
 	void recursiveDijkstra(std::vector<Junction>, Connection, int);
 	void drawElement();
