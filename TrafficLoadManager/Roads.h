@@ -84,7 +84,7 @@ public:
 	vectors getParallelVectors();
 protected:
 	ElementType _roadType;
-	std::vector<Point> mid;
+	std::vector<Point> mid, rightBermVector, leftBermVector;
 	std::vector<int> otherRoads;
 	vectors parallel_segments;
 	QLineF leftBerm, rightBerm, coreLine;

@@ -312,5 +312,21 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>action_sygnalizacja_edytuj</sender>
+   <signal>triggered()</signal>
+   <receiver>designArea</receiver>
+   <slot>handleAction()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>440</x>
+     <y>378</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
 </ui>

@@ -8,8 +8,8 @@ SpawnSettingsEditor::SpawnSettingsEditor(QWidget *parent, Junction* junction)
 	strcpy(this->name, this->junction->getName());
 	codec = QTextCodec::codecForName("Windows-1250");
 	ui.lineEdit_Actual->setText(codec->toUnicode(this->name));
-	ui.tableWidget->setColumnCount(1);
 	QStringList list;
+	ui.tableWidget->setColumnCount(1);
 	list << codec->toUnicode("Wêze³");
 	ui.tableWidget->setHorizontalHeaderLabels(list);
 }

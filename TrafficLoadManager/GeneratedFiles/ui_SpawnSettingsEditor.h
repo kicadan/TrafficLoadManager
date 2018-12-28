@@ -111,7 +111,6 @@ public:
         spinBox_smart_drivers->setObjectName(QStringLiteral("spinBox_smart_drivers"));
         spinBox_smart_drivers->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
         spinBox_smart_drivers->setMaximum(100);
-        spinBox_smart_drivers->setSingleStep(10);
 
         horizontalLayout_2->addWidget(spinBox_smart_drivers);
 

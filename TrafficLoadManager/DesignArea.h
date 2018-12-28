@@ -16,6 +16,7 @@
 #include "OneWayOneLane.h"
 #include "OneWayTwoLanes.h"
 #include "TwoWayOneLane.h"
+#include "TrafficLightsEditor.h"
 
 enum Action {
 	LOAD_FROM_FILE = 0,
@@ -101,6 +102,7 @@ private:
 	void updateWays();
 	void renewConnectionsForSpawnPoints(); //deprecated
 	void setTrafficLights();
+	void editTrafficLights();
 	void addCarSpawn();
 	void editCarSpawn();
 	void repaintScene();

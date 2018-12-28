@@ -18,8 +18,8 @@ public:
 	void setSpawnEditorFields();
 
 private:
-	char name[100];
 	Ui::SpawnSettingsEditor ui;
+	char name[100];
 	CarSpawnSettings spawnSettings;
 	Junction* junction;
 	std::vector<Junction*> possibleJunctions;

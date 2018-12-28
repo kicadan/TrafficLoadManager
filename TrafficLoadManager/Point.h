@@ -10,7 +10,7 @@ private:
 	int _junctionNumber = -1;
 public:
 	Point();
-	Point(QPoint);
+	Point(QPointF);
 	Point(float, float);
 	~Point();
 

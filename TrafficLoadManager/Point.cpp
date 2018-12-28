@@ -6,7 +6,7 @@ Point::Point():AppObject(APP_POINT)
 {
 }
 
-Point::Point(QPoint point):_x(point.x()), _y(point.y())
+Point::Point(QPointF point):_x(point.x()), _y(point.y())
 {
 }
 

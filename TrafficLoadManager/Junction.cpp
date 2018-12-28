@@ -63,6 +63,7 @@ void Junction::addRoad(Road *road)
 	}
 	roads.push_back(ConnectedRoad{ roads[0].road->getCloserBerm(road->getFurtherPoint(point)), road }); //getCloserBerm returns RIGHT_LANE or LEFT_LANE, based on which side it's closer to be
 	roadIds.push_back(road->id);
+	trafficLightsSettings.upToDate = false;
 }
 
 void Junction::deleteRoad(Road * deletedRoad)
@@ -86,19 +87,29 @@ void Junction::deleteRoad(Road * deletedRoad)
 		}
 		connIt++;
 	}
+	auto lightsIt = trafficLightsSettings.lights.begin();
+	while (lightsIt < trafficLightsSettings.lights.end()) {
+		if ((*lightsIt).roadId == deletedRoad->id) {
+			trafficLightsSettings.lights.erase(lightsIt);
+			lightsIt = trafficLightsSettings.lights.begin();
+			continue;
+		}
+		lightsIt++;
+	}
+	trafficLightsSettings.upToDate = false;
 }
 
 void Junction::addConnection(Connection added)
 {
-	for (auto connectionIt = connections.begin(); connectionIt < connections.end(); connectionIt++) {
-		if ((*connectionIt).previousRoad->id == added.previousRoad->id && (*connectionIt).previousLaneType == added.previousLaneType
-						&& (*connectionIt).nextRoad->id == added.nextRoad->id && (*connectionIt).nextLaneType == added.nextLaneType) { //if the same connection then update
-			(*connectionIt) = added;
-			return;
-		}
+for (auto connectionIt = connections.begin(); connectionIt < connections.end(); connectionIt++) {
+	if ((*connectionIt).previousRoad->id == added.previousRoad->id && (*connectionIt).previousLaneType == added.previousLaneType
+		&& (*connectionIt).nextRoad->id == added.nextRoad->id && (*connectionIt).nextLaneType == added.nextLaneType) { //if the same connection then update
+		(*connectionIt) = added;
+		return;
 	}
-	//if couldn't be updated
-	connections.push_back(added);
+}
+//if couldn't be updated
+connections.push_back(added);
 }
 
 void Junction::updateConnectionsForRoad(int roadId)
@@ -127,7 +138,7 @@ void Junction::drawJunction()
 		}
 	}
 	if (_isCarSpawn)
-		drawCircle(point);
+		drawCircle(point, 2*distance);
 	if (_gotTrafficLights)
 		drawTrafficLights();
 }
@@ -149,16 +160,16 @@ bool Junction::isCarSpawn()
 
 void Junction::setTrafficLights()
 {
-	trafficLightsSettings = TrafficLightsSettings();
 	_gotTrafficLights = true;
 }
 
 void Junction::notTrafficLights()
 {
+	trafficLightsSettings = TrafficLightsSettings();
 	_gotTrafficLights = false;
 }
 
-bool Junction::gotTrafficLights()
+bool Junction::hasTrafficLights()
 {
 	return _gotTrafficLights;
 }
@@ -173,10 +184,208 @@ TrafficLightsSettings Junction::getTrafficLightsSettings()
 	return trafficLightsSettings;
 }
 
+Point Junction::getPointForTrafficLight(short direction, Point oppositePoint) //searches for closest berms cross point on main road
+{
+	QPointF closestPoint(0, 0);
+	qreal closestPointDistance = 99999;
+	for (auto roadIt = roads.begin(); roadIt < roads.end(); roadIt++) {
+		if (direction > 0 && (*roadIt).whichSide == RIGHT_BERM) { //RIGHT SIDE
+			int otherRoadIndex = (*roadIt).road->getPointIndex(point, MID);
+			QPointF actualCrossPoint = otherRoadIndex == 0 ? (*roadIt).road->getLineParams(RIGHT_BERM).p1() : (*roadIt).road->getLineParams(LEFT_BERM).p2();
+			qreal actualDistance = qSqrt(qPow(oppositePoint.x() - actualCrossPoint.x(), 2) + qPow(oppositePoint.y() - actualCrossPoint.y(), 2));
+			if (actualDistance < closestPointDistance)
+				closestPoint = actualCrossPoint;
+		}
+		else if (direction < 0 && (*roadIt).whichSide == LEFT_BERM) { //direction < 0 ---> looking for roads on LEFT SIDE
+			int otherRoadIndex = (*roadIt).road->getPointIndex(point, MID);
+			QPointF actualCrossPoint = otherRoadIndex == 0 ? (*roadIt).road->getLineParams(RIGHT_BERM).p1() : (*roadIt).road->getLineParams(LEFT_BERM).p2();
+			qreal actualDistance = qSqrt(qPow(oppositePoint.x() - actualCrossPoint.x(), 2) + qPow(oppositePoint.y() - actualCrossPoint.y(), 2));
+			if (actualDistance < closestPointDistance)
+				closestPoint = actualCrossPoint;
+		}
+	}
+	return Point(closestPoint);
+}
+
+void Junction::updateLights()
+{
+	bool updated = false;
+	for (auto roadIt = roads.begin(); roadIt < roads.end(); roadIt++) {
+		updated = false;
+		if ((*roadIt).road->getPointIndex(point, MID) == 0) {
+			if ((*roadIt).road->getRoadType() == TwoWayRoadWithOneLane) {
+				Lights trafficLights;
+				trafficLights.berm = (*roadIt).road->getLineParams(LEFT_BERM);
+				if ((*roadIt).whichSide == LANE) {//main road
+					trafficLights.lightsPoint = getPointForTrafficLight(-1, trafficLights.berm.p2());
+					if (trafficLights.lightsPoint.x() == 0) //where no road on right side
+						trafficLights.lightsPoint = (*roadIt).road->getPoint((*roadIt).road->getPointIndex(point, MID) + 1, LEFT_BERM);
+				}
+				else {
+					trafficLights.lightsPoint = Point(trafficLights.berm.p1());
+				}
+				for (auto connIt = connections.begin(); connIt < connections.end(); connIt++) {
+					if ((*connIt).previousRoad->id == (*roadIt).road->id) {
+						trafficLights.haveConnection = true;
+						break;
+					}
+				}
+				trafficLights.direction = -1;
+				trafficLights.roadId = (*roadIt).road->id;
+				for (auto lightsIt = trafficLightsSettings.lights.begin(); lightsIt < trafficLightsSettings.lights.end(); lightsIt++) {
+					if ((*lightsIt).roadId == trafficLights.roadId && (*lightsIt).direction == trafficLights.direction) {
+						(*lightsIt) = trafficLights;
+						updated = true;
+						break;
+					}
+				}
+				if (!updated) {
+					trafficLights.lightsId = trafficLightsSettings.lights.size();
+					trafficLightsSettings.lights.push_back(trafficLights);
+				}
+			}
+		}
+		else if ((*roadIt).road->getLastPointOf(MID) == point) {
+			//jedno i dwukierunkowe
+			if (1) {
+				Lights trafficLights;
+				trafficLights.berm = (*roadIt).road->getLineParams(RIGHT_BERM);
+				if ((*roadIt).whichSide == LANE) {//main road
+					trafficLights.lightsPoint = getPointForTrafficLight(1, (*roadIt).road->getFirstPointOf(MID));
+					if (trafficLights.lightsPoint.x() == 0) //when no road on right side
+						trafficLights.lightsPoint = (*roadIt).road->getPoint((*roadIt).road->getPointIndex(point, MID) - 1, RIGHT_BERM);
+				}
+				else {
+					trafficLights.lightsPoint = trafficLights.berm.p2();
+				}
+				for (auto connIt = connections.begin(); connIt < connections.end(); connIt++) {
+					if ((*connIt).previousRoad->id == (*roadIt).road->id){
+						trafficLights.haveConnection = true;
+						break;
+					}
+				}
+				trafficLights.direction = 1;
+				trafficLights.roadId = (*roadIt).road->id;
+				for (auto lightsIt = trafficLightsSettings.lights.begin(); lightsIt < trafficLightsSettings.lights.end(); lightsIt++) {
+					if ((*lightsIt).roadId == trafficLights.roadId && (*lightsIt).direction == trafficLights.direction) {
+						(*lightsIt) = trafficLights;
+						updated = true;
+						break;
+					}
+				}
+				if (!updated) {
+					trafficLights.lightsId = trafficLightsSettings.lights.size();
+					trafficLightsSettings.lights.push_back(trafficLights);
+				}
+			}
+		}
+		else {
+			//œrodek drogi -> MAIN ROAD
+			//œrodek jednokierunkowych
+			if ((*roadIt).road->getRoadType() != TwoWayRoadWithOneLane) {
+				Lights trafficLights;
+				trafficLights.berm = (*roadIt).road->getLineParams(RIGHT_BERM);
+				trafficLights.lightsPoint = getPointForTrafficLight(1, (*roadIt).road->getFirstPointOf(MID));
+				if (trafficLights.lightsPoint.x() == 0) //when no road on right side
+					trafficLights.lightsPoint = (*roadIt).road->getPoint((*roadIt).road->getPointIndex(point, MID) - 1, RIGHT_BERM);
+				for (auto connIt = connections.begin(); connIt < connections.end(); connIt++) {
+					if ((*connIt).previousRoad->id == (*roadIt).road->id) {
+						trafficLights.haveConnection = true;
+						break;
+					}
+				}
+				trafficLights.direction = 1;
+				trafficLights.roadId = (*roadIt).road->id;
+				for (auto lightsIt = trafficLightsSettings.lights.begin(); lightsIt < trafficLightsSettings.lights.end(); lightsIt++) {
+					if ((*lightsIt).roadId == trafficLights.roadId && (*lightsIt).direction == trafficLights.direction) {
+						(*lightsIt) = trafficLights;
+						updated = true;
+						break;
+					}
+				}
+				if (!updated) {
+					trafficLights.lightsId = trafficLightsSettings.lights.size();
+					trafficLightsSettings.lights.push_back(trafficLights);
+				}
+			}
+			else {
+				//œrodek dwukierunkowej
+				Lights trafficLights;
+				//right side
+				trafficLights.berm = (*roadIt).road->getLineParams(RIGHT_BERM);
+				trafficLights.lightsPoint = getPointForTrafficLight(1, (*roadIt).road->getFirstPointOf(MID));
+				if (trafficLights.lightsPoint.x() == 0) //when no road on right side
+					trafficLights.lightsPoint = (*roadIt).road->getPoint((*roadIt).road->getPointIndex(point, MID) - 1, RIGHT_BERM);
+				for (auto connIt = connections.begin(); connIt < connections.end(); connIt++) {
+					if ((*connIt).previousRoad->id == (*roadIt).road->id && (*connIt).previousLaneType == LANE) {
+						trafficLights.haveConnection = true;
+						break;
+					}
+				}
+				trafficLights.direction = 1;
+				trafficLights.roadId = (*roadIt).road->id;
+				for (auto lightsIt = trafficLightsSettings.lights.begin(); lightsIt < trafficLightsSettings.lights.end(); lightsIt++) {
+					if ((*lightsIt).roadId == trafficLights.roadId && (*lightsIt).direction == trafficLights.direction) {
+						(*lightsIt) = trafficLights;
+						updated = true;
+						break;
+					}
+				}
+				if (!updated) {
+					trafficLights.lightsId = trafficLightsSettings.lights.size();
+					trafficLightsSettings.lights.push_back(trafficLights);
+				}
+				//left side
+				updated = false;
+				trafficLights = Lights();
+				trafficLights.berm = (*roadIt).road->getLineParams(LEFT_BERM);
+				trafficLights.lightsPoint = getPointForTrafficLight(-1, (*roadIt).road->getLastPointOf(MID));
+				if (trafficLights.lightsPoint.x() == 0) //where no road on right side
+					trafficLights.lightsPoint = (*roadIt).road->getPoint((*roadIt).road->getPointIndex(point, MID) + 1, LEFT_BERM);
+				for (auto connIt = connections.begin(); connIt < connections.end(); connIt) {
+					if ((*connIt).previousRoad->id == (*roadIt).road->id && (*connIt).previousLaneType == BACK_LANE) {
+						trafficLights.haveConnection = true;
+						break;
+					}
+				}
+				trafficLights.direction = -1;
+				trafficLights.roadId = (*roadIt).road->id;
+				for (auto lightsIt = trafficLightsSettings.lights.begin(); lightsIt < trafficLightsSettings.lights.end(); lightsIt++) {
+					if ((*lightsIt).roadId == trafficLights.roadId && (*lightsIt).direction == trafficLights.direction) {
+						(*lightsIt) = trafficLights;
+						updated = true;
+						break;
+					}
+				}
+				if (!updated) {
+					trafficLights.lightsId = trafficLightsSettings.lights.size();
+					trafficLightsSettings.lights.push_back(trafficLights);
+				}
+			}
+		}
+	}
+}
+
 void Junction::drawTrafficLights()
 {
 	//draw traffic lights
 	//TO DO
+	//if not trafficLightsSettings.upToDate -> yellow light?
+	for (auto lightsIt = trafficLightsSettings.lights.begin(); lightsIt < trafficLightsSettings.lights.end(); lightsIt++) {
+		drawSquare((*lightsIt).lightsPoint);
+		drawFilledCircle((*lightsIt).lightsPoint, distance/2, 0.972, 0.937, 0.227); //yellow
+		//glRasterPos2i((*lightsIt).lightsPoint.x(), (*lightsIt).lightsPoint.y());
+	}
+}
+
+void Junction::drawTrafficLights(float red, float green, float blue)
+{
+	//draw traffic lights
+	//TO DO
+	//if not trafficLightsSettings.upToDate -> yellow light?
+	for (auto lightsIt = trafficLightsSettings.lights.begin(); lightsIt < trafficLightsSettings.lights.end(); lightsIt++) {
+		drawSquare((*lightsIt).lightsPoint);
+	}
 }
 
 int Junction::getNumberOfRoads()
@@ -544,15 +753,37 @@ void drawLine(Point p1, Point p2, float red, float green, float blue)
 	glFlush();
 }
 
-void drawCircle(Point point) {
+void drawCircle(Point point, float radius) {
 	GLfloat twicePi = 2.0f * M_PI;
 
 	glColor3f(1.0f, 0.0f, 0.0f);
 	glBegin(GL_LINE_LOOP);
 	for (int i = 0; i <= 360; i++) {
-		glVertex2f(point.x() + (2*distance * cos(i *  twicePi / 360)), point.y() + (2*distance* sin(i * twicePi / 360)));
+		glVertex2f(point.x() + (radius * cos(i *  twicePi / 360)), point.y() + (radius * sin(i * twicePi / 360)));
 	}
 	glEnd();
+}
+
+void drawFilledCircle(Point point, float radius, float red, float green, float blue) {
+	GLfloat twicePi = 2.0f * M_PI;
+
+	glColor3f(red, green, blue);
+	glBegin(GL_TRIANGLE_FAN);
+	for (int i = 0; i <= 360; i++) {
+		glVertex2f(point.x() + (radius * cos(i *  twicePi / 360)), point.y() + (radius * sin(i * twicePi / 360)));
+	}
+	glEnd();
+}
+
+void drawSquare(Point mid) {
+	glColor3f(0.529f, 0.529f, 0.529f);
+	glBegin(GL_POLYGON);
+	glVertex2f(mid.x() - 1.2*distance/2, mid.y() - 1.2*distance/2);
+	glVertex2f(mid.x() + 1.2*distance/2, mid.y() - 1.2*distance/2);
+	glVertex2f(mid.x() + 1.2*distance/2, mid.y() + 1.2*distance/2);
+	glVertex2f(mid.x() - 1.2*distance/2, mid.y() + 1.2*distance/2);
+	glEnd();
+	glFlush();
 }
 
 void drawWhiteQuads(std::vector<Point> points)

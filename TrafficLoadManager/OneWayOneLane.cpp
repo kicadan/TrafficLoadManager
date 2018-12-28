@@ -12,7 +12,9 @@ OneWayOneLane::~OneWayOneLane()
 void OneWayOneLane::addPoint(Point point, LaneType pointType)
 {
 	switch (pointType) {
-	case LANE: { lane.push_back(LanePoint{ point }); mid.push_back(point); }
+	case LANE: { lane.push_back(LanePoint{ point }); mid.push_back(point); break; }
+	case RIGHT_BERM: { rightBermVector.push_back(Point(point.x() + parallel_segments.xr, point.y() + parallel_segments.yr)); break; }
+	case LEFT_BERM: { leftBermVector.push_back(Point(point.x() + parallel_segments.xl, point.y() + parallel_segments.yl)); break; }
 	}
 }
 
@@ -25,6 +27,8 @@ void OneWayOneLane::setRoad(QPointF firstPoint, QPointF lastPoint, bool endingTo
 	this->Road::coreLine = QLineF(firstPoint.x(), firstPoint.y(), lastPoint.x(), lastPoint.y());
 	double A = coreLine.dy() / coreLine.dx();
 	double B = (coreLine.y1()*coreLine.x2() - coreLine.y2()*coreLine.x1()) / (coreLine.x2() - coreLine.x1());
+	double Bl = ((coreLine.y1() + parallel_segments.yl)*(coreLine.x2() + parallel_segments.xl) - (coreLine.y2() + parallel_segments.yl)*(coreLine.x1() + parallel_segments.xl)) / (coreLine.x2() - coreLine.x1());
+	double Br = ((coreLine.y1() + parallel_segments.yr)*(coreLine.x2() + parallel_segments.xr) - (coreLine.y2() + parallel_segments.yr)*(coreLine.x1() + parallel_segments.xr)) / (coreLine.x2() - coreLine.x1());
 
 	//if ( (A == startBermParams.a && upright == startBermParams.upright) || (A == endBermParams.a && upright == endBermParams.upright) )
 	//{//dont draw if parallel to any connected line
@@ -40,8 +44,10 @@ void OneWayOneLane::setRoad(QPointF firstPoint, QPointF lastPoint, bool endingTo
 		horizontal = false;
 	//create vectors of the roads
 	addPoint(Point(firstPoint.x(), firstPoint.y()), LANE);
+	addPoint(Point(firstPoint.x(), firstPoint.y()), RIGHT_BERM);
+	addPoint(Point(firstPoint.x(), firstPoint.y()), LEFT_BERM);
 	double xm = firstPoint.x() + distance; //one point later than first
-	double _x = xm;
+	double _x = xm; 
 	double _y = 0.0;
 	
 	if (horizontal)
@@ -51,28 +57,36 @@ void OneWayOneLane::setRoad(QPointF firstPoint, QPointF lastPoint, bool endingTo
 		if (lastPoint.x() > firstPoint.x())
 			for (_x = xm; _x < x_last; _x += distance) {
 				addPoint(Point(_x, A*_x + B), LANE);
+				addPoint(Point(_x, A*_x + B), RIGHT_BERM);
+				addPoint(Point(_x, A*_x + B), LEFT_BERM);
 			}
 		else
 			for (_x = xm; _x > x_last; _x -= distance) {
 				addPoint(Point(_x, A*_x + B), LANE);
+				addPoint(Point(_x, A*_x + B), RIGHT_BERM);
+				addPoint(Point(_x, A*_x + B), LEFT_BERM);
 			}
 	}
 	else
 	{
 		// x = (y - B) / A if dx != 0 else x = point.x
 		double ym = firstPoint.y() + distance; //one point later than first
-		double yl = firstPoint.y() + parallel_segments.yl;
-		double yr = firstPoint.y() + parallel_segments.yr;
 		double y_last = lastPoint.y();
 		if (lastPoint.y() > firstPoint.y())
 			for (_y = ym; _y < y_last; _y += distance) {
 				addPoint(Point(dx != 0 ? (_y - B) / A : xm, _y), LANE);
+				addPoint(Point(dx != 0 ? (_y - B) / A : xm, _y), RIGHT_BERM);
+				addPoint(Point(dx != 0 ? (_y - B) / A : xm, _y), LEFT_BERM);
 			}
 		else
 			for (_y = ym; _y > y_last; _y -= distance) {
 				addPoint(Point(dx != 0 ? (_y - B) / A : xm, _y), LANE);
+				addPoint(Point(dx != 0 ? (_y - B) / A : xm, _y), RIGHT_BERM);
+				addPoint(Point(dx != 0 ? (_y - B) / A : xm, _y), LEFT_BERM);
 			}
 	}
+	addPoint(Point(lastPoint.x(), lastPoint.y()), RIGHT_BERM);
+	addPoint(Point(lastPoint.x(), lastPoint.y()), LEFT_BERM);
 	addPoint(Point(lastPoint.x(), lastPoint.y()), LANE);
 
 	QPointF _firstBermLeftPoint(0, 0), _firstBermRightPoint(0, 0), _lastBermLeftPoint(0, 0), _lastBermRightPoint(0, 0);
@@ -115,25 +129,26 @@ void OneWayOneLane::drawRoad() //poprawiæ na jedn¹ drogê
 	glLineWidth(3);
 
 	//berm right
-	glBegin(GL_LINES);
 	glColor3f(1.0f, 0.0f, 0.0f);
+	glBegin(GL_LINES);
 	glVertex2f(rightBerm.p2().x(), rightBerm.p2().y());
 	glVertex2f(rightBerm.p1().x(), rightBerm.p1().y());
 	glEnd();
 
 	//berm left
-	glBegin(GL_LINES);
 	glColor3f(0.0f, 1.0f, 0.0f);
+	glBegin(GL_LINES);
 	glVertex2f(leftBerm.p2().x(), leftBerm.p2().y());
 	glVertex2f(leftBerm.p1().x(), leftBerm.p1().y());
 	glEnd();
 
 	//main lane
-	glBegin(GL_LINES);
 	glColor3f(0.0f, 0.0f, 1.0f);
+	glBegin(GL_LINES);
 	glVertex2f(coreLine.p2().x(), coreLine.p2().y());
 	glVertex2f(coreLine.p1().x(), coreLine.p1().y());
 	glEnd();
+	glFlush();
 }
 
 Point OneWayOneLane::getPoint(int index, LaneType laneType)
@@ -142,7 +157,15 @@ Point OneWayOneLane::getPoint(int index, LaneType laneType)
 		if (index < lane.size())
 			return lane[index].point;
 	}
-	else
+	else if (laneType == RIGHT_BERM) {
+		if (index < rightBermVector.size())
+			return rightBermVector[index];
+	}
+	else if (laneType == LEFT_BERM) {
+		if (index < leftBermVector.size()) {
+			return leftBermVector[index];
+		}
+	}
 		return Point(0, 0);
 }
 

@@ -41,9 +41,20 @@ struct LightSequence {
 	int time; //seconds
 };
 
-struct TrafficLightsSettings {
-	LightSequence redLight { RED, 0 };
+struct Lights {
+	LightSequence redLight{ RED, 0 };
 	LightSequence greenLight{ GREEN, 0 };
+	Point lightsPoint;
+	QLineF berm;
+	bool haveConnection = false;
+	short direction; //on which side of the road it is
+	int roadId;
+	int lightsId;
+};
+
+struct TrafficLightsSettings {
+	std::vector<Lights> lights;
+	bool upToDate = false;
 };
 
 class Junction :
@@ -75,11 +86,14 @@ public:
 
 	//traffic lights
 	TrafficLightsSettings getTrafficLightsSettings();
+	Point getPointForTrafficLight(short, Point); //searches for closest berms cross point on main road
 	void setTrafficLights();
 	void notTrafficLights();
 	void setTrafficLightsSettings(TrafficLightsSettings);
 	void drawTrafficLights();
-	bool gotTrafficLights();
+	void drawTrafficLights(float, float, float);
+	void updateLights();
+	bool hasTrafficLights();
 
 	//junction
 	QPointF returnCrossPointsForBerm(QLineF, QPointF);
@@ -121,7 +135,9 @@ private:
 
 void drawBezierCurve(Point, Point, Point, float, float, float);
 void drawLine(Point, Point, float, float, float);
-void drawCircle(Point);
+void drawCircle(Point, float);
+void drawFilledCircle(Point, float, float, float, float);
+void drawSquare(Point);
 void drawWhiteQuads(std::vector<Point>);
 void copyLanePointVectorToPointVector(std::vector<LanePoint>, std::vector<Point>&); //deprecated
 
