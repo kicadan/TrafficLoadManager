@@ -32,7 +32,8 @@ public:
     QHBoxLayout *horizontalLayout;
     QLabel *label_kolejny_krok;
     QComboBox *comboBox_kierunki;
-    QSpinBox *spinBox;
+    QLabel *label_3;
+    QSpinBox *spinBox_green;
     QLabel *label;
     QPushButton *pushButton_dodaj;
     QLabel *label_2;
@@ -74,12 +75,20 @@ public:
 
         horizontalLayout->addWidget(comboBox_kierunki);
 
-        spinBox = new QSpinBox(TrafficLightsEditor);
-        spinBox->setObjectName(QStringLiteral("spinBox"));
-        spinBox->setMaximumSize(QSize(50, 16777215));
-        spinBox->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
+        label_3 = new QLabel(TrafficLightsEditor);
+        label_3->setObjectName(QStringLiteral("label_3"));
+        label_3->setMinimumSize(QSize(200, 0));
+        label_3->setMaximumSize(QSize(200, 16777215));
+        label_3->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
 
-        horizontalLayout->addWidget(spinBox);
+        horizontalLayout->addWidget(label_3);
+
+        spinBox_green = new QSpinBox(TrafficLightsEditor);
+        spinBox_green->setObjectName(QStringLiteral("spinBox_green"));
+        spinBox_green->setMaximumSize(QSize(50, 16777215));
+        spinBox_green->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
+
+        horizontalLayout->addWidget(spinBox_green);
 
         label = new QLabel(TrafficLightsEditor);
         label->setObjectName(QStringLiteral("label"));
@@ -133,8 +142,11 @@ public:
 
 
         retranslateUi(TrafficLightsEditor);
-        QObject::connect(buttonBox, SIGNAL(accepted()), TrafficLightsEditor, SLOT(accept()));
-        QObject::connect(buttonBox, SIGNAL(rejected()), TrafficLightsEditor, SLOT(reject()));
+        QObject::connect(buttonBox, SIGNAL(accepted()), TrafficLightsEditor, SLOT(acceptButton()));
+        QObject::connect(buttonBox, SIGNAL(rejected()), TrafficLightsEditor, SLOT(rejectButton()));
+        QObject::connect(pushButton_dodaj, SIGNAL(pressed()), TrafficLightsEditor, SLOT(addToTableAction()));
+        QObject::connect(tableWidget, SIGNAL(cellDoubleClicked(int,int)), TrafficLightsEditor, SLOT(deleteFromTableAction(int,int)));
+        QObject::connect(pushButton_reset, SIGNAL(clicked()), TrafficLightsEditor, SLOT(resetSettings()));
 
         QMetaObject::connectSlotsByName(TrafficLightsEditor);
     } // setupUi
@@ -144,6 +156,7 @@ public:
         TrafficLightsEditor->setWindowTitle(QApplication::translate("TrafficLightsEditor", "Dialog", nullptr));
         label_skrzyzowanie->setText(QApplication::translate("TrafficLightsEditor", "W\304\231ze\305\202", nullptr));
         label_kolejny_krok->setText(QApplication::translate("TrafficLightsEditor", "Krok numer ", nullptr));
+        label_3->setText(QApplication::translate("TrafficLightsEditor", "d\305\202ugo\305\233\304\207 zielonego \305\233wiat\305\202a", nullptr));
         label->setText(QApplication::translate("TrafficLightsEditor", "[s]", nullptr));
         pushButton_dodaj->setText(QApplication::translate("TrafficLightsEditor", "Dodaj krok", nullptr));
         label_2->setText(QApplication::translate("TrafficLightsEditor", "Aktualna sekwencja", nullptr));

@@ -23,7 +23,7 @@ void SpawnSettingsEditor::setJunctionComboBox(std::vector<Junction*> vector)
 	ui.comboBox_available->clear();
 	QStringList junctionList;
 	std::vector<Junction*> realPossibleJunctions = differentialBetweenTwoJunctionVectors(vector, this->spawnSettings.destinations);
-	realPossibleJunctions.erase(std::remove(realPossibleJunctions.begin(), realPossibleJunctions.end(), this->junction), realPossibleJunctions.end());
+	realPossibleJunctions.erase(std::remove(realPossibleJunctions.begin(), realPossibleJunctions.end(), this->junction), realPossibleJunctions.end()); //erase this junction from possible junctions
 	possibleJunctions = realPossibleJunctions;
 	for (auto possibleIt = possibleJunctions.begin(); possibleIt < possibleJunctions.end(); possibleIt++) {
 		ui.comboBox_available->addItem(codec->toUnicode((*possibleIt)->getName()));

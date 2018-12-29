@@ -19,6 +19,14 @@ void Road::addOtherRoad(int roadNumber)
 	this->otherRoads.push_back(roadNumber);
 }
 
+void Road::setBerm(LaneType laneType, QLineF newBerm)
+{
+	if (laneType == RIGHT_BERM)
+		rightBerm = newBerm;
+	else if (laneType == LEFT_BERM)
+		leftBerm = newBerm;
+}
+
 QLineF Road::getLineParams(LaneType laneType)
 {
 	switch (laneType) {

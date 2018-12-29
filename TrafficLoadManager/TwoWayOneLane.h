@@ -27,7 +27,7 @@ public:
 	void deleteJunction(void*);
 	void deleteFromJunctions();
 	void freePoint(LaneType, int);
-	bool reservePoint(LaneType, int);
+	bool reservePoint(LaneType, Vehicle*, int);
 	void updateLane();
 
 private:

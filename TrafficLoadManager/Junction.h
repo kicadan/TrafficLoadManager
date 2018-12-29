@@ -4,6 +4,8 @@
 
 class Junction;
 
+struct Way;
+
 struct LanePoint {
 	Point point;
 	Junction* junction;
@@ -12,7 +14,7 @@ struct LanePoint {
 struct Connection {
 	Road* previousRoad;
 	LaneType previousLaneType;
-	int nextPoint; //junction point in road's lane
+	int nextPoint; //junction point in road's lane while car spawn, but in normal junction connection made by user it is next point on the road (1 after junction)
 	Road* nextRoad;
 	LaneType nextLaneType;
 	Junction* nextJunction = NULL;
@@ -33,7 +35,8 @@ struct ConnectedRoad {
 
 enum Light {
 	RED = 0,
-	GREEN = 1
+	YELLOW = 1,
+	GREEN = 2
 };
 
 struct LightSequence {
@@ -50,11 +53,25 @@ struct Lights {
 	short direction; //on which side of the road it is
 	int roadId;
 	int lightsId;
+	char lightsName[20];
 };
 
 struct TrafficLightsSettings {
 	std::vector<Lights> lights;
+	std::vector<Lights> lightsSequence;
 	bool upToDate = false;
+};
+
+struct Traffics { //stores information about actual state of traffic lights during animation
+	Light actualLight;
+	Point lightsPoint;
+	int counter = 0; //modulo maxGreenTime + maxRedTime
+	int greenStarts; //when previous green in sequence ends
+	int greenEnds; //after greenStart + green.time
+	int timeModulo; // green + red time
+	int lightsId;
+	int roadId;
+	short direction;
 };
 
 class Junction :
@@ -87,22 +104,27 @@ public:
 	//traffic lights
 	TrafficLightsSettings getTrafficLightsSettings();
 	Point getPointForTrafficLight(short, Point); //searches for closest berms cross point on main road
-	void setTrafficLights();
+	Light getLightState(int, LaneType);
 	void notTrafficLights();
+	void setTrafficLights();
 	void setTrafficLightsSettings(TrafficLightsSettings);
 	void drawTrafficLights();
-	void drawTrafficLights(float, float, float);
+	//void drawTrafficLights(float, float, float);
+	void updateLightsSettings();
 	void updateLights();
+	void initTrafficLights();
+	void showFocusedLights(Point); //growing and shrinking lights, while focused on setting lights
 	bool hasTrafficLights();
 
 	//junction
-	QPointF returnCrossPointsForBerm(QLineF, QPointF);
+	QPointF returnCrossPointsForBerm(QLineF, QPointF, int roadId = -1);
 	Point getPoint();
 	std::vector<int> getRoadIds();
 	void addRoad(Road*);
 	void deleteRoad(Road*);
 	void drawJunction();
 	void forgetAboutMe();
+	void updateJunctionRoadsBerms();
 	void setName(char*);
 	void forgetJunction(Junction*);
 	bool isPoint(QPointF);
@@ -117,6 +139,7 @@ private:
 	Point point;
 	std::vector<Connection> connections;
 	std::vector<ConnectedRoad> roads;
+	std::vector<Traffics> trafficLights; //next second
 	std::vector<int> roadIds;
 	float red = 0.6, green = 0.0, blue = 0.45;
 	bool _isCarSpawn = false;
@@ -141,3 +164,10 @@ void drawSquare(Point);
 void drawWhiteQuads(std::vector<Point>);
 void copyLanePointVectorToPointVector(std::vector<LanePoint>, std::vector<Point>&); //deprecated
 
+
+struct Way {
+	Junction from;
+	Junction to;
+	std::vector<Connection> steps;
+	int length = 0;
+};

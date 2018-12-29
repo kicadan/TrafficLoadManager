@@ -64,7 +64,29 @@
       </widget>
      </item>
      <item>
-      <widget class="QSpinBox" name="spinBox">
+      <widget class="QLabel" name="label_3">
+       <property name="minimumSize">
+        <size>
+         <width>200</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>200</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>długość zielonego światła</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSpinBox" name="spinBox_green">
        <property name="maximumSize">
         <size>
          <width>50</width>
@@ -161,7 +183,7 @@
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
    <receiver>TrafficLightsEditor</receiver>
-   <slot>accept()</slot>
+   <slot>acceptButton()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>248</x>
@@ -177,7 +199,7 @@
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
    <receiver>TrafficLightsEditor</receiver>
-   <slot>reject()</slot>
+   <slot>rejectButton()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>316</x>
@@ -189,5 +211,60 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>pushButton_dodaj</sender>
+   <signal>pressed()</signal>
+   <receiver>TrafficLightsEditor</receiver>
+   <slot>addToTableAction()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>806</x>
+     <y>40</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>436</x>
+     <y>248</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>tableWidget</sender>
+   <signal>cellDoubleClicked(int,int)</signal>
+   <receiver>TrafficLightsEditor</receiver>
+   <slot>deleteFromTableAction(int,int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>406</x>
+     <y>266</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>436</x>
+     <y>248</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButton_reset</sender>
+   <signal>clicked()</signal>
+   <receiver>TrafficLightsEditor</receiver>
+   <slot>resetSettings()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>838</x>
+     <y>266</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>436</x>
+     <y>248</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
+ <slots>
+  <slot>addToTableAction()</slot>
+  <slot>deleteFromTableAction(int,int)</slot>
+  <slot>acceptButton()</slot>
+  <slot>rejectButton()</slot>
+  <slot>resetSettings()</slot>
+ </slots>
 </ui>

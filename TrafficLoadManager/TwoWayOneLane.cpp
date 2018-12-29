@@ -100,8 +100,6 @@ void TwoWayOneLane::setRoad(QPointF firstPoint, QPointF lastPoint, bool endingTo
 	}
 	addPoint(Point(lastPoint.x() + parallel_segments.xl, lastPoint.y() + parallel_segments.yl), BACK_LANE);
 	addPoint(Point(lastPoint.x() + parallel_segments.xr, lastPoint.y() + parallel_segments.yr), LANE);
-	addPoint(Point(lastPoint.x(), lastPoint.y()), RIGHT_BERM);
-	addPoint(Point(lastPoint.x(), lastPoint.y()), LEFT_BERM);
 	addPoint(Point(lastPoint.x(), lastPoint.y()), MID);
 
 	QPointF _firstBermLeftPoint(0, 0), _firstBermRightPoint(0, 0), _lastBermLeftPoint(0, 0), _lastBermRightPoint(0, 0);
@@ -117,10 +115,14 @@ void TwoWayOneLane::setRoad(QPointF firstPoint, QPointF lastPoint, bool endingTo
 		backLane[backLane.size() - 1].junction = endJunction;
 		lane[lane.size() - 1].junction = endJunction;
 	}
-	if (_firstBermLeftPoint.x() != 0) leftBerm.setP1(_firstBermLeftPoint);
-	if (_firstBermRightPoint.x() != 0) rightBerm.setP1(_firstBermRightPoint);
-	if (_lastBermLeftPoint.x() != 0) leftBerm.setP2(_lastBermLeftPoint);
-	if (_lastBermRightPoint.x() != 0) rightBerm.setP2(_lastBermRightPoint);
+	if (_firstBermLeftPoint.x() != 0)
+		leftBerm.setP1(_firstBermLeftPoint);
+	if (_firstBermRightPoint.x() != 0)
+		rightBerm.setP1(_firstBermRightPoint);
+	if (_lastBermLeftPoint.x() != 0)
+		leftBerm.setP2(_lastBermLeftPoint);
+	if (_lastBermRightPoint.x() != 0)
+		rightBerm.setP2(_lastBermRightPoint);
 }
 
 void TwoWayOneLane::drawRoad() //poprawiæ na dwie drogi
@@ -236,6 +238,8 @@ Point TwoWayOneLane::getLastPointOf(LaneType laneType)
 	case BACK_LANE: return backLane[backLane.size() - 1].point;
 	case LANE: return lane[lane.size() - 1].point;
 	case MID: return mid[mid.size() - 1];
+	case RIGHT_BERM: return rightBermVector[rightBermVector.size() - 1];
+	case LEFT_BERM: return leftBermVector[leftBermVector.size() - 1];
 	}
 }
 
@@ -448,13 +452,13 @@ void TwoWayOneLane::freePoint(LaneType laneType, int index)
 		lane[index].point.setFree();
 }
 
-bool TwoWayOneLane::reservePoint(LaneType laneType, int index)
+bool TwoWayOneLane::reservePoint(LaneType laneType, Vehicle* vehicle, int index)
 {
 	bool success = false;
 	if (laneType == BACK_LANE)
-		success = backLane[index].point.occupy();
+		success = backLane[index].point.occupy(vehicle);
 	else if (laneType == LANE)
-		success = lane[index].point.occupy();
+		success = lane[index].point.occupy(vehicle);
 	return success;
 }
 
@@ -480,6 +484,8 @@ Point TwoWayOneLane::getFirstPointOf(LaneType laneType)
 	case BACK_LANE: return backLane[0].point;
 	case LANE: return lane[0].point;
 	case MID: return mid[0];
+	case RIGHT_BERM: return rightBermVector[0];
+	case LEFT_BERM: return leftBermVector[0];
 	}
 }
 

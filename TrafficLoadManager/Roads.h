@@ -57,6 +57,7 @@ public:
 	//virtual bool setRoad(QPoint, QPoint, bool, Junction*);// LineParams startBermParams = LineParams{ 0.0, 0.0, false }, LineParams endBermParams = LineParams{ 0.0, 0.0, false }); // , int, int);//, int, int) = 0;
 	Point searchPoint(Point);
 	void addOtherRoad(int);
+	void setBerm(LaneType, QLineF);
 	LaneType getCloserBerm(Point); //returns berm basing on distance calculated on opposite point to connecting to this road (if _firstPoint connecting, _lastPoint is the calculation base)
 	bool doLineCrosses(QLineF);
 	Point getFurtherPoint(Point); //returns lastPoint if parameter point is firstPoint and firstPoint if parameter is lastPoint
@@ -77,7 +78,7 @@ public:
 	virtual void deleteJunction(void*) = 0;
 	virtual void deleteFromJunctions() = 0;
 	virtual void freePoint(LaneType, int) = 0;
-	virtual bool reservePoint(LaneType, int) = 0;
+	virtual bool reservePoint(LaneType, Vehicle*, int) = 0;
 	ElementType getRoadType();
 	ObjectType getObjectType();
 	QLineF getLineParams(LaneType);

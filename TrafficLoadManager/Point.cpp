@@ -30,16 +30,23 @@ double Point::y()
 	return this->_y;
 }
 
+Vehicle * Point::getVehicle()
+{
+	return vehicle;
+}
+
 void Point::setFree()
 {
 	free = true;
+	vehicle = NULL;
 }
 
-bool Point::occupy()
+bool Point::occupy(Vehicle *vehicle)
 {
 	bool succesfull = free;
 	if (free) {
 		free = false;
+		this->vehicle = vehicle;
 	}
 	return succesfull;
 }

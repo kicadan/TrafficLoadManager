@@ -240,7 +240,7 @@ void DesignArea::makeConnection()
 	}
 	if (startPointJunction != NULL && startPointJunction == endPointJunction && endRoad != NULL && startRoad != NULL && endLaneType != NOTHING && startLaneType != NOTHING) {
 		startPointJunction->connectRoads(startRoad, startLaneType, endRoad, endLaneType);
-		startPointJunction->updateLights();
+		startPointJunction->updateLightsSettings();
 		startPointJunction->drawJunction();
 	}
 	constructing = false;
@@ -323,6 +323,7 @@ void DesignArea::editTrafficLights()
 		//open dialog
 		if (junction != NULL && junction->hasTrafficLights()) {
 			TrafficLightsEditor trafficLightsEditor(this, junction);
+			trafficLightsEditor.setLightsEditorFields();
 			trafficLightsEditor.setModal(true);
 			trafficLightsEditor.exec();
 		}
@@ -470,14 +471,14 @@ void DesignArea::drawRoad()
 			if (startRoad != NULL) {
 				startRoad->addJunction(firstPoint, startJunction); 
 				startJunction->addRoad(road);
-				startJunction->updateLights();
+				startJunction->updateLightsSettings();
 				startJunction->updateOtherJunctionsOnMainRoad();
 				startJunction->drawJunction();
 			}
 			if (endRoad != NULL) {
 				endRoad->addJunction(lastPoint, endJunction); 
 				endJunction->addRoad(road);
-				endJunction->updateLights();
+				endJunction->updateLightsSettings();
 				endJunction->updateOtherJunctionsOnMainRoad();
 				endJunction->drawJunction();
 			}
@@ -509,14 +510,14 @@ void DesignArea::drawRoad()
 			if (startRoad != NULL) {
 				startRoad->addJunction(firstPoint, startJunction);
 				startJunction->addRoad(road);
-				startJunction->updateLights();
+				startJunction->updateLightsSettings();
 				startJunction->updateOtherJunctionsOnMainRoad();
 				startJunction->drawJunction();
 			}
 			if (endRoad != NULL) {
 				endRoad->addJunction(lastPoint, endJunction);
 				endJunction->addRoad(road);
-				endJunction->updateLights();
+				endJunction->updateLightsSettings();
 				endJunction->updateOtherJunctionsOnMainRoad();
 				endJunction->drawJunction();
 			}
@@ -548,14 +549,14 @@ void DesignArea::drawRoad()
 			if (startRoad != NULL) {
 				startRoad->addJunction(firstPoint, startJunction);
 				startJunction->addRoad(road);
-				startJunction->updateLights();
+				startJunction->updateLightsSettings();
 				startJunction->updateOtherJunctionsOnMainRoad();
 				startJunction->drawJunction();
 			}
 			if (endRoad != NULL) {
 				endRoad->addJunction(lastPoint, endJunction);
 				endJunction->addRoad(road);
-				endJunction->updateLights();
+				endJunction->updateLightsSettings();
 				endJunction->updateOtherJunctionsOnMainRoad();
 				endJunction->drawJunction();
 			}
@@ -651,6 +652,7 @@ void DesignArea::validateConnections()
 {
 	for (auto junctionIt = allJunctions.begin(); junctionIt < allJunctions.end(); junctionIt++) {
 		(*junctionIt)->validateConnections();
+		(*junctionIt)->updateLightsSettings();
 	}
 }
 

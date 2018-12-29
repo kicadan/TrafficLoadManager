@@ -236,6 +236,8 @@ Point OneWayTwoLanes::getLastPointOf(LaneType laneType)
 	case LEFT_LANE: return leftLane[leftLane.size() - 1].point;
 	case RIGHT_LANE: return rightLane[rightLane.size() - 1].point;
 	case MID: return mid[mid.size() - 1];
+	case RIGHT_BERM: return rightBermVector[rightBermVector.size() - 1];
+	case LEFT_BERM: return leftBermVector[leftBermVector.size() - 1];
 	}
 }
 
@@ -448,13 +450,13 @@ void OneWayTwoLanes::freePoint(LaneType laneType, int index)
 		rightLane[index].point.setFree();
 }
 
-bool OneWayTwoLanes::reservePoint(LaneType laneType, int index)
+bool OneWayTwoLanes::reservePoint(LaneType laneType, Vehicle* vehicle, int index)
 {
 	bool success = false;
 	if (laneType == LEFT_LANE)
-		success = leftLane[index].point.occupy();
+		success = leftLane[index].point.occupy(vehicle);
 	else if (laneType == RIGHT_LANE)
-		success = rightLane[index].point.occupy();
+		success = rightLane[index].point.occupy(vehicle);
 	return success;
 }
 
@@ -480,6 +482,8 @@ Point OneWayTwoLanes::getFirstPointOf(LaneType laneType)
 	case LEFT_LANE: return leftLane[0].point;
 	case RIGHT_LANE: return rightLane[0].point;
 	case MID: return mid[0];
+	case RIGHT_BERM: return rightBermVector[0];
+	case LEFT_BERM: return leftBermVector[0];
 	}
 }
 

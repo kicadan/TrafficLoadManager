@@ -38,13 +38,6 @@ struct Change {
 	Action action;
 };
 
-struct Way {
-	Junction from;
-	Junction to;
-	std::vector<Connection> steps;
-	int length = 0;
-};
-
 struct Previous {
 	int cost = 999999;
 	Connection connection;

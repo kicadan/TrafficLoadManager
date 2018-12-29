@@ -17,7 +17,7 @@ Junction::Junction(Point _point, Road* mainRoad, int id) : AppObject(JUNCTION)
 	roads.push_back(ConnectedRoad{ LANE, mainRoad }); //main actualRoad could be lane, the rest have right or left berm param
 	roadIds.push_back(mainRoad->id);
 	char name[100];
-	sprintf(name, "Wêze³ numer: %d", id);
+	sprintf(name, "Wêze³ numer %d", id);
 	strcpy(this->name, name);
 }
 
@@ -26,33 +26,105 @@ Junction::~Junction()
 {
 }
 
-QPointF Junction::returnCrossPointsForBerm(QLineF theLine, QPointF oppositePoint)
+QPointF Junction::returnCrossPointsForBerm(QLineF theLine, QPointF oppositePoint, int roadId)
 {
 	QLineF::IntersectType intersectType;
 	std::vector<QPointF> points;
+	std::vector<int> roadNumbers;
 	QPointF crossPoint(0, 0);
 	for (auto actualRoad : this->roads) {
-		QLineF leftBerm = actualRoad.road->getLineParams(LEFT_BERM);
-		QLineF rightBerm = actualRoad.road->getLineParams(RIGHT_BERM);
+		if (roadId != actualRoad.road->id) { //check all roads without new
+			QLineF leftBerm = actualRoad.road->getLineParams(LEFT_BERM);
+			QLineF rightBerm = actualRoad.road->getLineParams(RIGHT_BERM);
 
-		intersectType = theLine.intersect(rightBerm, &crossPoint);
-		if (intersectType == QLineF::BoundedIntersection)
-			points.push_back(crossPoint);
-		intersectType = theLine.intersect(leftBerm, &crossPoint);
-		if (intersectType == QLineF::BoundedIntersection)
-			points.push_back(crossPoint);
+			intersectType = theLine.intersect(rightBerm, &crossPoint);
+			if (intersectType == QLineF::BoundedIntersection) {
+				points.push_back(crossPoint);
+				roadNumbers.push_back(actualRoad.road->id + 10000); //ROADID + 10000 if RIGHT_BERM
+			}
+			intersectType = theLine.intersect(leftBerm, &crossPoint);
+			if (intersectType == QLineF::BoundedIntersection) {
+				points.push_back(crossPoint);
+				roadNumbers.push_back(actualRoad.road->id + 20000); //ROADID + 20000 if LEFT_BERM
+			}
+		}
 	}
 	double minimumDistance = 9999999.0, minimumRightDistance = 9999999.0;
 	double dist;
+	int counter = 0;
+	int pointsRoadId = -1;
+	LaneType whichBerm = RIGHT_BERM; //just for default 
 	crossPoint = QPointF(0, 0);
 	for (auto _point : points) {
 		dist = sqrt(pow(oppositePoint.x() - _point.x(), 2) + pow(oppositePoint.y() - _point.y(), 2));
 		if (dist < minimumDistance) {
 			minimumDistance = dist;
 			crossPoint = _point;
+			if (roadNumbers[counter] >= 20000) {
+				pointsRoadId = roadNumbers[counter] - 20000;
+				whichBerm = LEFT_BERM;
+			}
+			else if (roadNumbers[counter] >= 10000){
+				pointsRoadId = roadNumbers[counter] - 10000;
+				whichBerm = RIGHT_BERM;
+			}
+		}
+		counter++;
+	}
+	//update berm from roads already connected to junction
+	QLineF newBerm;
+	int idx = 0;
+	if (pointsRoadId > 0) { // >0 without main road 
+		for (auto roadsIt = roads.begin(); roadsIt < roads.end(); roadsIt++) {
+			if ((*roadsIt).road->id == pointsRoadId && (*roadsIt).road->id != 0) {
+				idx = (*roadsIt).road->getPointIndex(point, MID);
+				newBerm = (*roadsIt).road->getLineParams(whichBerm);
+				if (idx == 0)
+					newBerm.setP1(crossPoint);
+				else if (idx > 0)
+					newBerm.setP2(crossPoint);
+				(*roadsIt).road->setBerm(whichBerm, newBerm);
+				break;
+			}
 		}
 	}
 	return crossPoint;
+}
+
+void Junction::updateJunctionRoadsBerms()
+{
+	QLineF updatedBerm;
+	QPointF newCrossPoint;
+	for (auto roadIt = roads.begin(); roadIt < roads.end(); roadIt++) {
+		if ((*roadIt).road->id == 0)
+			continue;
+		int idx = (*roadIt).road->getPointIndex(point, MID);
+		updatedBerm = (*roadIt).road->getLineParams(RIGHT_BERM);
+		if (idx == 0) {
+			updatedBerm.setP1(QPointF((*roadIt).road->getFirstPointOf(RIGHT_BERM).x(), (*roadIt).road->getFirstPointOf(RIGHT_BERM).y()));
+			newCrossPoint = returnCrossPointsForBerm(updatedBerm, updatedBerm.p2(), (*roadIt).road->id);
+			updatedBerm.setP1(newCrossPoint);
+		}
+		else {
+			updatedBerm.setP2(QPointF((*roadIt).road->getLastPointOf(RIGHT_BERM).x(), (*roadIt).road->getLastPointOf(RIGHT_BERM).y()));
+			newCrossPoint = returnCrossPointsForBerm(updatedBerm, updatedBerm.p1(), (*roadIt).road->id);
+			updatedBerm.setP2(newCrossPoint);
+		}
+		(*roadIt).road->setBerm(RIGHT_BERM, updatedBerm);
+
+		updatedBerm = (*roadIt).road->getLineParams(LEFT_BERM);
+		if (idx == 0) {
+			updatedBerm.setP1(QPointF((*roadIt).road->getFirstPointOf(LEFT_BERM).x(), (*roadIt).road->getFirstPointOf(LEFT_BERM).y()));
+			newCrossPoint = returnCrossPointsForBerm(updatedBerm, updatedBerm.p2(), (*roadIt).road->id);
+			updatedBerm.setP1(newCrossPoint);
+		}
+		else {
+			updatedBerm.setP2(QPointF((*roadIt).road->getLastPointOf(LEFT_BERM).x(), (*roadIt).road->getLastPointOf(LEFT_BERM).y()));
+			newCrossPoint = returnCrossPointsForBerm(updatedBerm, updatedBerm.p1(), (*roadIt).road->id);
+			updatedBerm.setP2(newCrossPoint);
+		}
+		(*roadIt).road->setBerm(LEFT_BERM, updatedBerm);
+	}
 }
 
 void Junction::addRoad(Road *road)
@@ -96,6 +168,7 @@ void Junction::deleteRoad(Road * deletedRoad)
 		}
 		lightsIt++;
 	}
+	updateJunctionRoadsBerms();
 	trafficLightsSettings.upToDate = false;
 }
 
@@ -193,21 +266,38 @@ Point Junction::getPointForTrafficLight(short direction, Point oppositePoint) //
 			int otherRoadIndex = (*roadIt).road->getPointIndex(point, MID);
 			QPointF actualCrossPoint = otherRoadIndex == 0 ? (*roadIt).road->getLineParams(RIGHT_BERM).p1() : (*roadIt).road->getLineParams(LEFT_BERM).p2();
 			qreal actualDistance = qSqrt(qPow(oppositePoint.x() - actualCrossPoint.x(), 2) + qPow(oppositePoint.y() - actualCrossPoint.y(), 2));
-			if (actualDistance < closestPointDistance)
+			if (actualDistance < closestPointDistance) {
 				closestPoint = actualCrossPoint;
+				closestPointDistance = actualDistance;
+			}
 		}
 		else if (direction < 0 && (*roadIt).whichSide == LEFT_BERM) { //direction < 0 ---> looking for roads on LEFT SIDE
 			int otherRoadIndex = (*roadIt).road->getPointIndex(point, MID);
 			QPointF actualCrossPoint = otherRoadIndex == 0 ? (*roadIt).road->getLineParams(RIGHT_BERM).p1() : (*roadIt).road->getLineParams(LEFT_BERM).p2();
 			qreal actualDistance = qSqrt(qPow(oppositePoint.x() - actualCrossPoint.x(), 2) + qPow(oppositePoint.y() - actualCrossPoint.y(), 2));
-			if (actualDistance < closestPointDistance)
+			if (actualDistance < closestPointDistance) {
 				closestPoint = actualCrossPoint;
+				closestPointDistance = actualDistance;
+			}
 		}
 	}
 	return Point(closestPoint);
 }
 
-void Junction::updateLights()
+Light Junction::getLightState(int roadId, LaneType lane)
+{
+	short direction;
+	if (lane == LANE || lane == RIGHT_LANE || lane == LEFT_LANE) direction = 1;
+	else direction = -1;
+	for (auto lightsIt = trafficLights.begin(); lightsIt < trafficLights.end(); lightsIt++) {
+		if ((*lightsIt).roadId == roadId && (*lightsIt).direction == direction)
+			return (*lightsIt).actualLight;
+	}
+	if (!trafficLightsSettings.upToDate) //if lights are not set properly
+		return YELLOW;
+}
+
+void Junction::updateLightsSettings()
 {
 	bool updated = false;
 	for (auto roadIt = roads.begin(); roadIt < roads.end(); roadIt++) {
@@ -234,13 +324,19 @@ void Junction::updateLights()
 				trafficLights.roadId = (*roadIt).road->id;
 				for (auto lightsIt = trafficLightsSettings.lights.begin(); lightsIt < trafficLightsSettings.lights.end(); lightsIt++) {
 					if ((*lightsIt).roadId == trafficLights.roadId && (*lightsIt).direction == trafficLights.direction) {
-						(*lightsIt) = trafficLights;
+						(*lightsIt).berm = trafficLights.berm;
+						(*lightsIt).lightsPoint = trafficLights.lightsPoint;
+						(*lightsIt).haveConnection = trafficLights.haveConnection;
+						(*lightsIt).direction = trafficLights.direction;
+						(*lightsIt).roadId = trafficLights.roadId;
 						updated = true;
 						break;
 					}
 				}
 				if (!updated) {
-					trafficLights.lightsId = trafficLightsSettings.lights.size();
+					trafficLights.lightsId = trafficLightsSettings.lights.size(); 
+					char name[100];
+					sprintf(trafficLights.lightsName, "Kierunek numer %d", trafficLights.lightsId);
 					trafficLightsSettings.lights.push_back(trafficLights);
 				}
 			}
@@ -268,13 +364,19 @@ void Junction::updateLights()
 				trafficLights.roadId = (*roadIt).road->id;
 				for (auto lightsIt = trafficLightsSettings.lights.begin(); lightsIt < trafficLightsSettings.lights.end(); lightsIt++) {
 					if ((*lightsIt).roadId == trafficLights.roadId && (*lightsIt).direction == trafficLights.direction) {
-						(*lightsIt) = trafficLights;
+						(*lightsIt).berm = trafficLights.berm;
+						(*lightsIt).lightsPoint = trafficLights.lightsPoint;
+						(*lightsIt).haveConnection = trafficLights.haveConnection;
+						(*lightsIt).direction = trafficLights.direction;
+						(*lightsIt).roadId = trafficLights.roadId;
 						updated = true;
 						break;
 					}
 				}
 				if (!updated) {
 					trafficLights.lightsId = trafficLightsSettings.lights.size();
+					char name[100];
+					sprintf(trafficLights.lightsName, "Kierunek numer %d", trafficLights.lightsId);
 					trafficLightsSettings.lights.push_back(trafficLights);
 				}
 			}
@@ -298,13 +400,19 @@ void Junction::updateLights()
 				trafficLights.roadId = (*roadIt).road->id;
 				for (auto lightsIt = trafficLightsSettings.lights.begin(); lightsIt < trafficLightsSettings.lights.end(); lightsIt++) {
 					if ((*lightsIt).roadId == trafficLights.roadId && (*lightsIt).direction == trafficLights.direction) {
-						(*lightsIt) = trafficLights;
+						(*lightsIt).berm = trafficLights.berm;
+						(*lightsIt).lightsPoint = trafficLights.lightsPoint;
+						(*lightsIt).haveConnection = trafficLights.haveConnection;
+						(*lightsIt).direction = trafficLights.direction;
+						(*lightsIt).roadId = trafficLights.roadId;
 						updated = true;
 						break;
 					}
 				}
 				if (!updated) {
 					trafficLights.lightsId = trafficLightsSettings.lights.size();
+					char name[100];
+					sprintf(trafficLights.lightsName, "Kierunek numer %d", trafficLights.lightsId);
 					trafficLightsSettings.lights.push_back(trafficLights);
 				}
 			}
@@ -326,13 +434,19 @@ void Junction::updateLights()
 				trafficLights.roadId = (*roadIt).road->id;
 				for (auto lightsIt = trafficLightsSettings.lights.begin(); lightsIt < trafficLightsSettings.lights.end(); lightsIt++) {
 					if ((*lightsIt).roadId == trafficLights.roadId && (*lightsIt).direction == trafficLights.direction) {
-						(*lightsIt) = trafficLights;
+						(*lightsIt).berm = trafficLights.berm;
+						(*lightsIt).lightsPoint = trafficLights.lightsPoint;
+						(*lightsIt).haveConnection = trafficLights.haveConnection;
+						(*lightsIt).direction = trafficLights.direction;
+						(*lightsIt).roadId = trafficLights.roadId;
 						updated = true;
 						break;
 					}
 				}
 				if (!updated) {
 					trafficLights.lightsId = trafficLightsSettings.lights.size();
+					char name[100];
+					sprintf(trafficLights.lightsName, "Kierunek numer %d", trafficLights.lightsId);
 					trafficLightsSettings.lights.push_back(trafficLights);
 				}
 				//left side
@@ -342,7 +456,7 @@ void Junction::updateLights()
 				trafficLights.lightsPoint = getPointForTrafficLight(-1, (*roadIt).road->getLastPointOf(MID));
 				if (trafficLights.lightsPoint.x() == 0) //where no road on right side
 					trafficLights.lightsPoint = (*roadIt).road->getPoint((*roadIt).road->getPointIndex(point, MID) + 1, LEFT_BERM);
-				for (auto connIt = connections.begin(); connIt < connections.end(); connIt) {
+				for (auto connIt = connections.begin(); connIt < connections.end(); connIt++) {
 					if ((*connIt).previousRoad->id == (*roadIt).road->id && (*connIt).previousLaneType == BACK_LANE) {
 						trafficLights.haveConnection = true;
 						break;
@@ -352,16 +466,55 @@ void Junction::updateLights()
 				trafficLights.roadId = (*roadIt).road->id;
 				for (auto lightsIt = trafficLightsSettings.lights.begin(); lightsIt < trafficLightsSettings.lights.end(); lightsIt++) {
 					if ((*lightsIt).roadId == trafficLights.roadId && (*lightsIt).direction == trafficLights.direction) {
-						(*lightsIt) = trafficLights;
+						(*lightsIt).berm = trafficLights.berm;
+						(*lightsIt).lightsPoint = trafficLights.lightsPoint;
+						(*lightsIt).haveConnection = trafficLights.haveConnection;
+						(*lightsIt).direction = trafficLights.direction;
+						(*lightsIt).roadId = trafficLights.roadId;
 						updated = true;
 						break;
 					}
 				}
 				if (!updated) {
 					trafficLights.lightsId = trafficLightsSettings.lights.size();
+					char name[100];
+					sprintf(trafficLights.lightsName, "Kierunek numer %d", trafficLights.lightsId);
 					trafficLightsSettings.lights.push_back(trafficLights);
 				}
 			}
+		}
+	}
+}
+
+void Junction::initTrafficLights()
+{
+	trafficLights.clear();
+	int beforeStep = 0;
+	if (trafficLightsSettings.upToDate) {
+		for (auto settingsIt = trafficLightsSettings.lightsSequence.begin(); settingsIt < trafficLightsSettings.lightsSequence.end(); settingsIt++) {
+			Traffics traffics;
+			traffics.greenStarts = beforeStep;
+			if (beforeStep == 0) traffics.actualLight = GREEN;
+			else traffics.actualLight = RED;
+			beforeStep = traffics.greenEnds = traffics.greenStarts + (*settingsIt).greenLight.time;
+			traffics.timeModulo = (*settingsIt).greenLight.time + (*settingsIt).redLight.time;
+			traffics.lightsId = (*settingsIt).lightsId;
+			traffics.lightsPoint = (*settingsIt).lightsPoint;
+			traffics.roadId = (*settingsIt).roadId;
+			traffics.direction = (*settingsIt).direction;
+			trafficLights.push_back(traffics);
+		}
+	}
+}
+
+void Junction::updateLights() {
+	Traffics actual;
+	if (trafficLightsSettings.upToDate) {
+		for (auto lightsIt = trafficLights.begin(); lightsIt < trafficLights.end(); lightsIt++) {
+			(*lightsIt).counter = ((*lightsIt).counter + 1) % (*lightsIt).timeModulo;
+			if ((*lightsIt).counter >= (*lightsIt).greenStarts && (*lightsIt).counter < (*lightsIt).greenEnds) { (*lightsIt).actualLight = GREEN; drawFilledCircle((*lightsIt).lightsPoint, distance / 2, 0, 1, 0); }
+			else { (*lightsIt).actualLight = RED; drawFilledCircle((*lightsIt).lightsPoint, distance / 2, 1, 0, 0); }
+			
 		}
 	}
 }
@@ -378,15 +531,15 @@ void Junction::drawTrafficLights()
 	}
 }
 
-void Junction::drawTrafficLights(float red, float green, float blue)
-{
-	//draw traffic lights
-	//TO DO
-	//if not trafficLightsSettings.upToDate -> yellow light?
-	for (auto lightsIt = trafficLightsSettings.lights.begin(); lightsIt < trafficLightsSettings.lights.end(); lightsIt++) {
-		drawSquare((*lightsIt).lightsPoint);
-	}
-}
+//void Junction::drawTrafficLights(float red, float green, float blue)
+//{
+//	//draw traffic lights
+//	//TO DO
+//	//if not trafficLightsSettings.upToDate -> yellow light?
+//	for (auto lightsIt = trafficLightsSettings.lights.begin(); lightsIt < trafficLightsSettings.lights.end(); lightsIt++) {
+//		drawSquare((*lightsIt).lightsPoint);
+//	}
+//}
 
 int Junction::getNumberOfRoads()
 {
@@ -437,7 +590,7 @@ std::vector<Connection> Junction::getConnectionsFrom(int roadFrom)
 	return workingConnections;
 }
 
-bool Junction::connectRoads(Road* roadFrom, LaneType laneFrom, Road* roadTo, LaneType laneTo)
+bool Junction::connectRoads(Road* roadFrom, LaneType laneFrom, Road* roadTo, LaneType laneTo) //making connection on junction
 {
 	if (!checkIfBelongs(roadFrom->id) || !checkIfBelongs(roadTo->id))
 		return false;
@@ -453,7 +606,7 @@ bool Junction::connectRoads(Road* roadFrom, LaneType laneFrom, Road* roadTo, Lan
 	int pointIndexOnTheRoad = roadTo->getPointIndex(point, MID);
 	newConnection.nextLaneType = laneTo;
 	newConnection.nextRoad = roadTo;
-	newConnection.nextPoint = pointIndexOnTheRoad;
+	newConnection.nextPoint = laneTo == LANE || laneTo == RIGHT_LANE || laneTo == LEFT_LANE ? pointIndexOnTheRoad + 1 : pointIndexOnTheRoad - 1; //next point on the road - miss junction point
 	if (pointIndexOnTheRoad > -1) {
 		newConnection.nextJunction = (Junction*)roadTo->getNextJunction(laneTo, pointIndexOnTheRoad);
 		newConnection.distanceToNextJunction = pointIndexOnTheRoad;
@@ -705,12 +858,6 @@ std::vector<Point> Junction::getPointsToClearJunctionArea()
 	return pointsToPass;
 }
 
-void copyLanePointVectorToPointVector(std::vector<LanePoint> vectorFrom, std::vector<Point> &vectorTo)
-{
-	for (auto vectorFromIt = vectorFrom.begin(); vectorFromIt < vectorFrom.end(); vectorFromIt++)
-		vectorTo.push_back((*vectorFromIt).point);
-}
-
 bool Junction::checkIfBelongs(int roadId) {
 	for (auto roadIt = roadIds.begin(); roadIt < roadIds.end(); roadIt++) {
 		if ((*roadIt) == roadId)
@@ -719,6 +866,15 @@ bool Junction::checkIfBelongs(int roadId) {
 	return false;
 }
 
+void Junction::showFocusedLights(Point lightsPoint) {
+	//TO DO
+}
+
+void copyLanePointVectorToPointVector(std::vector<LanePoint> vectorFrom, std::vector<Point> &vectorTo)
+{
+	for (auto vectorFromIt = vectorFrom.begin(); vectorFromIt < vectorFrom.end(); vectorFromIt++)
+		vectorTo.push_back((*vectorFromIt).point);
+}
 
 QPointF getBezierPoint(QPointF point1, QPointF point2, QPointF point3, double t) {
 	QPointF point;
@@ -776,7 +932,7 @@ void drawFilledCircle(Point point, float radius, float red, float green, float b
 }
 
 void drawSquare(Point mid) {
-	glColor3f(0.529f, 0.529f, 0.529f);
+	glColor3f(0.529f, 0.529f, 0.529f); //grey
 	glBegin(GL_POLYGON);
 	glVertex2f(mid.x() - 1.2*distance/2, mid.y() - 1.2*distance/2);
 	glVertex2f(mid.x() + 1.2*distance/2, mid.y() - 1.2*distance/2);

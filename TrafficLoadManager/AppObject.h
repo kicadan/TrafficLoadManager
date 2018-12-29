@@ -8,7 +8,8 @@
 enum ObjectType {
 	ROAD = 0,
 	JUNCTION = 1,
-	APP_POINT = 2
+	APP_POINT = 2,
+	VEHICLE = 3
 };
 
 class AppObject
