@@ -179,7 +179,7 @@ public:
     {
         SpawnSettingsEditor->setWindowTitle(QApplication::translate("SpawnSettingsEditor", "Edytor punktu odradzania pojazd\303\263w", nullptr));
         lineEdit_Actual->setText(QApplication::translate("SpawnSettingsEditor", "W\304\231ze\305\202", nullptr));
-        label->setText(QApplication::translate("SpawnSettingsEditor", "Liczba pojazd\303\263w na minut\304\231", nullptr));
+        label->setText(QApplication::translate("SpawnSettingsEditor", "Odst\304\231p pomi\304\231dzy kolejnymi pojazdami [s]", nullptr));
         label_4->setText(QApplication::translate("SpawnSettingsEditor", "Procent kierowc\303\263w z GPS", nullptr));
         label_3->setText(QApplication::translate("SpawnSettingsEditor", "Dost\304\231pne w\304\231z\305\202y", nullptr));
         pushButton_add->setText(QApplication::translate("SpawnSettingsEditor", "Dodaj w\304\231ze\305\202", nullptr));

@@ -74,7 +74,7 @@ void SpawnSettingsEditor::setSpawnEditorFields()
 {
 	spawnSettings = this->junction->getCarSpawnSettings();
 	tableJunctions = spawnSettings.destinations;
-	ui.spinBox_cars->setValue(spawnSettings.carsPerMinute);
+	ui.spinBox_cars->setValue(spawnSettings.timeBetweenCars);
 	ui.spinBox_smart_drivers->setValue(spawnSettings.smartDrivers);
 	for (auto junctionIt = tableJunctions.begin(); junctionIt < tableJunctions.end(); junctionIt++) {
 		ui.tableWidget->insertRow(ui.tableWidget->rowCount());

@@ -39,8 +39,9 @@ public:
     QAction *action_sygnalizacja;
     QAction *action_sygnalizacja_edytuj;
     QAction *actionPunkt_odradzania_pojazd_w_2;
-    QAction *actionGeneruj_statystyki;
+    QAction *action_koniec_symulacji;
     QAction *actionPo_czenia_na_skrzy_owaniu;
+    QAction *actionZatrzymaj_symulacj;
     QWidget *centralWidget;
     QHBoxLayout *horizontalLayout;
     DesignArea *designArea;
@@ -85,10 +86,12 @@ public:
         action_sygnalizacja_edytuj->setObjectName(QStringLiteral("action_sygnalizacja_edytuj"));
         actionPunkt_odradzania_pojazd_w_2 = new QAction(TrafficLoadManagerClass);
         actionPunkt_odradzania_pojazd_w_2->setObjectName(QStringLiteral("actionPunkt_odradzania_pojazd_w_2"));
-        actionGeneruj_statystyki = new QAction(TrafficLoadManagerClass);
-        actionGeneruj_statystyki->setObjectName(QStringLiteral("actionGeneruj_statystyki"));
+        action_koniec_symulacji = new QAction(TrafficLoadManagerClass);
+        action_koniec_symulacji->setObjectName(QStringLiteral("action_koniec_symulacji"));
         actionPo_czenia_na_skrzy_owaniu = new QAction(TrafficLoadManagerClass);
         actionPo_czenia_na_skrzy_owaniu->setObjectName(QStringLiteral("actionPo_czenia_na_skrzy_owaniu"));
+        actionZatrzymaj_symulacj = new QAction(TrafficLoadManagerClass);
+        actionZatrzymaj_symulacj->setObjectName(QStringLiteral("actionZatrzymaj_symulacj"));
         centralWidget = new QWidget(TrafficLoadManagerClass);
         centralWidget->setObjectName(QStringLiteral("centralWidget"));
         horizontalLayout = new QHBoxLayout(centralWidget);
@@ -130,7 +133,7 @@ public:
         menuCzynno_ci->addAction(menuEdytuj->menuAction());
         menuCzynno_ci->addSeparator();
         menuCzynno_ci->addAction(actionSymuluj);
-        menuCzynno_ci->addAction(actionGeneruj_statystyki);
+        menuCzynno_ci->addAction(action_koniec_symulacji);
         menuRysuj->addAction(actionDroga_jednokierunkowa_z_jednym_pasem);
         menuRysuj->addAction(actionDroga_jednokierunkowa_z_dwoma_pasami_ruchu);
         menuRysuj->addAction(actionDroga_dwukierunkowa_z_jednym_pasem_ruchu);
@@ -151,6 +154,8 @@ public:
         QObject::connect(actionPunkt_odradzania_pojazd_w_2, SIGNAL(triggered()), designArea, SLOT(handleAction()));
         QObject::connect(action_sygnalizacja, SIGNAL(triggered()), designArea, SLOT(handleAction()));
         QObject::connect(action_sygnalizacja_edytuj, SIGNAL(triggered()), designArea, SLOT(handleAction()));
+        QObject::connect(actionSymuluj, SIGNAL(triggered()), designArea, SLOT(startSimulation()));
+        QObject::connect(action_koniec_symulacji, SIGNAL(triggered()), designArea, SLOT(stopSimulation()));
 
         QMetaObject::connectSlotsByName(TrafficLoadManagerClass);
     } // setupUi
@@ -172,8 +177,9 @@ public:
         action_sygnalizacja->setText(QApplication::translate("TrafficLoadManagerClass", "Sygnalizacja \305\233wietlna", nullptr));
         action_sygnalizacja_edytuj->setText(QApplication::translate("TrafficLoadManagerClass", "Sygnalizacja \305\233wietlna", nullptr));
         actionPunkt_odradzania_pojazd_w_2->setText(QApplication::translate("TrafficLoadManagerClass", "Punkt odradzania pojazd\303\263w", nullptr));
-        actionGeneruj_statystyki->setText(QApplication::translate("TrafficLoadManagerClass", "Generuj statystyki", nullptr));
+        action_koniec_symulacji->setText(QApplication::translate("TrafficLoadManagerClass", "Zako\305\204cz symulacj\304\231", nullptr));
         actionPo_czenia_na_skrzy_owaniu->setText(QApplication::translate("TrafficLoadManagerClass", "Po\305\202\304\205czenia na skrzy\305\274owaniu", nullptr));
+        actionZatrzymaj_symulacj->setText(QApplication::translate("TrafficLoadManagerClass", "Zatrzymaj symulacj\304\231", nullptr));
 #ifndef QT_NO_ACCESSIBILITY
         designArea->setAccessibleName(QApplication::translate("TrafficLoadManagerClass", "designAreaWidget", nullptr));
 #endif // QT_NO_ACCESSIBILITY

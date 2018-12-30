@@ -48,16 +48,19 @@ void TwoWayOneLane::setRoad(QPointF firstPoint, QPointF lastPoint, bool endingTo
 	addPoint(Point(firstPoint.x(), firstPoint.y()), RIGHT_BERM);
 	addPoint(Point(firstPoint.x(), firstPoint.y()), LEFT_BERM);
 	addPoint(Point(firstPoint.x(), firstPoint.y()), MID);
-	double xl = firstPoint.x() + parallel_segments.xl + distance; //one point later than first
-	double xr = firstPoint.x() + parallel_segments.xr + distance; //one point later than first
-	double xm = firstPoint.x() + distance;
+	double xl = firstPoint.x() + parallel_segments.xl;
+	double xr = firstPoint.x() + parallel_segments.xr;
+	double xm = firstPoint.x();
 	double yl, yr, ym;
 
 	if (horizontal)
 	{
 		// y = A * x + B
 		double x_last = lastPoint.x() + parallel_segments.xl;
-		if (lastPoint.x() > firstPoint.x())
+		if (lastPoint.x() > firstPoint.x()) {
+			xl += distance; //one point later than first
+			xr += distance; //one point later than first
+			xm += distance; //one point later than first
 			for (xl; xl < x_last; xm += distance, xl += distance, xr += distance) {
 				addPoint(Point(xl, A*xl + Bl), BACK_LANE);
 				addPoint(Point(xr, A*xr + Br), LANE);
@@ -65,7 +68,11 @@ void TwoWayOneLane::setRoad(QPointF firstPoint, QPointF lastPoint, bool endingTo
 				addPoint(Point(xm, A*xm + Bm), RIGHT_BERM);
 				addPoint(Point(xm, A*xm + Bm), LEFT_BERM);
 			}
-		else
+		}
+		else {
+			xl -= distance; //one point later than first
+			xr -= distance; //one point later than first
+			xm -= distance; //one point later than first
 			for (xl; xl > x_last; xm -= distance, xl -= distance, xr -= distance) {
 				addPoint(Point(xl, A*xl + Bl), BACK_LANE);
 				addPoint(Point(xr, A*xr + Br), LANE);
@@ -73,15 +80,16 @@ void TwoWayOneLane::setRoad(QPointF firstPoint, QPointF lastPoint, bool endingTo
 				addPoint(Point(xm, A*xm + Bm), RIGHT_BERM);
 				addPoint(Point(xm, A*xm + Bm), LEFT_BERM);
 			}
+		}
 	}
 	else
 	{
 		// x = (y - B) / A if dx != 0 else x = point.x
-		yl = firstPoint.y() + parallel_segments.yl + distance; //one point later than first;
-		yr = firstPoint.y() + parallel_segments.yr + distance; //one point later than first;
-		ym = firstPoint.y() + distance;
 		double y_last = lastPoint.y() + parallel_segments.yl;
-		if (lastPoint.y() > firstPoint.y())
+		if (lastPoint.y() > firstPoint.y()) {
+			yl = firstPoint.y() + parallel_segments.yl + distance; //one point later than first;
+			yr = firstPoint.y() + parallel_segments.yr + distance; //one point later than first;
+			ym = firstPoint.y() + distance;
 			for (yl; yl < y_last; ym += distance, yl += distance, yr += distance) {
 				addPoint(Point(dx != 0 ? (yl - Bl) / A : xl, yl), BACK_LANE);
 				addPoint(Point(dx != 0 ? (yr - Br) / A : xr, yr), LANE);
@@ -89,7 +97,11 @@ void TwoWayOneLane::setRoad(QPointF firstPoint, QPointF lastPoint, bool endingTo
 				addPoint(Point(dx != 0 ? (ym - Bm) / A : xm, ym), RIGHT_BERM);
 				addPoint(Point(dx != 0 ? (ym - Bm) / A : xm, ym), LEFT_BERM);
 			}
-		else
+		}
+		else {
+			yl = firstPoint.y() + parallel_segments.yl - distance; //one point later than first;
+			yr = firstPoint.y() + parallel_segments.yr - distance; //one point later than first;
+			ym = firstPoint.y() - distance;
 			for (yl; yl > y_last; ym -= distance, yl -= distance, yr -= distance) {
 				addPoint(Point(dx != 0 ? (yl - Bl) / A : xl, yl), BACK_LANE);
 				addPoint(Point(dx != 0 ? (yr - Br) / A : xr, yr), LANE);
@@ -97,6 +109,7 @@ void TwoWayOneLane::setRoad(QPointF firstPoint, QPointF lastPoint, bool endingTo
 				addPoint(Point(dx != 0 ? (ym - Bm) / A : xm, ym), RIGHT_BERM);
 				addPoint(Point(dx != 0 ? (ym - Bm) / A : xm, ym), LEFT_BERM);
 			}
+		}
 	}
 	addPoint(Point(lastPoint.x() + parallel_segments.xl, lastPoint.y() + parallel_segments.yl), BACK_LANE);
 	addPoint(Point(lastPoint.x() + parallel_segments.xr, lastPoint.y() + parallel_segments.yr), LANE);
@@ -441,6 +454,49 @@ void TwoWayOneLane::deleteFromJunctions()
 			(*backLaneIt).junction->deleteRoad(this);
 		if ((*laneIt).junction != NULL)
 			(*laneIt).junction->deleteRoad(this);
+	}
+}
+
+void TwoWayOneLane::processAllVehicles(std::vector<Vehicle*> &alreadyProcessed)
+{
+	Point actualPoint;
+	Vehicle* vehicle;
+	bool processed, turned;
+	auto laneIt = lane.end();
+	while (laneIt > lane.begin()) {
+		laneIt--;
+		actualPoint = (*laneIt).point;
+		processed = false;
+		turned = false;
+		if (!actualPoint.isFree()) {
+			vehicle = actualPoint.getVehicle();
+			for (auto vehiclesIt = alreadyProcessed.begin(); vehiclesIt < alreadyProcessed.end(); vehiclesIt++) {
+				if ((*vehiclesIt) == vehicle) {
+					processed = true;
+					break;
+				}
+			}
+			if (!processed) turned = vehicle->continueJourney();
+			if (turned) alreadyProcessed.push_back(vehicle);
+		}
+	}
+	processed = false;
+	turned = false;
+	laneIt = backLane.begin();
+	while (laneIt < backLane.end()) {
+		actualPoint = (*laneIt).point;
+		if (!actualPoint.isFree()) {
+			vehicle = actualPoint.getVehicle();
+			for (auto vehiclesIt = alreadyProcessed.begin(); vehiclesIt < alreadyProcessed.end(); vehiclesIt++) {
+				if ((*vehiclesIt) == vehicle) {
+					processed = true;
+					break;
+				}
+			}
+			if (!processed) turned = vehicle->continueJourney();
+			if (turned) alreadyProcessed.push_back(vehicle);
+		}
+		laneIt++;
 	}
 }
 

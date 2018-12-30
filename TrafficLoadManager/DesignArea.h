@@ -17,6 +17,7 @@
 #include "OneWayTwoLanes.h"
 #include "TwoWayOneLane.h"
 #include "TrafficLightsEditor.h"
+#include "Automobile.h"
 
 enum Action {
 	LOAD_FROM_FILE = 0,
@@ -65,11 +66,12 @@ private:
 	ElementType currentObjectBrush = OneWayRoadWithOneLane;
 	std::vector<Road*> allRoads;
 	std::vector<Junction*> allJunctions;
+	std::vector<Vehicle*> allVehicles;
 	std::vector<Change> allChanges;
 	std::vector<Node> allNodes;
 	std::vector<Way> allWays;
 	int changeCounter = 0;
-	QTimer timer;
+	QTimer* timer;
 	int actualScale;
 	Point lastPoint;
 	Point firstPoint;
@@ -78,6 +80,7 @@ private:
 	bool constructing = false;
 	bool editing = false;
 	bool repainting = false;
+	bool simulationInProgress = false;
 	QImage image;
 	double x = 10;
 	double y = 10;
@@ -106,14 +109,15 @@ private:
 	bool checkIfCollidingWithOtherRoad(Road*, std::vector<int>);
 	void deleteJunction(Junction*);
 	void deleteRoad(Road*);
+	void deleteVehicle(Vehicle*);
 	void copyAllJunctions(std::vector<Junction>&);
 	void fulfillNodeTable(std::vector<Node>&, Junction);
 	void transferJunction(std::vector<Junction> &from, std::vector<Junction> &to, Junction junction);
-	void updateConnectionIfCloser(Junction, std::vector<Node>&, Connection);
-	Junction getClosestJunction(std::vector<Node> allNodes, std::vector<Junction> Qset);
 	vectors calc_vectors(QPoint, QPoint);
-	Way makeWayFromNodes(std::vector<Node>, Junction, Junction);
 	void findWay(Junction, Junction);
+	void processVehiclesMove();
+	void emitCar(Way);
+	void processSimulation();
 
 protected:
 	
@@ -129,5 +133,8 @@ protected:
 
 public slots:
 	void handleAction();
+	void continueSimulation();
+	void startSimulation();
+	void stopSimulation();
 
 };

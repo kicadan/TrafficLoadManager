@@ -77,6 +77,7 @@ public:
 	virtual void addJunction(Point, void*) = 0;
 	virtual void deleteJunction(void*) = 0;
 	virtual void deleteFromJunctions() = 0;
+	virtual void processAllVehicles(std::vector<Vehicle*>&) = 0;
 	virtual void freePoint(LaneType, int) = 0;
 	virtual bool reservePoint(LaneType, Vehicle*, int) = 0;
 	ElementType getRoadType();

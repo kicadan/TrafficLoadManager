@@ -6,15 +6,15 @@ class Automobile :
 	public Vehicle
 {
 public:
-	Automobile(Junction*, Junction*, Way);
+	Automobile(Way);
 	~Automobile();
 
+	//returns false didn't change road; true if turned to another road
 	bool continueJourney();
+	void setWay(Way);
 
 private:
 
-	Junction * from;
-	Junction * to;
 	Connection actualStep;
 	Road* actualRoad;
 	LaneType actualLaneType;

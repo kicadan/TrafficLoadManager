@@ -10,6 +10,9 @@ TrafficLightsEditor::TrafficLightsEditor(QWidget *parent, Junction* junction)
 	lightsInTable = trafficLightsSettings.lightsSequence;
 	lightsInCombo = differentialBetweenTwoLightsVectors(trafficLightsSettings.lights, trafficLightsSettings.lightsSequence);
 	lights = trafficLightsSettings.lights;
+	for (auto lightsIt = lightsInTable.begin(); lightsIt < lightsInTable.end(); lightsIt++) {
+		totalGreenLight += (*lightsIt).greenLight.time;
+	}
 	codec = QTextCodec::codecForName("Windows-1250");
 	ui.label_skrzyzowanie->setText(codec->toUnicode(this->name)); 
 	QStringList list;

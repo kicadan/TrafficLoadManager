@@ -47,7 +47,7 @@
          <item>
           <widget class="QLabel" name="label">
            <property name="text">
-            <string>Liczba pojazdów na minutę</string>
+            <string>Odstęp pomiędzy kolejnymi pojazdami [s]</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>

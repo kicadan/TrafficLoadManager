@@ -23,7 +23,7 @@ struct Connection {
 };
 
 struct CarSpawnSettings {
-	int carsPerMinute = 0;
+	int timeBetweenCars = 0;
 	int smartDrivers = 0;
 	std::vector<Junction*> destinations;
 };
@@ -99,6 +99,9 @@ public:
 	void notCarSpawn();
 	void editCarSpawn(CarSpawnSettings);
 	void makeConnectionsForCarSpawn(); //makes connections if CarSpawn has 1 road in it
+	void addWay(Way);
+	void clearWays();
+	Way updateCarSpawn();
 	bool isCarSpawn();
 
 	//traffic lights
@@ -140,11 +143,16 @@ private:
 	std::vector<Connection> connections;
 	std::vector<ConnectedRoad> roads;
 	std::vector<Traffics> trafficLights; //next second
+	std::vector<Way> ways;
 	std::vector<int> roadIds;
 	float red = 0.6, green = 0.0, blue = 0.45;
 	bool _isCarSpawn = false;
 	bool _gotTrafficLights = false;
 	char name[100];
+	int wayCounter = 0;
+	int emitTimeCounter = 0;;
+	int carsEmitted = 0;
+	int carsShouldBeEmitted = 0;
 	int id;
 
 	std::vector<Point> getPointsToDrawConnection(Connection);

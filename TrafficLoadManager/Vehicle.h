@@ -1,6 +1,9 @@
 #pragma once
 #include "AppObject.h"
 
+struct Way;
+class Junction;
+
 class Vehicle :
 	public AppObject
 {
@@ -8,6 +11,8 @@ public:
 	Vehicle();
 	~Vehicle();
 
+	ObjectType getObjectType();
+	virtual void setWay(Way) = 0;
 	virtual bool continueJourney() = 0;
 
 protected:

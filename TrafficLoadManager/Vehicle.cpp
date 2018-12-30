@@ -14,3 +14,8 @@ Vehicle::~Vehicle()
 {
 }
 
+ObjectType Vehicle::getObjectType()
+{
+	return _objectType;
+}
+

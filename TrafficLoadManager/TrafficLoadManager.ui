@@ -68,7 +68,7 @@
     <addaction name="menuEdytuj"/>
     <addaction name="separator"/>
     <addaction name="actionSymuluj"/>
-    <addaction name="actionGeneruj_statystyki"/>
+    <addaction name="action_koniec_symulacji"/>
    </widget>
    <widget class="QMenu" name="menuUstawienia">
     <property name="title">
@@ -158,14 +158,19 @@
     <string>Punkt odradzania pojazdów</string>
    </property>
   </action>
-  <action name="actionGeneruj_statystyki">
+  <action name="action_koniec_symulacji">
    <property name="text">
-    <string>Generuj statystyki</string>
+    <string>Zakończ symulację</string>
    </property>
   </action>
   <action name="actionPo_czenia_na_skrzy_owaniu">
    <property name="text">
     <string>Połączenia na skrzyżowaniu</string>
+   </property>
+  </action>
+  <action name="actionZatrzymaj_symulacj">
+   <property name="text">
+    <string>Zatrzymaj symulację</string>
    </property>
   </action>
  </widget>
@@ -177,6 +182,8 @@
    <header location="global">DesignArea.h</header>
    <slots>
     <slot>handleAction()</slot>
+    <slot>startSimulation()</slot>
+    <slot>stopSimulation()</slot>
    </slots>
   </customwidget>
  </customwidgets>
@@ -317,6 +324,38 @@
    <signal>triggered()</signal>
    <receiver>designArea</receiver>
    <slot>handleAction()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>440</x>
+     <y>378</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionSymuluj</sender>
+   <signal>triggered()</signal>
+   <receiver>designArea</receiver>
+   <slot>startSimulation()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>440</x>
+     <y>378</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>action_koniec_symulacji</sender>
+   <signal>triggered()</signal>
+   <receiver>designArea</receiver>
+   <slot>stopSimulation()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>-1</x>

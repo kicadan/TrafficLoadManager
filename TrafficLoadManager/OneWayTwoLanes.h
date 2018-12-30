@@ -27,6 +27,7 @@ public:
 	void addJunction(Point, void*);
 	void deleteJunction(void*);
 	void deleteFromJunctions();
+	void processAllVehicles(std::vector<Vehicle*>&);
 	void freePoint(LaneType, int);
 	bool reservePoint(LaneType, Vehicle*, int);
 	void updateLane();

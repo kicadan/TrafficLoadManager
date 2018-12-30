@@ -30,7 +30,9 @@ QPointF Junction::returnCrossPointsForBerm(QLineF theLine, QPointF oppositePoint
 {
 	QLineF::IntersectType intersectType;
 	std::vector<QPointF> points;
-	std::vector<int> roadNumbers;
+	std::vector<LaneType> roadSides;
+	std::vector<LaneType> roadBerms;
+	std::vector<int> roadsNumbers;
 	QPointF crossPoint(0, 0);
 	for (auto actualRoad : this->roads) {
 		if (roadId != actualRoad.road->id) { //check all roads without new
@@ -38,14 +40,18 @@ QPointF Junction::returnCrossPointsForBerm(QLineF theLine, QPointF oppositePoint
 			QLineF rightBerm = actualRoad.road->getLineParams(RIGHT_BERM);
 
 			intersectType = theLine.intersect(rightBerm, &crossPoint);
-			if (intersectType == QLineF::BoundedIntersection) {
+			if (intersectType == QLineF::BoundedIntersection) { //rightBerm
 				points.push_back(crossPoint);
-				roadNumbers.push_back(actualRoad.road->id + 10000); //ROADID + 10000 if RIGHT_BERM
+				roadSides.push_back(actualRoad.whichSide);
+				roadBerms.push_back(RIGHT_BERM);
+				roadsNumbers.push_back(actualRoad.road->id);
 			}
 			intersectType = theLine.intersect(leftBerm, &crossPoint);
-			if (intersectType == QLineF::BoundedIntersection) {
+			if (intersectType == QLineF::BoundedIntersection) { //leftBerm
 				points.push_back(crossPoint);
-				roadNumbers.push_back(actualRoad.road->id + 20000); //ROADID + 20000 if LEFT_BERM
+				roadSides.push_back(actualRoad.whichSide);
+				roadBerms.push_back(LEFT_BERM);
+				roadsNumbers.push_back(actualRoad.road->id);
 			}
 		}
 	}
@@ -53,30 +59,26 @@ QPointF Junction::returnCrossPointsForBerm(QLineF theLine, QPointF oppositePoint
 	double dist;
 	int counter = 0;
 	int pointsRoadId = -1;
-	LaneType whichBerm = RIGHT_BERM; //just for default 
+	LaneType whichMainRoadSide = RIGHT_BERM; //just for default 
+	LaneType whichBerm = RIGHT_BERM; //also just for default
 	crossPoint = QPointF(0, 0);
 	for (auto _point : points) {
 		dist = sqrt(pow(oppositePoint.x() - _point.x(), 2) + pow(oppositePoint.y() - _point.y(), 2));
 		if (dist < minimumDistance) {
 			minimumDistance = dist;
 			crossPoint = _point;
-			if (roadNumbers[counter] >= 20000) {
-				pointsRoadId = roadNumbers[counter] - 20000;
-				whichBerm = LEFT_BERM;
-			}
-			else if (roadNumbers[counter] >= 10000){
-				pointsRoadId = roadNumbers[counter] - 10000;
-				whichBerm = RIGHT_BERM;
-			}
+			whichMainRoadSide = roadSides[counter];
+			whichBerm = roadBerms[counter];
+			pointsRoadId = counter;
 		}
 		counter++;
 	}
 	//update berm from roads already connected to junction
 	QLineF newBerm;
 	int idx = 0;
-	if (pointsRoadId > 0) { // >0 without main road 
+	if (whichMainRoadSide != LANE && pointsRoadId != -1) { // without main road 
 		for (auto roadsIt = roads.begin(); roadsIt < roads.end(); roadsIt++) {
-			if ((*roadsIt).road->id == pointsRoadId && (*roadsIt).road->id != 0) {
+			if ((*roadsIt).road->id == roadsNumbers[pointsRoadId]) {
 				idx = (*roadsIt).road->getPointIndex(point, MID);
 				newBerm = (*roadsIt).road->getLineParams(whichBerm);
 				if (idx == 0)
@@ -96,32 +98,38 @@ void Junction::updateJunctionRoadsBerms()
 	QLineF updatedBerm;
 	QPointF newCrossPoint;
 	for (auto roadIt = roads.begin(); roadIt < roads.end(); roadIt++) {
-		if ((*roadIt).road->id == 0)
-			continue;
 		int idx = (*roadIt).road->getPointIndex(point, MID);
 		updatedBerm = (*roadIt).road->getLineParams(RIGHT_BERM);
 		if (idx == 0) {
 			updatedBerm.setP1(QPointF((*roadIt).road->getFirstPointOf(RIGHT_BERM).x(), (*roadIt).road->getFirstPointOf(RIGHT_BERM).y()));
-			newCrossPoint = returnCrossPointsForBerm(updatedBerm, updatedBerm.p2(), (*roadIt).road->id);
-			updatedBerm.setP1(newCrossPoint);
+			if ((*roadIt).whichSide != LANE) {
+				newCrossPoint = returnCrossPointsForBerm(updatedBerm, updatedBerm.p2(), (*roadIt).road->id);
+				if (newCrossPoint.x() != 0) updatedBerm.setP1(newCrossPoint);
+			}
 		}
-		else {
+		else if(point == (*roadIt).road->getLastPointOf(MID)) {
 			updatedBerm.setP2(QPointF((*roadIt).road->getLastPointOf(RIGHT_BERM).x(), (*roadIt).road->getLastPointOf(RIGHT_BERM).y()));
-			newCrossPoint = returnCrossPointsForBerm(updatedBerm, updatedBerm.p1(), (*roadIt).road->id);
-			updatedBerm.setP2(newCrossPoint);
+			if ((*roadIt).whichSide != LANE) {
+				newCrossPoint = returnCrossPointsForBerm(updatedBerm, updatedBerm.p1(), (*roadIt).road->id);
+				if (newCrossPoint.x() != 0) updatedBerm.setP2(newCrossPoint);
+			}
 		}
 		(*roadIt).road->setBerm(RIGHT_BERM, updatedBerm);
 
 		updatedBerm = (*roadIt).road->getLineParams(LEFT_BERM);
 		if (idx == 0) {
 			updatedBerm.setP1(QPointF((*roadIt).road->getFirstPointOf(LEFT_BERM).x(), (*roadIt).road->getFirstPointOf(LEFT_BERM).y()));
-			newCrossPoint = returnCrossPointsForBerm(updatedBerm, updatedBerm.p2(), (*roadIt).road->id);
-			updatedBerm.setP1(newCrossPoint);
+			if ((*roadIt).whichSide != LANE) {
+				newCrossPoint = returnCrossPointsForBerm(updatedBerm, updatedBerm.p2(), (*roadIt).road->id);
+				if (newCrossPoint.x() != 0) updatedBerm.setP1(newCrossPoint);
+			}
 		}
-		else {
+		else if (point == (*roadIt).road->getLastPointOf(MID)) {
 			updatedBerm.setP2(QPointF((*roadIt).road->getLastPointOf(LEFT_BERM).x(), (*roadIt).road->getLastPointOf(LEFT_BERM).y()));
-			newCrossPoint = returnCrossPointsForBerm(updatedBerm, updatedBerm.p1(), (*roadIt).road->id);
-			updatedBerm.setP2(newCrossPoint);
+			if ((*roadIt).whichSide != LANE) {
+				newCrossPoint = returnCrossPointsForBerm(updatedBerm, updatedBerm.p1(), (*roadIt).road->id);
+				if (newCrossPoint.x() != 0) updatedBerm.setP2(newCrossPoint);
+			}
 		}
 		(*roadIt).road->setBerm(LEFT_BERM, updatedBerm);
 	}
@@ -169,6 +177,7 @@ void Junction::deleteRoad(Road * deletedRoad)
 		lightsIt++;
 	}
 	updateJunctionRoadsBerms();
+	updateLightsSettings();
 	trafficLightsSettings.upToDate = false;
 }
 
@@ -733,6 +742,40 @@ void Junction::makeConnectionsForCarSpawn()
 			}
 		}
 	}
+}
+
+void Junction::addWay(Way way)
+{
+	ways.push_back(way);
+}
+
+void Junction::clearWays()
+{
+	ways.clear();
+}
+
+Way Junction::updateCarSpawn()
+{
+	Way returnedWay;
+	Connection firstStep;
+	if (ways.size() > 0) {
+		firstStep = ways[wayCounter].steps[ways[wayCounter].steps.size() - 1];
+	}
+	else
+		return returnedWay;
+	if (carSpawnSettings.timeBetweenCars > 0) { //cars can be emitted when timeBetweenCars is set 
+		emitTimeCounter = (emitTimeCounter + 1) % carSpawnSettings.timeBetweenCars;
+		if (emitTimeCounter == 0) {
+			carsShouldBeEmitted++;
+		}
+		if (firstStep.nextRoad->getPoint(firstStep.nextPoint, firstStep.nextLaneType).isFree()
+			&& ways.size() > 0 && carsShouldBeEmitted > carsEmitted) { //if car can be emitted
+			carsEmitted++;
+			returnedWay = ways[wayCounter];
+			wayCounter = (wayCounter + 1) % ways.size();
+		}
+	}
+	return returnedWay; //if point is occupied returns Way with length = 0
 }
 
 //deprecated
