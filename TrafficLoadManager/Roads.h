@@ -87,7 +87,6 @@ public:
 protected:
 	ElementType _roadType;
 	std::vector<Point> mid, rightBermVector, leftBermVector;
-	std::vector<int> otherRoads;
 	vectors parallel_segments;
 	QLineF leftBerm, rightBerm, coreLine;
 	bool horizontal;

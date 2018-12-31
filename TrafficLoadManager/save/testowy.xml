@@ -1,0 +1,114 @@
+<?xml version="1.0" ?>
+<DesignArea>
+    <Changes>
+        <Change id="0" type="3">
+            <AppObject object-type="0">
+                <Road id="0" type="0">
+                    <FirstPoint x="514" y="79" />
+                    <LastPoint x="554" y="363" />
+                </Road>
+            </AppObject>
+        </Change>
+        <Change id="1" type="3">
+            <AppObject object-type="0">
+                <Road id="1" type="0">
+                    <FirstPoint x="554" y="363" />
+                    <LastPoint x="1076" y="488" />
+                </Road>
+            </AppObject>
+        </Change>
+        <Change id="1" type="3">
+            <AppObject object-type="1">
+                <Junction id="0" name="Wêze³ numer 0">
+                    <RoadId id="0" />
+                    <Point x="554" y="363" />
+                </Junction>
+            </AppObject>
+        </Change>
+        <Change id="2" type="3">
+            <AppObject object-type="0">
+                <Road id="2" type="0">
+                    <FirstPoint x="364" y="537" />
+                    <LastPoint x="554" y="363" />
+                </Road>
+            </AppObject>
+        </Change>
+        <Change id="3" type="6">
+            <AppObject object-type="1">
+                <Junction id="1" name="Wêze³ numer 1">
+                    <RoadId id="0" />
+                    <Point x="514" y="79" />
+                </Junction>
+            </AppObject>
+        </Change>
+        <Change id="4" type="6">
+            <AppObject object-type="1">
+                <Junction id="2" name="Wêze³ numer 2">
+                    <RoadId id="1" />
+                    <Point x="1076" y="488" />
+                </Junction>
+            </AppObject>
+        </Change>
+        <Change id="5" type="6">
+            <AppObject object-type="1">
+                <Junction id="3" name="Wêze³ numer 3">
+                    <RoadId id="2" />
+                    <Point x="364" y="537" />
+                </Junction>
+            </AppObject>
+        </Change>
+        <Change id="6" type="9">
+            <AppObject object-type="1">
+                <Junction id="0" name="Wêze³ numer 0">
+                    <RoadId id="0" />
+                    <Point x="554" y="363" />
+                </Junction>
+            </AppObject>
+        </Change>
+    </Changes>
+    <TrafficLightsSettings>
+        <Settings junction-id="0" up-to-date="1">
+            <LightsSequence>
+                <Lights green="4" red="1" road-id="0" direction="1" />
+                <Lights green="1" red="4" road-id="2" direction="1" />
+            </LightsSequence>
+        </Settings>
+        <Settings junction-id="1" up-to-date="0">
+            <LightsSequence />
+        </Settings>
+        <Settings junction-id="2" up-to-date="0">
+            <LightsSequence />
+        </Settings>
+        <Settings junction-id="3" up-to-date="0">
+            <LightsSequence />
+        </Settings>
+    </TrafficLightsSettings>
+    <CarSpawnSettings>
+        <Settings junction-id="0" time="0" />
+        <Settings junction-id="1" time="4">
+            <Destination junction-id="2" />
+        </Settings>
+        <Settings junction-id="2" time="0" />
+        <Settings junction-id="3" time="2">
+            <Destination junction-id="2" />
+        </Settings>
+    </CarSpawnSettings>
+    <Connections>
+        <Connection junction-id="0">
+            <Previous road-id="2" lane-type="2" />
+            <Next road-id="1" lane-type="2" />
+        </Connection>
+        <Connection junction-id="0">
+            <Previous road-id="0" lane-type="2" />
+            <Next road-id="1" lane-type="2" />
+        </Connection>
+        <Connection junction-id="1">
+            <Previous road-id="0" lane-type="2" />
+            <Next road-id="0" lane-type="2" />
+        </Connection>
+        <Connection junction-id="3">
+            <Previous road-id="2" lane-type="2" />
+            <Next road-id="2" lane-type="2" />
+        </Connection>
+    </Connections>
+</DesignArea>

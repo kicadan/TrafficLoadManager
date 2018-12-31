@@ -30,6 +30,7 @@ private:
 	void putLightsInTable(Lights);
 	void updateLightsInTables(Lights);
 	void deleteLightsFromTable(int);
+	void showFocusedLights(int);
 
 public slots:
 	void addToTableAction();
@@ -37,6 +38,7 @@ public slots:
 	void resetSettings();
 	void acceptButton();
 	void rejectButton();
+	void comboBoxIndexChanged(int);
 };
 
 //enum Light {

@@ -5,6 +5,7 @@
 #include <qgraphicsview.h>
 #include <qcolor.h>
 #include <qpainter.h>
+#include <vld.h>
 
 #define width 1920
 #define height 1080

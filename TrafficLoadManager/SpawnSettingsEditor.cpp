@@ -12,6 +12,7 @@ SpawnSettingsEditor::SpawnSettingsEditor(QWidget *parent, Junction* junction)
 	ui.tableWidget->setColumnCount(1);
 	list << codec->toUnicode("Wêze³");
 	ui.tableWidget->setHorizontalHeaderLabels(list);
+	ui.tableWidget->horizontalHeader()->setStretchLastSection(true);
 }
 
 SpawnSettingsEditor::~SpawnSettingsEditor()
@@ -75,7 +76,6 @@ void SpawnSettingsEditor::setSpawnEditorFields()
 	spawnSettings = this->junction->getCarSpawnSettings();
 	tableJunctions = spawnSettings.destinations;
 	ui.spinBox_cars->setValue(spawnSettings.timeBetweenCars);
-	ui.spinBox_smart_drivers->setValue(spawnSettings.smartDrivers);
 	for (auto junctionIt = tableJunctions.begin(); junctionIt < tableJunctions.end(); junctionIt++) {
 		ui.tableWidget->insertRow(ui.tableWidget->rowCount());
 		int counter = ui.tableWidget->rowCount() - 1;
@@ -101,7 +101,7 @@ void SpawnSettingsEditor::acceptButton() {
 	//change settings !!!!!!
 	strcpy(name, codec->fromUnicode(ui.lineEdit_Actual->text()));
 	junction->setName(this->name);
-	this->spawnSettings = CarSpawnSettings{ ui.spinBox_cars->value(), ui.spinBox_smart_drivers->value(), tableJunctions };
+	this->spawnSettings = CarSpawnSettings{ ui.spinBox_cars->value(), tableJunctions };
 	junction->editCarSpawn(this->spawnSettings);
 	accept();
 }

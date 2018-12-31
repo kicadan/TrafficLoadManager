@@ -18,7 +18,7 @@ void OneWayOneLane::addPoint(Point point, LaneType pointType)
 	}
 }
 
-void OneWayOneLane::setRoad(QPointF firstPoint, QPointF lastPoint, bool endingToOtherRoad, Junction* startJunction, Junction* endJunction)//std::vector<Road*> startRoads, std::vector<Road*> endRoads)//LineParams startBermParams, LineParams endBermParams)//, int beginRoad, int endRoad)
+void OneWayOneLane::setRoad(QPointF firstPoint, QPointF lastPoint, Junction* startJunction, Junction* endJunction)//std::vector<Road*> startRoads, std::vector<Road*> endRoads)//LineParams startBermParams, LineParams endBermParams)//, int beginRoad, int endRoad)
 {
 	this->parallel_segments = calc_vectors(lastPoint, firstPoint);
 	

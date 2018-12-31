@@ -37,6 +37,7 @@
     <property name="title">
      <string>Pliki</string>
     </property>
+    <addaction name="action_nowy"/>
     <addaction name="actionWczytaj_plansz_z_pliku"/>
     <addaction name="actionZapisz_plansz_do_pliku"/>
    </widget>
@@ -69,16 +70,10 @@
     <addaction name="separator"/>
     <addaction name="actionSymuluj"/>
     <addaction name="action_koniec_symulacji"/>
-   </widget>
-   <widget class="QMenu" name="menuUstawienia">
-    <property name="title">
-     <string>Ustawienia</string>
-    </property>
-    <addaction name="actionKonfiguracja"/>
+    <addaction name="action_generuj_statystyki"/>
    </widget>
    <addaction name="menuPliki"/>
    <addaction name="menuCzynno_ci"/>
-   <addaction name="menuUstawienia"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
@@ -160,7 +155,7 @@
   </action>
   <action name="action_koniec_symulacji">
    <property name="text">
-    <string>Zakończ symulację</string>
+    <string>Zatrzymaj symulację</string>
    </property>
   </action>
   <action name="actionPo_czenia_na_skrzy_owaniu">
@@ -171,6 +166,16 @@
   <action name="actionZatrzymaj_symulacj">
    <property name="text">
     <string>Zatrzymaj symulację</string>
+   </property>
+  </action>
+  <action name="action_generuj_statystyki">
+   <property name="text">
+    <string>Generuj statystyki</string>
+   </property>
+  </action>
+  <action name="action_nowy">
+   <property name="text">
+    <string>Nowy</string>
    </property>
   </action>
  </widget>
@@ -184,6 +189,9 @@
     <slot>handleAction()</slot>
     <slot>startSimulation()</slot>
     <slot>stopSimulation()</slot>
+    <slot>generateStatistics()</slot>
+    <slot>readFromFile()</slot>
+    <slot>saveToFile()</slot>
    </slots>
   </customwidget>
  </customwidgets>
@@ -356,6 +364,54 @@
    <signal>triggered()</signal>
    <receiver>designArea</receiver>
    <slot>stopSimulation()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>440</x>
+     <y>378</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>action_generuj_statystyki</sender>
+   <signal>triggered()</signal>
+   <receiver>designArea</receiver>
+   <slot>generateStatistics()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>440</x>
+     <y>378</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionWczytaj_plansz_z_pliku</sender>
+   <signal>triggered()</signal>
+   <receiver>designArea</receiver>
+   <slot>readFromFile()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>440</x>
+     <y>378</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionZapisz_plansz_do_pliku</sender>
+   <signal>triggered()</signal>
+   <receiver>designArea</receiver>
+   <slot>saveToFile()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>-1</x>

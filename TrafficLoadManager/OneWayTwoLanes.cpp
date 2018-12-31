@@ -23,7 +23,7 @@ void OneWayTwoLanes::addPoint(Point point, LaneType pointType)
 	}
 }
 
-void OneWayTwoLanes::setRoad(QPointF firstPoint, QPointF lastPoint, bool endingToOtherRoad, Junction* startJunction, Junction* endJunction)
+void OneWayTwoLanes::setRoad(QPointF firstPoint, QPointF lastPoint, Junction* startJunction, Junction* endJunction)
 {
 	this->parallel_segments = calc_vectors(lastPoint, firstPoint);
 

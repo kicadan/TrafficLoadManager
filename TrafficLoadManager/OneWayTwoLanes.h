@@ -9,7 +9,7 @@ public:
 	OneWayTwoLanes(int);
 	~OneWayTwoLanes();
 
-	void setRoad(QPointF, QPointF, bool, Junction*, Junction*);// LineParams startBermParams = LineParams{ 0.0, 0.0, false }, LineParams endBermParams = LineParams{ 0.0, 0.0, false }); // , int, int);
+	void setRoad(QPointF, QPointF, Junction*, Junction*);// LineParams startBermParams = LineParams{ 0.0, 0.0, false }, LineParams endBermParams = LineParams{ 0.0, 0.0, false }); // , int, int);
 	void drawRoad();
 	//int getPoint(Point);
 

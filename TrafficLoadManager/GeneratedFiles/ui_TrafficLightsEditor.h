@@ -30,6 +30,7 @@ public:
     QVBoxLayout *verticalLayout;
     QLabel *label_skrzyzowanie;
     QHBoxLayout *horizontalLayout;
+    QLabel *label_colour;
     QLabel *label_kolejny_krok;
     QComboBox *comboBox_kierunki;
     QLabel *label_3;
@@ -61,6 +62,13 @@ public:
 
         horizontalLayout = new QHBoxLayout();
         horizontalLayout->setObjectName(QStringLiteral("horizontalLayout"));
+        label_colour = new QLabel(TrafficLightsEditor);
+        label_colour->setObjectName(QStringLiteral("label_colour"));
+        label_colour->setMinimumSize(QSize(50, 0));
+        label_colour->setMaximumSize(QSize(50, 16777215));
+
+        horizontalLayout->addWidget(label_colour);
+
         label_kolejny_krok = new QLabel(TrafficLightsEditor);
         label_kolejny_krok->setObjectName(QStringLiteral("label_kolejny_krok"));
         label_kolejny_krok->setMinimumSize(QSize(150, 0));
@@ -147,14 +155,16 @@ public:
         QObject::connect(pushButton_dodaj, SIGNAL(pressed()), TrafficLightsEditor, SLOT(addToTableAction()));
         QObject::connect(tableWidget, SIGNAL(cellDoubleClicked(int,int)), TrafficLightsEditor, SLOT(deleteFromTableAction(int,int)));
         QObject::connect(pushButton_reset, SIGNAL(clicked()), TrafficLightsEditor, SLOT(resetSettings()));
+        QObject::connect(comboBox_kierunki, SIGNAL(currentIndexChanged(int)), TrafficLightsEditor, SLOT(comboBoxIndexChanged(int)));
 
         QMetaObject::connectSlotsByName(TrafficLightsEditor);
     } // setupUi
 
     void retranslateUi(QDialog *TrafficLightsEditor)
     {
-        TrafficLightsEditor->setWindowTitle(QApplication::translate("TrafficLightsEditor", "Dialog", nullptr));
+        TrafficLightsEditor->setWindowTitle(QApplication::translate("TrafficLightsEditor", "Edytor \305\233wiate\305\202", nullptr));
         label_skrzyzowanie->setText(QApplication::translate("TrafficLightsEditor", "W\304\231ze\305\202", nullptr));
+        label_colour->setText(QString());
         label_kolejny_krok->setText(QApplication::translate("TrafficLightsEditor", "Krok numer ", nullptr));
         label_3->setText(QApplication::translate("TrafficLightsEditor", "d\305\202ugo\305\233\304\207 zielonego \305\233wiat\305\202a", nullptr));
         label->setText(QApplication::translate("TrafficLightsEditor", "[s]", nullptr));

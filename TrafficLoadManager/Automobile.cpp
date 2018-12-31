@@ -8,7 +8,7 @@ Automobile::Automobile(Way way):theWay(way)
 	actualStep = theWay.steps[step];
 	actualRoad = actualStep.nextRoad;
 	actualLaneType = actualStep.nextLaneType;
-	actualPoint = theWay.from.getPoint();
+	actualPoint = theWay.from->getPoint();
 	indexOnRoad = actualStep.nextPoint;
 	nextStepWhileIndex = actualLaneType == BACK_LANE ? indexOnRoad - actualStep.distanceToNextJunction : indexOnRoad + actualStep.distanceToNextJunction;
 }
@@ -36,6 +36,7 @@ bool Automobile::continueJourney()
 		if ( theLight == GREEN || theLight == YELLOW) { //if green light
 			if (theWay.steps[step - 1].nextRoad->getPoint(theWay.steps[step - 1].nextPoint, theWay.steps[step - 1].nextLaneType).isFree()) { //if point is free
 				actualRoad->freePoint(actualLaneType, indexOnRoad);
+				theWay.steps[step].nextJunction->carPassedJunction(actualRoad, actualLaneType);
 				step--;
 				actualStep = theWay.steps[step];
 				actualRoad = actualStep.nextRoad;

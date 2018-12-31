@@ -42,6 +42,8 @@ public:
     QAction *action_koniec_symulacji;
     QAction *actionPo_czenia_na_skrzy_owaniu;
     QAction *actionZatrzymaj_symulacj;
+    QAction *action_generuj_statystyki;
+    QAction *action_nowy;
     QWidget *centralWidget;
     QHBoxLayout *horizontalLayout;
     DesignArea *designArea;
@@ -50,7 +52,6 @@ public:
     QMenu *menuCzynno_ci;
     QMenu *menuRysuj;
     QMenu *menuEdytuj;
-    QMenu *menuUstawienia;
     QToolBar *mainToolBar;
 
     void setupUi(QMainWindow *TrafficLoadManagerClass)
@@ -92,6 +93,10 @@ public:
         actionPo_czenia_na_skrzy_owaniu->setObjectName(QStringLiteral("actionPo_czenia_na_skrzy_owaniu"));
         actionZatrzymaj_symulacj = new QAction(TrafficLoadManagerClass);
         actionZatrzymaj_symulacj->setObjectName(QStringLiteral("actionZatrzymaj_symulacj"));
+        action_generuj_statystyki = new QAction(TrafficLoadManagerClass);
+        action_generuj_statystyki->setObjectName(QStringLiteral("action_generuj_statystyki"));
+        action_nowy = new QAction(TrafficLoadManagerClass);
+        action_nowy->setObjectName(QStringLiteral("action_nowy"));
         centralWidget = new QWidget(TrafficLoadManagerClass);
         centralWidget->setObjectName(QStringLiteral("centralWidget"));
         horizontalLayout = new QHBoxLayout(centralWidget);
@@ -115,8 +120,6 @@ public:
         menuRysuj->setObjectName(QStringLiteral("menuRysuj"));
         menuEdytuj = new QMenu(menuCzynno_ci);
         menuEdytuj->setObjectName(QStringLiteral("menuEdytuj"));
-        menuUstawienia = new QMenu(menuBar);
-        menuUstawienia->setObjectName(QStringLiteral("menuUstawienia"));
         TrafficLoadManagerClass->setMenuBar(menuBar);
         mainToolBar = new QToolBar(TrafficLoadManagerClass);
         mainToolBar->setObjectName(QStringLiteral("mainToolBar"));
@@ -124,7 +127,7 @@ public:
 
         menuBar->addAction(menuPliki->menuAction());
         menuBar->addAction(menuCzynno_ci->menuAction());
-        menuBar->addAction(menuUstawienia->menuAction());
+        menuPliki->addAction(action_nowy);
         menuPliki->addAction(actionWczytaj_plansz_z_pliku);
         menuPliki->addAction(actionZapisz_plansz_do_pliku);
         menuCzynno_ci->addAction(actionCofnij);
@@ -134,6 +137,7 @@ public:
         menuCzynno_ci->addSeparator();
         menuCzynno_ci->addAction(actionSymuluj);
         menuCzynno_ci->addAction(action_koniec_symulacji);
+        menuCzynno_ci->addAction(action_generuj_statystyki);
         menuRysuj->addAction(actionDroga_jednokierunkowa_z_jednym_pasem);
         menuRysuj->addAction(actionDroga_jednokierunkowa_z_dwoma_pasami_ruchu);
         menuRysuj->addAction(actionDroga_dwukierunkowa_z_jednym_pasem_ruchu);
@@ -142,7 +146,6 @@ public:
         menuEdytuj->addAction(action_sygnalizacja_edytuj);
         menuEdytuj->addAction(actionPunkt_odradzania_pojazd_w_2);
         menuEdytuj->addAction(actionPo_czenia_na_skrzy_owaniu);
-        menuUstawienia->addAction(actionKonfiguracja);
 
         retranslateUi(TrafficLoadManagerClass);
         QObject::connect(actionDroga_jednokierunkowa_z_jednym_pasem, SIGNAL(triggered()), designArea, SLOT(handleAction()));
@@ -156,6 +159,9 @@ public:
         QObject::connect(action_sygnalizacja_edytuj, SIGNAL(triggered()), designArea, SLOT(handleAction()));
         QObject::connect(actionSymuluj, SIGNAL(triggered()), designArea, SLOT(startSimulation()));
         QObject::connect(action_koniec_symulacji, SIGNAL(triggered()), designArea, SLOT(stopSimulation()));
+        QObject::connect(action_generuj_statystyki, SIGNAL(triggered()), designArea, SLOT(generateStatistics()));
+        QObject::connect(actionWczytaj_plansz_z_pliku, SIGNAL(triggered()), designArea, SLOT(readFromFile()));
+        QObject::connect(actionZapisz_plansz_do_pliku, SIGNAL(triggered()), designArea, SLOT(saveToFile()));
 
         QMetaObject::connectSlotsByName(TrafficLoadManagerClass);
     } // setupUi
@@ -177,9 +183,11 @@ public:
         action_sygnalizacja->setText(QApplication::translate("TrafficLoadManagerClass", "Sygnalizacja \305\233wietlna", nullptr));
         action_sygnalizacja_edytuj->setText(QApplication::translate("TrafficLoadManagerClass", "Sygnalizacja \305\233wietlna", nullptr));
         actionPunkt_odradzania_pojazd_w_2->setText(QApplication::translate("TrafficLoadManagerClass", "Punkt odradzania pojazd\303\263w", nullptr));
-        action_koniec_symulacji->setText(QApplication::translate("TrafficLoadManagerClass", "Zako\305\204cz symulacj\304\231", nullptr));
+        action_koniec_symulacji->setText(QApplication::translate("TrafficLoadManagerClass", "Zatrzymaj symulacj\304\231", nullptr));
         actionPo_czenia_na_skrzy_owaniu->setText(QApplication::translate("TrafficLoadManagerClass", "Po\305\202\304\205czenia na skrzy\305\274owaniu", nullptr));
         actionZatrzymaj_symulacj->setText(QApplication::translate("TrafficLoadManagerClass", "Zatrzymaj symulacj\304\231", nullptr));
+        action_generuj_statystyki->setText(QApplication::translate("TrafficLoadManagerClass", "Generuj statystyki", nullptr));
+        action_nowy->setText(QApplication::translate("TrafficLoadManagerClass", "Nowy", nullptr));
 #ifndef QT_NO_ACCESSIBILITY
         designArea->setAccessibleName(QApplication::translate("TrafficLoadManagerClass", "designAreaWidget", nullptr));
 #endif // QT_NO_ACCESSIBILITY
@@ -187,7 +195,6 @@ public:
         menuCzynno_ci->setTitle(QApplication::translate("TrafficLoadManagerClass", "Czynno\305\233ci", nullptr));
         menuRysuj->setTitle(QApplication::translate("TrafficLoadManagerClass", "Rysuj", nullptr));
         menuEdytuj->setTitle(QApplication::translate("TrafficLoadManagerClass", "Edytuj", nullptr));
-        menuUstawienia->setTitle(QApplication::translate("TrafficLoadManagerClass", "Ustawienia", nullptr));
     } // retranslateUi
 
 };

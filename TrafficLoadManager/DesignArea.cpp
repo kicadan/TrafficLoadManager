@@ -2,19 +2,7 @@
 #include "SpawnSettingsEditor.h"
 
 DesignArea::DesignArea(QWidget *parent) : QOpenGLWidget(parent)
-{/*
-	QSurfaceFormat format;
-	format.setProfile(QSurfaceFormat::CompatibilityProfile);
-	format.setVersion(2, 1);
-	
-	context = new QOpenGLContext;
-	context->setFormat(format);
-	context->create();
-	context->makeCurrent(this);
-
-	openGLFunctions = context->functions();*/
-	//connect(&timer, SIGNAL(timeout()), this, SLOT(updateGL()));
-	//timer.start(16);
+{
 }
 
 DesignArea::~DesignArea()
@@ -58,50 +46,49 @@ void DesignArea::dispatchAction(Action menuAction)
 	editing = false;
 	constructing = false;
 	repainting = false;
-	if (!simulationInProgress) {
-		switch (menuAction) {
-		case UNDO: {
-			undoChanges();
-			validateConnections();
-			repainting = true;
-			repaint();
-			break;
-		}
-		case DRAW_ONE_WAY_ONE_LANE: {
-			currentObjectBrush = OneWayRoadWithOneLane;
-			break;
-		}
-		case DRAW_ONE_WAY_TWO_LANES: {
-			currentObjectBrush = OneWayRoadWithTwoLanes;
-			break;
-		}
-		case DRAW_TWO_WAY_ONE_LANE: {
-			currentObjectBrush = TwoWayRoadWithOneLane;
-			break;
-		}
-		case DRAW_SPAWN_POINT: {
-			currentObjectBrush = CarSpawn;
-			break;
-		}
-		case EDIT_SPAWN_POINT: {
-			currentObjectBrush = CarSpawn;
-			editing = true;
-			break;
-		}
-		case MAKE_CONNECTION: {
-			currentObjectBrush = JunctionConnection;
-			break;
-		}
-		case SET_TRAFFIC_LIGHTS: {
-			currentObjectBrush = TrafficLights;
-			break;
-		}
-		case EDIT_TRAFFIC_LIGHTS: {
-			currentObjectBrush = TrafficLights;
-			editing = true;
-			break;
-		}
-		}
+	
+	switch (menuAction) {
+	case UNDO: {
+		undoChanges();
+		validateConnections();
+		repainting = true;
+		repaint();
+		break;
+	}
+	case DRAW_ONE_WAY_ONE_LANE: {
+		currentObjectBrush = OneWayRoadWithOneLane;
+		break;
+	}
+	case DRAW_ONE_WAY_TWO_LANES: {
+		currentObjectBrush = OneWayRoadWithTwoLanes;
+		break;
+	}
+	case DRAW_TWO_WAY_ONE_LANE: {
+		currentObjectBrush = TwoWayRoadWithOneLane;
+		break;
+	}
+	case DRAW_SPAWN_POINT: {
+		currentObjectBrush = CarSpawn;
+		break;
+	}
+	case EDIT_SPAWN_POINT: {
+		currentObjectBrush = CarSpawn;
+		editing = true;
+		break;
+	}
+	case MAKE_CONNECTION: {
+		currentObjectBrush = JunctionConnection;
+		break;
+	}
+	case SET_TRAFFIC_LIGHTS: {
+		currentObjectBrush = TrafficLights;
+		break;
+	}
+	case EDIT_TRAFFIC_LIGHTS: {
+		currentObjectBrush = TrafficLights;
+		editing = true;
+		break;
+	}
 	}
 }
 /*
@@ -137,7 +124,7 @@ void DesignArea::resizeGL(int w, int h)
 
 void DesignArea::paintGL()
 {
-	if (constructing) {
+	if (constructing && !simulationInProgress) {
 		drawElement();
 	}
 	else if (repainting) {
@@ -195,7 +182,8 @@ void DesignArea::drawElement()
 {
 	switch (currentObjectBrush) {
 	case OneWayRoadWithOneLane: case OneWayRoadWithTwoLanes: case TwoWayRoadWithOneLane: {
-		drawRoad(); 
+		drawRoad();
+		updateWays();
 		break;
 	}
 	case CarSpawn: {
@@ -203,10 +191,12 @@ void DesignArea::drawElement()
 			addCarSpawn();
 		else
 			editCarSpawn();
+		updateWays();
 		break;
 	}
 	case JunctionConnection: {
 		makeConnection();
+		updateWays();
 		break;
 	}
 	case TrafficLights: {
@@ -218,7 +208,6 @@ void DesignArea::drawElement()
 	}
 	}
 	repaintScene();
-	updateWays();
 }
 
 void DesignArea::makeConnection()
@@ -259,11 +248,11 @@ void DesignArea::updateWays()
 	for (auto junctionIt = allJunctions.begin(); junctionIt < allJunctions.end(); junctionIt++) {
 		destinations = (*junctionIt)->getCarSpawnSettings().destinations;
 		for (auto destinationIt = destinations.begin(); destinationIt < destinations.end(); destinationIt++) {
-			findWay(**junctionIt, **destinationIt);
+			findWay(*junctionIt, *destinationIt);
 		}
 		(*junctionIt)->clearWays();
 		for (auto wayIt = allWays.begin(); wayIt < allWays.end(); wayIt++) {
-			if ((*wayIt).from.getId() == (*junctionIt)->getId())
+			if ((*wayIt).from->getId() == (*junctionIt)->getId())
 				(*junctionIt)->addWay(*wayIt);
 		}
 	}
@@ -332,6 +321,7 @@ void DesignArea::editTrafficLights()
 		junction = (Junction*)startRoad->searchForClosestJunction(point, startRoad->getRoadType() == OneWayRoadWithOneLane || startRoad->getRoadType() == TwoWayRoadWithOneLane ? LANE : LEFT_LANE);
 		//open dialog
 		if (junction != NULL && junction->hasTrafficLights()) {
+			junction->colourLightsForEditing();
 			TrafficLightsEditor trafficLightsEditor(this, junction);
 			trafficLightsEditor.setLightsEditorFields();
 			trafficLightsEditor.setModal(true);
@@ -383,7 +373,7 @@ void DesignArea::addCarSpawn()
 	constructing = false;
 }
 
-void DesignArea::editCarSpawn()
+void DesignArea::editCarSpawn() //car spawn and junction lightsSetts
 {
 	constructing = false;
 	Road* startRoad = NULL;
@@ -475,7 +465,7 @@ void DesignArea::drawRoad()
 	{
 	case OneWayRoadWithOneLane: {
 		OneWayOneLane *road = new OneWayOneLane(currentRoadId);
-		road->setRoad(_firstPoint, _lastPoint, endRoad != NULL, startJunction, endJunction);
+		road->setRoad(_firstPoint, _lastPoint, startJunction, endJunction);
 		if (!checkIfCollidingWithOtherRoad(road, connectedRoads)) { //road can be added
 			road->drawRoad();
 			if (startRoad != NULL) {
@@ -514,7 +504,7 @@ void DesignArea::drawRoad()
 	}
 	case OneWayRoadWithTwoLanes: {
 		OneWayTwoLanes *road = new OneWayTwoLanes(currentRoadId);
-		road->setRoad(_firstPoint, _lastPoint, endRoad != NULL, startJunction, endJunction);
+		road->setRoad(_firstPoint, _lastPoint, startJunction, endJunction);
 		if (!checkIfCollidingWithOtherRoad(road, connectedRoads)) { //road can be added
 			road->drawRoad();
 			if (startRoad != NULL) {
@@ -553,7 +543,7 @@ void DesignArea::drawRoad()
 	}
 	case TwoWayRoadWithOneLane: {
 		TwoWayOneLane *road = new TwoWayOneLane(currentRoadId);
-		road->setRoad(_firstPoint, _lastPoint, endRoad != NULL, startJunction, endJunction);
+		road->setRoad(_firstPoint, _lastPoint, startJunction, endJunction);
 		if (!checkIfCollidingWithOtherRoad(road, connectedRoads)) { //road can be added
 			road->drawRoad();
 			if (startRoad != NULL) {
@@ -666,17 +656,63 @@ void DesignArea::validateConnections()
 	}
 }
 
-//deprecated
-void DesignArea::addChanges(std::vector<AppObject*> addedObjects)
+void DesignArea::generateStatistics()
 {
-	for (auto objectIt = addedObjects.begin(); objectIt <= addedObjects.end(); objectIt++)
-		allChanges.push_back(Change{ (*objectIt), changeCounter});
-	changeCounter++;
+	if (simulationInProgress) {
+		simulationInProgress = false;
+		timer->stop();
+	}
+	junctionStatistics.clear();
+	for (auto junctionIt = allJunctions.begin(); junctionIt < allJunctions.end(); junctionIt++) {
+		JunctionStatistics newStats;
+		newStats.junctionId = (*junctionIt)->getId();
+		strcpy(newStats.junctionName, (*junctionIt)->getName());
+		newStats.emitted = (*junctionIt)->getNumberOfCars(1);
+		newStats.shouldBeEmitted = (*junctionIt)->getNumberOfCars(2);
+		newStats.lightsStats = (*junctionIt)->getLightsStatistics();
+		for (auto lightsStatsIt = newStats.lightsStats.begin(); lightsStatsIt < newStats.lightsStats.end(); lightsStatsIt++) {
+			newStats.overallPassed += (*lightsStatsIt).carsPassed;
+		}
+		junctionStatistics.push_back(newStats);
+	}
+	StatisticsDialog statisticsDialog(this, junctionStatistics);
+	statisticsDialog.fillStatistics();
+	statisticsDialog.setModal(true);
+	statisticsDialog.exec();
+
 }
 
-Point DesignArea::searchPoint(QPoint)
+void DesignArea::reset()
 {
-	return Point(1, 1);
+	currentObjectBrush = OneWayRoadWithOneLane;
+	allJunctions.clear();
+	allRoads.clear();
+	allChanges.clear();
+	allVehicles.clear();
+	allNodes.clear();
+	allWays.clear();
+	junctionStatistics.clear();
+	changeCounter = 0;
+	timerCount = 0;
+	simulationInProgress = false;
+}
+
+void DesignArea::readFromFile()
+{
+	reset();
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"),
+		"//TrafficLoadManager/TrafficLoadManager/save",
+		tr("XML Files (*.xml)"));
+	reset();
+	loadDocument(fileName.toStdString());
+}
+
+void DesignArea::saveToFile()
+{
+	QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"),
+		"//TrafficLoadManager/TrafficLoadManager/save",
+		tr("XML Files (*.xml)"));
+	saveDocument(fileName.toStdString());
 }
 
 bool DesignArea::checkIfCollidingWithOtherRoad(Road *actual, std::vector<int> actuallyConnectedRoads)
@@ -736,13 +772,7 @@ void DesignArea::deleteVehicle(Vehicle *deleted)
 	}
 }
 
-void DesignArea::copyAllJunctions(std::vector<Junction> &vectorTo)
-{
-	for (auto junctionIt = allJunctions.begin(); junctionIt < allJunctions.end(); junctionIt++)
-		vectorTo.push_back(*(*junctionIt));
-}
-
-void DesignArea::fulfillNodeTable(std::vector<Node> &wayTable, Junction startJunction)
+void DesignArea::fulfillNodeTable(std::vector<Node> &wayTable, Junction* startJunction)
 {
 	/*for (auto junctionIt = allJunctions.begin(); junctionIt < allJunctions.end(); junctionIt++)
 		if ((*junctionIt)->getId() == startJunction.getId()) {
@@ -750,17 +780,6 @@ void DesignArea::fulfillNodeTable(std::vector<Node> &wayTable, Junction startJun
 		}
 		else
 			wayTable.push_back(Node{ *(*junctionIt), 999999, Junction(-1) });*/
-}
-
-void DesignArea::transferJunction(std::vector<Junction> &from, std::vector<Junction> &to, Junction junction)
-{
-	for (auto junctionIt = from.begin(); junctionIt < from.end(); junctionIt++) {
-		if ( (*junctionIt).getId() == junction.getId()) {
-			to.push_back(*junctionIt);
-			from.erase(junctionIt);
-			break;
-		}
-	}
 }
 
 /*
@@ -778,22 +797,22 @@ vectors DesignArea::calc_vectors(QPoint A, QPoint B)
 
 void deleteNode(std::vector<Node> &deleteFrom, Junction deleted) {
 	for (auto nodeIt = deleteFrom.begin(); nodeIt < deleteFrom.end(); nodeIt++) {
-		if ((*nodeIt).junction.getId() == deleted.getId()) {
+		if ((*nodeIt).junction->getId() == deleted.getId()) {
 			deleteFrom.erase(nodeIt);
 			break;
 		}
 	}
 }
 
-void DesignArea::resetNodeTable(Junction startJunction)
+void DesignArea::resetNodeTable(Junction* startJunction)
 {
 	allNodes.clear();
 	std::vector<Connection> initialConnections;
 	for (auto junctionIt = allJunctions.begin(); junctionIt < allJunctions.end(); junctionIt++) {
-		if ((*junctionIt)->getId() == startJunction.getId()) {
+		if ((*junctionIt)->getId() == startJunction->getId()) {
 			Node addedNode;
 			addedNode.junction = startJunction;
-			initialConnections = startJunction.getConnectionsFrom(-1);
+			initialConnections = startJunction->getConnectionsFrom(-1);
 			for (auto connIt = initialConnections.begin(); connIt < initialConnections.end(); connIt++) {
 				Previous initialPreviousConnection;
 				Connection connection;
@@ -806,16 +825,16 @@ void DesignArea::resetNodeTable(Junction startJunction)
 			allNodes.push_back(addedNode);
 		}
 		else {
-			allNodes.push_back(Node{ *(*junctionIt) });
+			allNodes.push_back(Node{ (*junctionIt) });
 		}
 	}
 }
 
-void DesignArea::updateNode(Junction actual, Junction next/*updated node*/, Connection connection) {
+void DesignArea::updateNode(Junction* actual, Junction* next/*updated node*/, Connection connection) {
 	int cost = 0;
 	//take cost from Previous vector, where previous (nextRoad) == actual_connection (previousRoad)
 	for (auto nodeIt = allNodes.begin(); nodeIt < allNodes.end(); nodeIt++) {
-		if ((*nodeIt).junction.getId() == actual.getId()) {
+		if ((*nodeIt).junction->getId() == actual->getId()) {
 			for (auto previousIt = (*nodeIt).previousConnections.begin(); previousIt < (*nodeIt).previousConnections.end(); previousIt++) {
 				if ((*previousIt).connection.nextRoad->id == connection.previousRoad->id) {
 					cost = (*previousIt).cost;
@@ -829,24 +848,24 @@ void DesignArea::updateNode(Junction actual, Junction next/*updated node*/, Conn
 	previous.junction = actual;
 	previous.cost = connection.distanceToNextJunction + cost;
 	for (auto nodeIt = allNodes.begin(); nodeIt < allNodes.end(); nodeIt++) {
-		if ((*nodeIt).junction.getId() == next.getId()) {
+		if ((*nodeIt).junction->getId() == next->getId()) {
 			(*nodeIt).previousConnections.push_back(previous);
 			break;
 		}
 	}
 }
 
-void DesignArea::findWay(Junction startJunction, Junction endJunction) {
+void DesignArea::findWay(Junction* startJunction, Junction* endJunction) {
 	Way theWay;
 	resetNodeTable(startJunction);
-	std::vector<Junction> passedNodes;
+	std::vector<Junction*> passedNodes;
 	std::vector<Connection> connections;
-	connections = startJunction.getConnectionsFrom(-1);
+	connections = startJunction->getConnectionsFrom(-1);
 	//deleteNode(allNodes, startJunction);
 	passedNodes.push_back(startJunction);
 	for (auto connIt = connections.begin(); connIt < connections.end(); connIt++) {
-		updateNode(startJunction, *(*connIt).nextJunction, *connIt);
-		recursiveNodeFollow(passedNodes, *connIt, endJunction.getId());
+		updateNode(startJunction, (*connIt).nextJunction, *connIt);
+		recursiveNodeFollow(passedNodes, *connIt, endJunction->getId());
 	}
 	collectWay(startJunction, endJunction);
 }
@@ -880,35 +899,387 @@ void DesignArea::processSimulation()
 	}
 }
 
-void DesignArea::recursiveNodeFollow(std::vector<Junction> passedNodes, Connection previousConnection, int endJunctionId) {
-	std::vector<Connection> connections;
-	Junction actual = *previousConnection.nextJunction;
-	//dont go further if u were in this node in this recursion before (it shouldn't be closer cause recursion still adds more cost in deeper steps)
-	for (auto junctionIt = passedNodes.begin(); junctionIt < passedNodes.end(); junctionIt++)
-		if ((*junctionIt).getId() == actual.getId())
-			return;
-	//if it's finish - end recursion
-	if (actual.getId() == endJunctionId)
-		return;
-	passedNodes.push_back(actual);
-	connections = actual.getConnectionsFrom(-1); //next->getConnectionsFrom(-1)
-	//deleteNode(passedNodes, actual);
-	for (auto connIt = connections.begin(); connIt < connections.end(); connIt++) {
-		if ((*connIt).previousRoad->id == previousConnection.nextRoad->id && (*connIt).previousLaneType == previousConnection.nextLaneType) {
-			updateNode(actual, *(*connIt).nextJunction, *connIt);
-			recursiveNodeFollow(passedNodes, *connIt, endJunctionId);
+void DesignArea::loadDocument(std::string filePath)
+{
+	TiXmlDocument doc(filePath);
+	if (doc.LoadFile())
+	{
+		TiXmlElement *pDesignArea, *pChanges, *pChange, *pAppObject, *pObject, *pPoint, *pFirstPoint, *pLastPoint, *pRoadId, *pLightsSettings, *pLightsSetts, 
+			*pLightsSequence, *pLights, *pSpawnSettings, *pSpawnSetts, *pDestination, *pConnections, *pConnection, *pPrevious, *pNext;
+		TiXmlAttribute * pAttribute;
+		pDesignArea = doc.FirstChildElement("DesignArea");
+		if (pDesignArea)
+		{
+			pChanges = pDesignArea->FirstChildElement("Changes");
+			if (pChanges) {
+				pChange = pChanges->FirstChildElement("Change");
+				while (pChange)
+				{
+					int changeId, enumAction;
+					Action action;
+					pAttribute = pChange->FirstAttribute();
+					pAttribute->QueryIntValue(&changeId);
+					pAttribute = pAttribute->Next();
+					pAttribute->QueryIntValue(&enumAction);
+					action = Action(enumAction);
+					pAppObject = pChange->FirstChildElement("AppObject");
+					if (pAppObject) {
+						int id, objectTypeEnum;
+						pAttribute = pAppObject->FirstAttribute();
+						pAttribute->QueryIntValue(&objectTypeEnum);
+						ObjectType objectType = ObjectType(objectTypeEnum);
+						if (objectType == ROAD) {
+							int roadTypeEnum;
+							double firstPointX, firstPointY, lastPointX, lastPointY;
+							pObject = pAppObject->FirstChildElement("Road");
+							if (pObject) {
+								pAttribute = pObject->FirstAttribute();
+								pAttribute->QueryIntValue(&id);
+								pAttribute = pAttribute->Next();
+								pAttribute->QueryIntValue(&roadTypeEnum);
+								pFirstPoint = pObject->FirstChildElement("FirstPoint");
+								if (pFirstPoint) {
+									pAttribute = pFirstPoint->FirstAttribute();
+									pAttribute->QueryDoubleValue(&firstPointX);
+									pAttribute = pAttribute->Next();
+									pAttribute->QueryDoubleValue(&firstPointY);
+								}
+								pLastPoint = pObject->FirstChildElement("LastPoint");
+								if (pLastPoint) {
+									pAttribute = pLastPoint->FirstAttribute();
+									pAttribute->QueryDoubleValue(&lastPointX);
+									pAttribute = pAttribute->Next();
+									pAttribute->QueryDoubleValue(&lastPointY);
+								}
+								QPointF firstPoint(firstPointX, firstPointY), lastPoint(lastPointX, lastPointY);
+								this->_firstPoint = firstPoint;
+								this->_lastPoint = lastPoint;
+								this->firstPoint = Point(firstPoint);
+								this->lastPoint = Point(lastPoint);
+								this->constructing = true;
+								this->currentObjectBrush = ElementType(roadTypeEnum);
+								repaint();
+								pChange = pChange->NextSiblingElement("Change");
+							}
+						}
+						else if (objectType == JUNCTION && action != DRAW_ONE_WAY_ONE_LANE && action != DRAW_ONE_WAY_TWO_LANES && action != DRAW_TWO_WAY_ONE_LANE) { //there is no need to construct junction in this cases, it will perform automatically while building road
+							char name[100];
+							int roadId;
+							double pointX, pointY;
+							pObject = pAppObject->FirstChildElement("Junction");
+							if (pObject) {
+								pAttribute = pObject->FirstAttribute();
+								pAttribute->QueryIntValue(&id);
+								strcpy(name, pObject->Attribute("name"));
+								pRoadId = pObject->FirstChildElement("RoadId");
+								if (pRoadId) {
+									pAttribute = pRoadId->FirstAttribute();
+									pAttribute->QueryIntValue(&roadId);
+								}
+								pPoint = pObject->FirstChildElement("Point");
+								if (pPoint) {
+									pAttribute = pPoint->FirstAttribute();
+									pAttribute->QueryDoubleValue(&pointX);
+									pAttribute = pAttribute->Next();
+									pAttribute->QueryDoubleValue(&pointY);
+								}
+								this->constructing = true;
+								this->_firstPoint = QPointF(pointX, pointY);
+								this->firstPoint = Point(pointX, pointY);
+								this->currentObjectBrush = action == DRAW_SPAWN_POINT ? CarSpawn : TrafficLights;
+								repaint();
+								for (auto junctionIt = allJunctions.begin(); junctionIt < allJunctions.end(); junctionIt++)
+									if ((*junctionIt)->getId() == id)
+										(*junctionIt)->setName(name);
+								pChange = pChange->NextSiblingElement("Change");
+							}
+						}
+						else
+							pChange = pChange->NextSiblingElement("Change"); //if couldnt be processed but take next changes...
+					}
+				}
+				pLightsSettings = pDesignArea->FirstChildElement("TrafficLightsSettings"); //only if node changes exists
+				if (pLightsSettings) {
+					int junctionId, upToDateNumber;
+					bool upToDate;
+					pLightsSetts = pLightsSettings->FirstChildElement("Settings");
+					while (pLightsSetts) {
+						TrafficLightsSettings trafficLightsSettings;
+						Junction* junction;
+						pAttribute = pLightsSetts->FirstAttribute();
+						pAttribute->QueryIntValue(&junctionId);
+						pAttribute = pAttribute->Next();
+						pAttribute->QueryIntValue(&upToDateNumber);
+						upToDate = upToDateNumber > 0 ? true : false;
+						//take settings for later update
+						for (auto junctionIt = allJunctions.begin(); junctionIt < allJunctions.end(); junctionIt++) {
+							if ((*junctionIt)->getId() == junctionId) {
+								junction = (*junctionIt);
+								trafficLightsSettings = (*junctionIt)->getTrafficLightsSettings();
+								break;
+							}
+						}
+						pLightsSequence = pLightsSetts->FirstChildElement("LightsSequence");
+						if (pLightsSequence) {
+							std::vector<Lights> lightsSequence;
+							int green, red, roadId, direction;
+							pLights = pLightsSequence->FirstChildElement("Lights");
+							while (pLights) {
+								Lights lights;
+								pAttribute = pLights->FirstAttribute();
+								pAttribute->QueryIntValue(&green);
+								pAttribute = pAttribute->Next();
+								pAttribute->QueryIntValue(&red);
+								pAttribute = pAttribute->Next();
+								pAttribute->QueryIntValue(&roadId);
+								pAttribute = pAttribute->Next();
+								pAttribute->QueryIntValue(&direction);
+								lights.greenLight = LightSequence{ GREEN, green };
+								lights.redLight = LightSequence{ RED, red };
+								lights.roadId = roadId;
+								lights.direction = direction;
+								lightsSequence.push_back(lights);
+								pLights = pLights->NextSiblingElement("Lights");
+							}
+							for (auto lightsIt = lightsSequence.begin(); lightsIt < lightsSequence.end(); lightsIt++) {
+								for (auto lightsSettingsIt = trafficLightsSettings.lights.begin(); lightsSettingsIt < trafficLightsSettings.lights.end(); lightsSettingsIt++)
+									if ((*lightsIt).roadId == (*lightsSettingsIt).roadId && (*lightsIt).direction == (*lightsSettingsIt).direction) {
+										Lights lights = (*lightsSettingsIt);
+										lights.greenLight = (*lightsIt).greenLight;
+										lights.redLight = (*lightsIt).redLight;
+										trafficLightsSettings.lightsSequence.push_back(lights);
+										break;
+									}
+							}
+						}
+						trafficLightsSettings.upToDate = upToDate;
+						junction->setTrafficLightsSettings(trafficLightsSettings);
+						pLightsSetts = pLightsSetts->NextSiblingElement("Settings");
+					}
+					pSpawnSettings = pDesignArea->FirstChildElement("CarSpawnSettings"); //only if TrafficLightsSettings exists
+					if (pSpawnSettings) {
+						int junctionId, time;
+						pSpawnSetts = pSpawnSettings->FirstChildElement("Settings");
+						while (pSpawnSetts) {
+							Junction* junction;
+							CarSpawnSettings carSpawnSettings;
+							std::vector<Junction*> destinations;
+							int destinationId;
+							pAttribute = pSpawnSetts->FirstAttribute();
+							pAttribute->QueryIntValue(&junctionId);
+							pAttribute = pAttribute->Next();
+							pAttribute->QueryIntValue(&time);
+							for (auto junctionIt = allJunctions.begin(); junctionIt < allJunctions.end(); junctionIt++) {
+								if ((*junctionIt)->getId() == junctionId) {
+									junction = (*junctionIt);
+									break;
+								}
+							}
+							pDestination = pSpawnSetts->FirstChildElement("Destination");
+							while (pDestination) {
+								Junction* junction;
+								pAttribute = pDestination->FirstAttribute();
+								pAttribute->QueryIntValue(&destinationId);
+								for (auto junctionIt = allJunctions.begin(); junctionIt < allJunctions.end(); junctionIt++) {
+									if ((*junctionIt)->getId() == destinationId) {
+										junction = (*junctionIt);
+										break;
+									}
+								}
+								destinations.push_back(junction);
+								pDestination = pDestination->NextSiblingElement("Destination");
+							}
+							carSpawnSettings.timeBetweenCars = time;
+							carSpawnSettings.destinations = destinations;
+							junction->editCarSpawn(carSpawnSettings);
+							updateWays();
+							pSpawnSetts = pSpawnSetts->NextSiblingElement("Settings");
+						}
+						pConnections = pDesignArea->FirstChildElement("Connections");
+						if (pConnections) {
+							int junctionId;
+							pConnection = pConnections->FirstChildElement("Connection");
+							while (pConnection) {
+								Junction* junction;
+								Road *previousRoad, *nextRoad;
+								LaneType previousLaneType, nextLaneType;
+								int previousRoadId, previousLaneTypeEnum, nextRoadId, nextLaneTypeEnum;
+								pAttribute = pConnection->FirstAttribute();
+								pAttribute->QueryIntValue(&junctionId);
+								for (auto junctionIt = allJunctions.begin(); junctionIt < allJunctions.end(); junctionIt++) {
+									if ((*junctionIt)->getId() == junctionId) {
+										junction = (*junctionIt);
+										break;
+									}
+								}
+								pPrevious = pConnection->FirstChildElement("Previous");
+								if (pPrevious) {
+									pAttribute = pPrevious->FirstAttribute();
+									pAttribute->QueryIntValue(&previousRoadId);
+									pAttribute = pAttribute->Next();
+									pAttribute->QueryIntValue(&previousLaneTypeEnum);
+								}
+								pNext = pConnection->FirstChildElement("Next");
+								if (pNext) {
+									pAttribute = pNext->FirstAttribute();
+									pAttribute->QueryIntValue(&nextRoadId);
+									pAttribute = pAttribute->Next();
+									pAttribute->QueryIntValue(&nextLaneTypeEnum);
+								}
+								previousLaneType = LaneType(previousLaneTypeEnum);
+								nextLaneType = LaneType(nextLaneTypeEnum);
+								for (auto roadIt = allRoads.begin(); roadIt < allRoads.end(); roadIt++) {
+									if ((*roadIt)->id == previousRoadId)
+										previousRoad = (*roadIt);
+									if ((*roadIt)->id == nextRoadId)
+										nextRoad = (*roadIt);
+								}
+								junction->connectRoads(previousRoad, previousLaneType, nextRoad, nextLaneType);
+								junction->updateLightsSettings();
+								updateWays();
+								this->repainting = true;
+								repaint();
+								pConnection = pConnection->NextSiblingElement("Connection");
+							}
+						}
+					}
+				}
+			}
 		}
 	}
 }
 
+void DesignArea::saveDocument(std::string filePath)
+{
+	TiXmlDocument doc;
+	TiXmlDeclaration* decl = new TiXmlDeclaration("1.0", "", "");
+	doc.LinkEndChild(decl);
+	TiXmlElement * root = new TiXmlElement("DesignArea");
+	doc.LinkEndChild(root);
+	TiXmlElement * changes = new TiXmlElement("Changes");
+	root->LinkEndChild(changes);
+	for (auto changeIt = allChanges.begin(); changeIt < allChanges.end(); changeIt++) {
+		TiXmlElement * change = new TiXmlElement("Change");
+		change->SetAttribute("id", (*changeIt).changeId);
+		change->SetAttribute("type", (*changeIt).action);
+		changes->LinkEndChild(change);
+		TiXmlElement * appObject = new TiXmlElement("AppObject");
+		appObject->SetAttribute("object-type", (*changeIt).appObject->getObjectType());
+		change->LinkEndChild(appObject);
+		TiXmlElement * road = new TiXmlElement("Road");
+		TiXmlElement * junction = new TiXmlElement("Junction");
+		AppObject* object = (*changeIt).appObject;
+		if(object->getObjectType() == ROAD){
+			Road* roadObject = (Road*)object;
+			road->SetAttribute("id", roadObject->id);
+			road->SetAttribute("type", roadObject->getRoadType());
+			appObject->LinkEndChild(road);
+			TiXmlElement * firstPoint = new TiXmlElement("FirstPoint");
+			firstPoint->SetDoubleAttribute("x", roadObject->getLineParams(LANE).p1().x());
+			firstPoint->SetDoubleAttribute("y", roadObject->getLineParams(LANE).p1().y());
+			TiXmlElement * lastPoint = new TiXmlElement("LastPoint");
+			lastPoint->SetDoubleAttribute("x", roadObject->getLineParams(LANE).p2().x());
+			lastPoint->SetDoubleAttribute("y", roadObject->getLineParams(LANE).p2().y());
+			road->LinkEndChild(firstPoint);
+			road->LinkEndChild(lastPoint);
+		}
+		else if (object->getObjectType() == JUNCTION) {
+			Junction* junctionObject = (Junction*)object;
+			junction->SetAttribute("id", junctionObject->getId());
+			junction->SetAttribute("name", junctionObject->getName());
+			appObject->LinkEndChild(junction);
+			TiXmlElement * roadId = new TiXmlElement("RoadId");
+			roadId->SetAttribute("id", junctionObject->getRoadIds()[0]);
+			TiXmlElement * point = new TiXmlElement("Point");
+			point->SetDoubleAttribute("x", junctionObject->getPoint().x());
+			point->SetDoubleAttribute("y", junctionObject->getPoint().y());
+			junction->LinkEndChild(roadId);
+			junction->LinkEndChild(point);
+		}
+	}
+	TiXmlElement * lightsSettings = new TiXmlElement("TrafficLightsSettings");
+	root->LinkEndChild(lightsSettings);
+	TiXmlElement * spawnSettings = new TiXmlElement("CarSpawnSettings");
+	root->LinkEndChild(spawnSettings);
+	TiXmlElement * connections = new TiXmlElement("Connections");
+	root->LinkEndChild(connections);
+	for (auto junctionIt = allJunctions.begin(); junctionIt < allJunctions.end(); junctionIt++) {
+		//traffic lights lightsSetts
+		TiXmlElement * lightsSetts = new TiXmlElement("Settings");
+		lightsSetts->SetAttribute("junction-id", (*junctionIt)->getId());
+		lightsSetts->SetAttribute("up-to-date", (*junctionIt)->getTrafficLightsSettings().upToDate == true ? 1 : 0);
+		lightsSettings->LinkEndChild(lightsSetts);
+		TiXmlElement * lightsSequence = new TiXmlElement("LightsSequence");
+		lightsSetts->LinkEndChild(lightsSequence);
+		std::vector<Lights> lightsVector = (*junctionIt)->getTrafficLightsSettings().lightsSequence;
+		for (auto lightsIt = lightsVector.begin(); lightsIt < lightsVector.end(); lightsIt++) {
+			TiXmlElement * lights = new TiXmlElement("Lights");
+			lights->SetAttribute("green", (*lightsIt).greenLight.time);
+			lights->SetAttribute("red", (*lightsIt).redLight.time);
+			lights->SetAttribute("road-id", (*lightsIt).roadId);
+			lights->SetAttribute("direction", (*lightsIt).direction);
+			lightsSequence->LinkEndChild(lights);
+		}
+		//car spawn lightsSetts
+		TiXmlElement * spawnSetts = new TiXmlElement("Settings");
+		spawnSetts->SetAttribute("junction-id", (*junctionIt)->getId());
+		spawnSetts->SetAttribute("time", (*junctionIt)->getCarSpawnSettings().timeBetweenCars);
+		spawnSettings->LinkEndChild(spawnSetts);
+		std::vector<Junction*> junctionVector = (*junctionIt)->getCarSpawnSettings().destinations;
+		for (auto destIt = junctionVector.begin(); destIt < junctionVector.end(); destIt++) {
+			TiXmlElement * destination = new TiXmlElement("Destination");
+			destination->SetAttribute("junction-id", (*destIt)->getId());
+			spawnSetts->LinkEndChild(destination);
+		}
+		//connections
+		std::vector<Connection> connectionVector = (*junctionIt)->getConnectionsFrom(-1);
+		for (auto connIt = connectionVector.begin(); connIt < connectionVector.end(); connIt++) {
+			TiXmlElement * connection = new TiXmlElement("Connection");
+			connection->SetAttribute("junction-id", (*junctionIt)->getId());
+			connections->LinkEndChild(connection);
+			TiXmlElement * previous = new TiXmlElement("Previous");
+			previous->SetAttribute("road-id", (*connIt).previousRoad->id);
+			previous->SetAttribute("lane-type", (*connIt).previousLaneType);
+			connection->LinkEndChild(previous);
+			TiXmlElement * next = new TiXmlElement("Next");
+			next->SetAttribute("road-id", (*connIt).nextRoad->id);
+			next->SetAttribute("lane-type", (*connIt).nextLaneType);
+			connection->LinkEndChild(next);
+		}
+	}
+	doc.SaveFile(filePath);
+}
+
+void DesignArea::recursiveNodeFollow(std::vector<Junction*> &passedNodes, Connection previousConnection, int endJunctionId) {
+	std::vector<Connection> connections;
+	Junction *actual = previousConnection.nextJunction;
+	//dont go further if u were in this node in this recursion before (it shouldn't be closer cause recursion still adds more cost in deeper steps)
+	for (auto junctionIt = passedNodes.begin(); junctionIt < passedNodes.end(); junctionIt++)
+		if ((*junctionIt)->getId() == actual->getId())
+			return;
+	//if it's finish - end recursion
+	if (actual->getId() == endJunctionId)
+		return;
+	passedNodes.push_back(actual);
+	connections = actual->getConnectionsFrom(-1); //next->getConnectionsFrom(-1)
+	//deleteNode(passedNodes, actual);
+	for (auto connIt = connections.begin(); connIt < connections.end(); connIt++) {
+		if ((*connIt).previousRoad->id == previousConnection.nextRoad->id && (*connIt).previousLaneType == previousConnection.nextLaneType) {
+			updateNode(actual, (*connIt).nextJunction, *connIt);
+			recursiveNodeFollow(passedNodes, *connIt, endJunctionId);
+		}
+	}
+	passedNodes.pop_back();
+}
+
 //collect way steps from all nodes, following from back to front (last node -> first node); do it recursive, it will let to be more than 1 collected way
-void DesignArea::collectWay(Junction startJunction, Junction endJunction)
+void DesignArea::collectWay(Junction* startJunction, Junction* endJunction)
 {
 	int deepWatchDog = 0;
 	int length;
 	Node actualNode;
 	for (auto nodeIt = allNodes.begin(); nodeIt < allNodes.end(); nodeIt++) {
-		if ((*nodeIt).junction.getId() == endJunction.getId()) {
+		if ((*nodeIt).junction->getId() == endJunction->getId()) {
 			actualNode = *nodeIt;
 			break;
 		}
@@ -919,36 +1290,44 @@ void DesignArea::collectWay(Junction startJunction, Junction endJunction)
 		way.to = endJunction;
 		way.length += (*connectionsIt).connection.distanceToNextJunction;
 		way.steps.push_back((*connectionsIt).connection);
-		collectWayRecursive((*connectionsIt).junction, (*connectionsIt).connection, startJunction.getId(), deepWatchDog, way);
+		collectWayRecursive((*connectionsIt).junction, (*connectionsIt).connection, startJunction->getId(), deepWatchDog, way);
 		allWays.push_back(way);
 	}
 }
 
-void DesignArea::collectWayRecursive(Junction actualJunction, Connection actualConnection, int firstJunctionId, int deepWatchDog, Way &way)
+void DesignArea::collectWayRecursive(Junction* actualJunction, Connection actualConnection, int firstJunctionId, int deepWatchDog, Way &way)
 {
 	if (deepWatchDog > allNodes.size())
 		return;
 	deepWatchDog++;
 	Node actualNode;
 	for (auto nodeIt = allNodes.begin(); nodeIt < allNodes.end(); nodeIt++) {
-		if ((*nodeIt).junction.getId() == actualJunction.getId()) {
+		if ((*nodeIt).junction->getId() == actualJunction->getId()) {
 			actualNode = (*nodeIt);
 			break;
 		}
 	}
-	if (actualNode.junction.getId() == firstJunctionId)
+	if (actualNode.junction->getId() == firstJunctionId)
 		return;
 	for (auto nodeConnectionIt = actualNode.previousConnections.begin(); nodeConnectionIt < actualNode.previousConnections.end(); nodeConnectionIt++) {
 		if ((*nodeConnectionIt).connection.nextRoad->id == actualConnection.previousRoad->id && (*nodeConnectionIt).connection.nextLaneType == actualConnection.previousLaneType) { //teraz wszystkie mo¿liwe drogi (szykuje siê implementacja zmiany pasa)
-			way.length += (*nodeConnectionIt).connection.distanceToNextJunction;
-			way.steps.push_back((*nodeConnectionIt).connection);
-			collectWayRecursive((*nodeConnectionIt).junction, (*nodeConnectionIt).connection, firstJunctionId, deepWatchDog, way);
+			if ((*nodeConnectionIt).junction->getId() != firstJunctionId) { //if not first junction, check all connections
+				way.length += (*nodeConnectionIt).connection.distanceToNextJunction;
+				way.steps.push_back((*nodeConnectionIt).connection);
+				collectWayRecursive((*nodeConnectionIt).junction, (*nodeConnectionIt).connection, firstJunctionId, deepWatchDog, way);
+			}
+			else if((*nodeConnectionIt).connection.nextPoint == 0){ //if it is first junction, take only connection with nextPoint = 0 -> it means that (only carspawn connections has zero as nextPoint) take only connection made for carSpawn
+				way.length += (*nodeConnectionIt).connection.distanceToNextJunction;
+				way.steps.push_back((*nodeConnectionIt).connection);
+				collectWayRecursive((*nodeConnectionIt).junction, (*nodeConnectionIt).connection, firstJunctionId, deepWatchDog, way);
+			}
 		}
 	}
 }
 
 void DesignArea::continueSimulation()
 {
+	timerCount++;
 	repaint();
 }
 

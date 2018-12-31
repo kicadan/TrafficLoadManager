@@ -123,6 +123,7 @@
     <ClCompile Include="Point.cpp" />
     <ClCompile Include="Roads.cpp" />
     <ClCompile Include="SpawnSettingsEditor.cpp" />
+    <ClCompile Include="StatisticsDialog.cpp" />
     <ClCompile Include="tinyxml\tinystr.cpp" />
     <ClCompile Include="tinyxml\tinyxml.cpp" />
     <ClCompile Include="tinyxml\tinyxmlerror.cpp" />
@@ -137,6 +138,7 @@
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="SpawnSettingsEditor.ui" />
+    <QtUic Include="StatisticsDialog.ui" />
     <QtUic Include="TrafficLightsEditor.ui" />
     <QtUic Include="TrafficLoadManager.ui" />
   </ItemGroup>
@@ -147,12 +149,20 @@
     <ClInclude Include="AppObject.h" />
     <ClInclude Include="Automobile.h" />
     <ClInclude Include="GeneratedFiles\ui_SpawnSettingsEditor.h" />
+    <ClInclude Include="GeneratedFiles\ui_StatisticsDialog.h" />
     <ClInclude Include="GeneratedFiles\ui_TrafficLightsEditor.h" />
+    <ClInclude Include="GeneratedFiles\ui_TrafficLoadManager.h" />
     <ClInclude Include="Junction.h" />
     <ClInclude Include="OneWayOneLane.h" />
     <ClInclude Include="OneWayTwoLanes.h" />
     <ClInclude Include="Point.h" />
     <ClInclude Include="Roads.h" />
+    <QtMoc Include="StatisticsDialog.h">
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\GeneratedFiles;.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName)\.;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtOpenGL;$(QTDIR)\include\QtWidgets;C:\Program Files (x86)\Visual Leak Detector\include</IncludePath>
+      <Define Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">UNICODE;_UNICODE;WIN32;WIN64;QT_DLL;QT_CORE_LIB;QT_GUI_LIB;QT_OPENGL_LIB;QT_WIDGETS_LIB</Define>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\GeneratedFiles;.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName)\.;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtOpenGL;$(QTDIR)\include\QtWidgets;C:\Program Files (x86)\Visual Leak Detector\include</IncludePath>
+      <Define Condition="'$(Configuration)|$(Platform)'=='Release|x64'">UNICODE;_UNICODE;WIN32;WIN64;QT_DLL;QT_NO_DEBUG;NDEBUG;QT_CORE_LIB;QT_GUI_LIB;QT_OPENGL_LIB;QT_WIDGETS_LIB</Define>
+    </QtMoc>
     <ClInclude Include="Vehicle.h" />
     <QtMoc Include="SpawnSettingsEditor.h">
       <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\GeneratedFiles;.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName)\.;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtOpenGL;$(QTDIR)\include\QtWidgets</IncludePath>

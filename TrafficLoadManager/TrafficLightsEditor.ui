@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Edytor świateł</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -31,6 +31,25 @@
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QLabel" name="label_colour">
+       <property name="minimumSize">
+        <size>
+         <width>50</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>50</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+     </item>
      <item>
       <widget class="QLabel" name="label_kolejny_krok">
        <property name="minimumSize">
@@ -259,6 +278,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>comboBox_kierunki</sender>
+   <signal>currentIndexChanged(int)</signal>
+   <receiver>TrafficLightsEditor</receiver>
+   <slot>comboBoxIndexChanged(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>310</x>
+     <y>40</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>436</x>
+     <y>248</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>addToTableAction()</slot>
@@ -266,5 +301,6 @@
   <slot>acceptButton()</slot>
   <slot>rejectButton()</slot>
   <slot>resetSettings()</slot>
+  <slot>comboBoxIndexChanged(int)</slot>
  </slots>
 </ui>

@@ -14,11 +14,6 @@ Point Road::searchPoint(Point point)
 	return foundPoint;
 }
 
-void Road::addOtherRoad(int roadNumber)
-{
-	this->otherRoads.push_back(roadNumber);
-}
-
 void Road::setBerm(LaneType laneType, QLineF newBerm)
 {
 	if (laneType == RIGHT_BERM)

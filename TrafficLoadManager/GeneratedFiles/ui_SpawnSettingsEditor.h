@@ -37,10 +37,6 @@ public:
     QLabel *label;
     QGridLayout *gridLayout;
     QSpinBox *spinBox_cars;
-    QHBoxLayout *horizontalLayout_2;
-    QHBoxLayout *horizontalLayout;
-    QLabel *label_4;
-    QSpinBox *spinBox_smart_drivers;
     QHBoxLayout *horizontalLayout_4;
     QLabel *label_3;
     QComboBox *comboBox_available;
@@ -93,29 +89,6 @@ public:
 
 
         horizontalLayout_5->addLayout(horizontalLayout_3);
-
-        horizontalLayout_2 = new QHBoxLayout();
-        horizontalLayout_2->setObjectName(QStringLiteral("horizontalLayout_2"));
-        horizontalLayout = new QHBoxLayout();
-        horizontalLayout->setObjectName(QStringLiteral("horizontalLayout"));
-        label_4 = new QLabel(SpawnSettingsEditor);
-        label_4->setObjectName(QStringLiteral("label_4"));
-        label_4->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
-
-        horizontalLayout->addWidget(label_4);
-
-
-        horizontalLayout_2->addLayout(horizontalLayout);
-
-        spinBox_smart_drivers = new QSpinBox(SpawnSettingsEditor);
-        spinBox_smart_drivers->setObjectName(QStringLiteral("spinBox_smart_drivers"));
-        spinBox_smart_drivers->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
-        spinBox_smart_drivers->setMaximum(100);
-
-        horizontalLayout_2->addWidget(spinBox_smart_drivers);
-
-
-        horizontalLayout_5->addLayout(horizontalLayout_2);
 
 
         verticalLayout->addLayout(horizontalLayout_5);
@@ -180,7 +153,6 @@ public:
         SpawnSettingsEditor->setWindowTitle(QApplication::translate("SpawnSettingsEditor", "Edytor punktu odradzania pojazd\303\263w", nullptr));
         lineEdit_Actual->setText(QApplication::translate("SpawnSettingsEditor", "W\304\231ze\305\202", nullptr));
         label->setText(QApplication::translate("SpawnSettingsEditor", "Odst\304\231p pomi\304\231dzy kolejnymi pojazdami [s]", nullptr));
-        label_4->setText(QApplication::translate("SpawnSettingsEditor", "Procent kierowc\303\263w z GPS", nullptr));
         label_3->setText(QApplication::translate("SpawnSettingsEditor", "Dost\304\231pne w\304\231z\305\202y", nullptr));
         pushButton_add->setText(QApplication::translate("SpawnSettingsEditor", "Dodaj w\304\231ze\305\202", nullptr));
         label_2->setText(QApplication::translate("SpawnSettingsEditor", "W\304\231z\305\202y docelowe", nullptr));

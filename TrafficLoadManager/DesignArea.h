@@ -11,6 +11,8 @@
 #include <QPoint>
 #include <gl\GLU.h>
 #include <algorithm>
+#include "tinyxml\tinyxml.h"
+#include "tinyxml\tinystr.h"
 #include "SpawnSettingsEditor.h"
 #include "Roads.h"
 #include "OneWayOneLane.h"
@@ -18,6 +20,7 @@
 #include "TwoWayOneLane.h"
 #include "TrafficLightsEditor.h"
 #include "Automobile.h"
+#include "StatisticsDialog.h"
 
 enum Action {
 	LOAD_FROM_FILE = 0,
@@ -42,11 +45,11 @@ struct Change {
 struct Previous {
 	int cost = 999999;
 	Connection connection;
-	Junction junction;
+	Junction* junction;
 };
 
 struct Node {
-	Junction junction;
+	Junction* junction;
 	std::vector<Previous> previousConnections;
 };
 
@@ -61,8 +64,6 @@ public:
 	void dispatchAction(Action);
 	
 private:
-	QOpenGLFunctions *openGLFunctions;
-	QOpenGLContext *context;
 	ElementType currentObjectBrush = OneWayRoadWithOneLane;
 	std::vector<Road*> allRoads;
 	std::vector<Junction*> allJunctions;
@@ -70,9 +71,10 @@ private:
 	std::vector<Change> allChanges;
 	std::vector<Node> allNodes;
 	std::vector<Way> allWays;
+	std::vector<JunctionStatistics> junctionStatistics;
 	int changeCounter = 0;
 	QTimer* timer;
-	int actualScale;
+	int timerCount = 0;
 	Point lastPoint;
 	Point firstPoint;
 	QPointF _lastPoint;
@@ -81,17 +83,13 @@ private:
 	bool editing = false;
 	bool repainting = false;
 	bool simulationInProgress = false;
-	QImage image;
-	double x = 10;
-	double y = 10;
-	GLUquadric * object;
 
 	//void drawLineTo(const QPoint &endPoint);
-	void resetNodeTable(Junction);
-	void updateNode(Junction, Junction, Connection);
-	void recursiveNodeFollow(std::vector<Junction>, Connection, int);
-	void collectWay(Junction, Junction);
-	void collectWayRecursive(Junction, Connection, int, int, Way&);
+	void resetNodeTable(Junction*);
+	void updateNode(Junction*, Junction*, Connection);
+	void recursiveNodeFollow(std::vector<Junction*>&, Connection, int);
+	void collectWay(Junction*, Junction*);
+	void collectWayRecursive(Junction*, Connection, int, int, Way&);
 	void drawElement();
 	void drawRoad();
 	void makeConnection();
@@ -104,20 +102,18 @@ private:
 	void repaintScene();
 	void undoChanges();
 	void validateConnections();
-	void addChanges(std::vector<AppObject*>); //deprecated
-	Point searchPoint(QPoint);
 	bool checkIfCollidingWithOtherRoad(Road*, std::vector<int>);
 	void deleteJunction(Junction*);
 	void deleteRoad(Road*);
 	void deleteVehicle(Vehicle*);
-	void copyAllJunctions(std::vector<Junction>&);
-	void fulfillNodeTable(std::vector<Node>&, Junction);
-	void transferJunction(std::vector<Junction> &from, std::vector<Junction> &to, Junction junction);
+	void fulfillNodeTable(std::vector<Node>&, Junction*);
 	vectors calc_vectors(QPoint, QPoint);
-	void findWay(Junction, Junction);
+	void findWay(Junction*, Junction*);
 	void processVehiclesMove();
 	void emitCar(Way);
 	void processSimulation();
+	void loadDocument(std::string);
+	void saveDocument(std::string);
 
 protected:
 	
@@ -136,5 +132,8 @@ public slots:
 	void continueSimulation();
 	void startSimulation();
 	void stopSimulation();
-
+	void generateStatistics();
+	void reset();
+	void readFromFile();
+	void saveToFile();
 };

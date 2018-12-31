@@ -19,6 +19,7 @@ TrafficLightsEditor::TrafficLightsEditor(QWidget *parent, Junction* junction)
 	ui.tableWidget->setColumnCount(2);
 	list << codec->toUnicode("Kierunek") << codec->toUnicode("Czas zielonego œwiat³a [s]");
 	ui.tableWidget->setHorizontalHeaderLabels(list);
+	ui.tableWidget->horizontalHeader()->setStretchLastSection(true);
 }
 
 TrafficLightsEditor::~TrafficLightsEditor()
@@ -44,6 +45,7 @@ void TrafficLightsEditor::setLightsEditorFields()
 		ui.tableWidget->setItem(counter, 0, new QTableWidgetItem(codec->toUnicode((*lightsIt).lightsName)));
 		ui.tableWidget->setItem(counter, 1, new QTableWidgetItem(codec->toUnicode(greenTime)));
 	}
+
 }
 
 std::vector<Lights> TrafficLightsEditor::differentialBetweenTwoLightsVectors(std::vector<Lights> minuend, std::vector<Lights> subtrahend)
@@ -105,6 +107,37 @@ void TrafficLightsEditor::deleteLightsFromTable(int idx)
 	setLightsComboBox();
 }
 
+void TrafficLightsEditor::showFocusedLights(int idx)
+{ /*colours per id
+  -1 - bez...
+  0 - RED,
+  1 - GREEN,
+  2 - BLUE,
+  3 - CYAN,
+  4 - MAGENTA,
+  5 - YELLOW,
+  6 - GREY,
+  7 - MEDIUMAQUAMARINE
+  8 - SPRINGGREEN
+  */
+	if (idx != -1) {
+		Lights actualLights = lightsInCombo[idx];
+		switch (actualLights.lightsId) {
+		case 0: {ui.label_colour->setStyleSheet("QLabel { background-color : red; color : blue; }"); break; }
+		case 1: {ui.label_colour->setStyleSheet("QLabel { background-color : green; color : blue; }"); break; }
+		case 2: {ui.label_colour->setStyleSheet("QLabel { background-color : blue; color : blue; }"); break; }
+		case 3: {ui.label_colour->setStyleSheet("QLabel { background-color : cyan; color : blue; }"); break; }
+		case 4: {ui.label_colour->setStyleSheet("QLabel { background-color : magenta; color : blue; }"); break; }
+		case 5: {ui.label_colour->setStyleSheet("QLabel { background-color : yellow; color : blue; }"); break; }
+		case 6: {ui.label_colour->setStyleSheet("QLabel { background-color : grey; color : blue; }"); break; }
+		case 7: {ui.label_colour->setStyleSheet("QLabel { background-color : mediumaquamarine; color : blue; }"); break; }
+		case 8: {ui.label_colour->setStyleSheet("QLabel { background-color : springgreen; color : blue; }"); break; }
+		}
+	}
+	else
+		ui.label_colour->setStyleSheet("QLabel { background-color : transparent; color : blue; }");
+}
+
 void TrafficLightsEditor::addToTableAction() {
 	int idx = ui.comboBox_kierunki->currentIndex();
 	if (lightsInCombo.size() > 0) {
@@ -159,4 +192,9 @@ void TrafficLightsEditor::acceptButton() {
 
 void TrafficLightsEditor::rejectButton() {
 	reject();
+}
+
+void TrafficLightsEditor::comboBoxIndexChanged(int idx)
+{
+	showFocusedLights(idx);
 }

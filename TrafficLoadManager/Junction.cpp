@@ -402,7 +402,7 @@ void Junction::updateLightsSettings()
 				for (auto connIt = connections.begin(); connIt < connections.end(); connIt++) {
 					if ((*connIt).previousRoad->id == (*roadIt).road->id) {
 						trafficLights.haveConnection = true;
-						break;
+break;
 					}
 				}
 				trafficLights.direction = 1;
@@ -499,6 +499,25 @@ void Junction::initTrafficLights()
 {
 	trafficLights.clear();
 	int beforeStep = 0;
+	//update junction statistics basing on lights directions
+	bool exists;
+	for (auto settingsIt = trafficLightsSettings.lights.begin(); settingsIt < trafficLightsSettings.lights.end(); settingsIt++) {
+		exists = false;
+		for (auto lightsStatsIt = lightsStatistics.begin(); lightsStatsIt < lightsStatistics.end(); lightsStatsIt++) {
+			if ((*lightsStatsIt).lightsId == (*settingsIt).lightsId) {
+				exists = true;
+				break;
+			}
+		}
+		if (!exists) {
+			LightsStatistics newStats;
+			newStats.lightsId = (*settingsIt).lightsId;
+			strcpy(newStats.lightsName, (*settingsIt).lightsName);
+			newStats.roadId = (*settingsIt).roadId;
+			newStats.direction = (*settingsIt).direction;
+			lightsStatistics.push_back(newStats);
+		}
+	}
 	if (trafficLightsSettings.upToDate) {
 		for (auto settingsIt = trafficLightsSettings.lightsSequence.begin(); settingsIt < trafficLightsSettings.lightsSequence.end(); settingsIt++) {
 			Traffics traffics;
@@ -510,8 +529,37 @@ void Junction::initTrafficLights()
 			traffics.lightsId = (*settingsIt).lightsId;
 			traffics.lightsPoint = (*settingsIt).lightsPoint;
 			traffics.roadId = (*settingsIt).roadId;
+			strcpy(traffics.lightsName, (*settingsIt).lightsName);
 			traffics.direction = (*settingsIt).direction;
 			trafficLights.push_back(traffics);
+		}
+	}
+}
+
+void Junction::colourLightsForEditing()
+{	/*colours per index
+	- 1 - bez...
+	0 - RED,
+	1 - GREEN,
+	2 - BLUE,
+	3 - CYAN,
+	4 - MAGENTA,
+	5 - YELLOW,
+	6 - GREY,
+	7 - MEDIUMAQUAMARINE
+	8 - SPRINGGREEN
+*/
+	for (auto trafficsIt = trafficLightsSettings.lights.begin(); trafficsIt < trafficLightsSettings.lights.end(); trafficsIt++) {
+		switch ((*trafficsIt).lightsId) {
+		case 0: {drawColouredSquare((*trafficsIt).lightsPoint, 1, 0, 0); break; }
+		case 1: {drawColouredSquare((*trafficsIt).lightsPoint, 0, 1, 0); break; }
+		case 2: {drawColouredSquare((*trafficsIt).lightsPoint, 0, 0, 1); break; }
+		case 3: {drawColouredSquare((*trafficsIt).lightsPoint, 0, 1, 1); break; }
+		case 4: {drawColouredSquare((*trafficsIt).lightsPoint, 1, 0, 1); break; }
+		case 5: {drawColouredSquare((*trafficsIt).lightsPoint, 1, 1, 0); break; }
+		case 6: {drawColouredSquare((*trafficsIt).lightsPoint, 0.501, 0.501, 0.501); break; }
+		case 7: {drawColouredSquare((*trafficsIt).lightsPoint, 0.4, 0.803, 0.666); break; }
+		case 8: {drawColouredSquare((*trafficsIt).lightsPoint, 0, 1, 0.498); break; }
 		}
 	}
 }
@@ -520,6 +568,7 @@ void Junction::updateLights() {
 	Traffics actual;
 	if (trafficLightsSettings.upToDate) {
 		for (auto lightsIt = trafficLights.begin(); lightsIt < trafficLights.end(); lightsIt++) {
+			if ((*lightsIt).timeModulo == 0) break; //when not even one light is set to more than 1 sec
 			(*lightsIt).counter = ((*lightsIt).counter + 1) % (*lightsIt).timeModulo;
 			if ((*lightsIt).counter >= (*lightsIt).greenStarts && (*lightsIt).counter < (*lightsIt).greenEnds) { (*lightsIt).actualLight = GREEN; drawFilledCircle((*lightsIt).lightsPoint, distance / 2, 0, 1, 0); }
 			else { (*lightsIt).actualLight = RED; drawFilledCircle((*lightsIt).lightsPoint, distance / 2, 1, 0, 0); }
@@ -583,9 +632,32 @@ char* Junction::getName()
 	return name;
 }
 
+int Junction::getNumberOfCars(int which/*1- cars emitted, 2-carsShouldBeEmitted*/)
+{
+	switch (which) {
+	case 1: return carsEmitted;
+	case 2: return carsShouldBeEmitted;
+	}
+}
+
 std::vector<int> Junction::getRoadIds()
 {
 	return roadIds;
+}
+
+std::vector<LightsStatistics> Junction::getLightsStatistics()
+{
+	return lightsStatistics;
+}
+
+void Junction::carPassedJunction(Road *road, LaneType laneType)
+{
+	short direction = laneType == BACK_LANE ? -1 : 1;
+	for (auto lightsIt = lightsStatistics.begin(); lightsIt < lightsStatistics.end(); lightsIt++) {
+		if ((*lightsIt).roadId == road->id && (*lightsIt).direction == direction) {
+			(*lightsIt).carsPassed++;
+		}
+	}
 }
 
 std::vector<Connection> Junction::getConnectionsFrom(int roadFrom)
@@ -909,10 +981,6 @@ bool Junction::checkIfBelongs(int roadId) {
 	return false;
 }
 
-void Junction::showFocusedLights(Point lightsPoint) {
-	//TO DO
-}
-
 void copyLanePointVectorToPointVector(std::vector<LanePoint> vectorFrom, std::vector<Point> &vectorTo)
 {
 	for (auto vectorFromIt = vectorFrom.begin(); vectorFromIt < vectorFrom.end(); vectorFromIt++)
@@ -972,6 +1040,17 @@ void drawFilledCircle(Point point, float radius, float red, float green, float b
 		glVertex2f(point.x() + (radius * cos(i *  twicePi / 360)), point.y() + (radius * sin(i * twicePi / 360)));
 	}
 	glEnd();
+}
+
+void drawColouredSquare(Point mid, float red, float green, float blue) {
+	glColor3f(red, green, blue);
+	glBegin(GL_POLYGON);
+	glVertex2f(mid.x() - 1.2*distance / 2, mid.y() - 1.2*distance / 2);
+	glVertex2f(mid.x() + 1.2*distance / 2, mid.y() - 1.2*distance / 2);
+	glVertex2f(mid.x() + 1.2*distance / 2, mid.y() + 1.2*distance / 2);
+	glVertex2f(mid.x() - 1.2*distance / 2, mid.y() + 1.2*distance / 2);
+	glEnd();
+	glFlush();
 }
 
 void drawSquare(Point mid) {

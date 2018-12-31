@@ -90,6 +90,9 @@
     <ClCompile Include="Automobile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="StatisticsDialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="TrafficLoadManager.h">
@@ -104,6 +107,9 @@
     <QtMoc Include="TrafficLightsEditor.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="StatisticsDialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="TrafficLoadManager.ui">
@@ -113,6 +119,9 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="TrafficLightsEditor.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="StatisticsDialog.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -159,6 +168,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Automobile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_StatisticsDialog.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_TrafficLoadManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

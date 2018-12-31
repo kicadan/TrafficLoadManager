@@ -24,7 +24,6 @@ struct Connection {
 
 struct CarSpawnSettings {
 	int timeBetweenCars = 0;
-	int smartDrivers = 0;
 	std::vector<Junction*> destinations;
 };
 
@@ -72,6 +71,24 @@ struct Traffics { //stores information about actual state of traffic lights duri
 	int lightsId;
 	int roadId;
 	short direction;
+	char lightsName[20];
+};
+
+struct LightsStatistics {
+	int lightsId;
+	char lightsName[20];
+	int roadId;
+	short direction;
+	int carsPassed = 0;
+};
+
+struct JunctionStatistics {
+	char junctionName[100];
+	int junctionId;
+	std::vector<LightsStatistics> lightsStats;
+	int overallPassed = 0;
+	int shouldBeEmitted = 0;
+	int emitted = 0;
 };
 
 class Junction :
@@ -116,13 +133,15 @@ public:
 	void updateLightsSettings();
 	void updateLights();
 	void initTrafficLights();
-	void showFocusedLights(Point); //growing and shrinking lights, while focused on setting lights
+	void colourLightsForEditing();
 	bool hasTrafficLights();
 
 	//junction
 	QPointF returnCrossPointsForBerm(QLineF, QPointF, int roadId = -1);
 	Point getPoint();
 	std::vector<int> getRoadIds();
+	std::vector<LightsStatistics> getLightsStatistics();
+	void carPassedJunction(Road*, LaneType);
 	void addRoad(Road*);
 	void deleteRoad(Road*);
 	void drawJunction();
@@ -133,6 +152,7 @@ public:
 	bool isPoint(QPointF);
 	bool isPoint(Point);
 	char* getName();
+	int getNumberOfCars(int /*1- emitted, 2-shouldBeEmitted*/);
 	int getNumberOfRoads();
 	int getId();
 
@@ -143,6 +163,7 @@ private:
 	std::vector<Connection> connections;
 	std::vector<ConnectedRoad> roads;
 	std::vector<Traffics> trafficLights; //next second
+	std::vector<LightsStatistics> lightsStatistics;
 	std::vector<Way> ways;
 	std::vector<int> roadIds;
 	float red = 0.6, green = 0.0, blue = 0.45;
@@ -168,14 +189,15 @@ void drawBezierCurve(Point, Point, Point, float, float, float);
 void drawLine(Point, Point, float, float, float);
 void drawCircle(Point, float);
 void drawFilledCircle(Point, float, float, float, float);
+void drawColouredSquare(Point, float, float, float);
 void drawSquare(Point);
 void drawWhiteQuads(std::vector<Point>);
 void copyLanePointVectorToPointVector(std::vector<LanePoint>, std::vector<Point>&); //deprecated
 
 
 struct Way {
-	Junction from;
-	Junction to;
+	Junction* from;
+	Junction* to;
 	std::vector<Connection> steps;
 	int length = 0;
 };
