@@ -997,6 +997,7 @@ void DesignArea::loadDocument(std::string filePath)
 						else
 							pChange = pChange->NextSiblingElement("Change"); //if couldnt be processed but take next changes...
 					}
+					Sleep(200);
 				}
 				pLightsSettings = pDesignArea->FirstChildElement("TrafficLightsSettings"); //only if node changes exists
 				if (pLightsSettings) {
@@ -1140,6 +1141,7 @@ void DesignArea::loadDocument(std::string filePath)
 								this->repainting = true;
 								repaint();
 								pConnection = pConnection->NextSiblingElement("Connection");
+								Sleep(200);
 							}
 						}
 					}
