@@ -151,6 +151,7 @@ void OneWayOneLane::drawRoad() //poprawiæ na jedn¹ drogê
 	glEnd();
 
 	//main lane
+	glLineWidth(1);
 	glColor3f(0.0f, 0.0f, 1.0f);
 	glBegin(GL_LINES);
 	glVertex2f(coreLine.p2().x(), coreLine.p2().y());

@@ -158,12 +158,17 @@ void OneWayTwoLanes::drawRoad() //poprawiæ na dwie drogi
 
 	glLineWidth(3);
 
+	glLineStipple(1, 0x00FF);
+	glEnable(GL_LINE_STIPPLE);
+
 	//main lane
 	glColor3f(0.0f, 0.0f, 1.0f);
 	glBegin(GL_LINES);
 	glVertex2f(coreLine.p2().x(), coreLine.p2().y());
 	glVertex2f(coreLine.p1().x(), coreLine.p1().y());
 	glEnd();
+	glDisable(GL_LINE_STIPPLE);
+	glPopAttrib();
 
 	//berm left
 	glColor3f(0.0f, 1.0f, 0.0f);
