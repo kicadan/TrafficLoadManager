@@ -162,6 +162,7 @@ public:
         QObject::connect(action_generuj_statystyki, SIGNAL(triggered()), designArea, SLOT(generateStatistics()));
         QObject::connect(actionWczytaj_plansz_z_pliku, SIGNAL(triggered()), designArea, SLOT(readFromFile()));
         QObject::connect(actionZapisz_plansz_do_pliku, SIGNAL(triggered()), designArea, SLOT(saveToFile()));
+        QObject::connect(action_nowy, SIGNAL(triggered()), designArea, SLOT(reset()));
 
         QMetaObject::connectSlotsByName(TrafficLoadManagerClass);
     } // setupUi

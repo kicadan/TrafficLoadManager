@@ -192,6 +192,7 @@
     <slot>generateStatistics()</slot>
     <slot>readFromFile()</slot>
     <slot>saveToFile()</slot>
+    <slot>reset()</slot>
    </slots>
   </customwidget>
  </customwidgets>
@@ -412,6 +413,22 @@
    <signal>triggered()</signal>
    <receiver>designArea</receiver>
    <slot>saveToFile()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>440</x>
+     <y>378</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>action_nowy</sender>
+   <signal>triggered()</signal>
+   <receiver>designArea</receiver>
+   <slot>reset()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>-1</x>

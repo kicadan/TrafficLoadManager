@@ -695,6 +695,8 @@ void DesignArea::reset()
 	changeCounter = 0;
 	timerCount = 0;
 	simulationInProgress = false;
+	repainting = true;
+	repaint();
 }
 
 void DesignArea::readFromFile()
@@ -915,6 +917,7 @@ void DesignArea::loadDocument(std::string filePath)
 				pChange = pChanges->FirstChildElement("Change");
 				while (pChange)
 				{
+					Sleep(100);
 					int changeId, enumAction;
 					Action action;
 					pAttribute = pChange->FirstAttribute();
@@ -997,7 +1000,7 @@ void DesignArea::loadDocument(std::string filePath)
 						else
 							pChange = pChange->NextSiblingElement("Change"); //if couldnt be processed but take next changes...
 					}
-					Sleep(200);
+					Sleep(300);
 				}
 				pLightsSettings = pDesignArea->FirstChildElement("TrafficLightsSettings"); //only if node changes exists
 				if (pLightsSettings) {
