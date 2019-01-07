@@ -850,31 +850,6 @@ Way Junction::updateCarSpawn()
 	return returnedWay; //if point is occupied returns Way with length = 0
 }
 
-//deprecated
-void Junction::connectToOneWayOneLane(Road *newRoad, LaneType previousType, Road* previousRoad) //to OneWayOneLane
-{
-	Connection newConnection;
-	newConnection.previousLaneType = previousType;
-	newConnection.previousRoad = previousRoad;
-	int pointIndexOnTheRoad = newRoad->getPointIndex(point, LANE);
-	if (pointIndexOnTheRoad == 0 && newRoad->id == previousRoad->id) //break if u try to connect beggining of the same road
-		return;
-	newConnection.nextLaneType = LANE;
-	newConnection.nextRoad = newRoad;
-	newConnection.nextPoint = pointIndexOnTheRoad;
-	if (pointIndexOnTheRoad > -1) {
-		newConnection.nextJunction = (Junction*)newRoad->getNextJunction(LANE, pointIndexOnTheRoad);
-		newConnection.distanceToNextJunction = pointIndexOnTheRoad;
-	}
-	if (newConnection.nextJunction != NULL)
-		addConnection(newConnection);
-}
-
-//deprecated
-void Junction::connectToOneWayTwoLanes(Road *, LaneType, Road* previousRoad)
-{
-}
-
 void Junction::updateOtherJunctionsOnMainRoad()
 {
 	Road* mainRoad = roads[0].road;
@@ -981,12 +956,6 @@ bool Junction::checkIfBelongs(int roadId) {
 	return false;
 }
 
-void copyLanePointVectorToPointVector(std::vector<LanePoint> vectorFrom, std::vector<Point> &vectorTo)
-{
-	for (auto vectorFromIt = vectorFrom.begin(); vectorFromIt < vectorFrom.end(); vectorFromIt++)
-		vectorTo.push_back((*vectorFromIt).point);
-}
-
 QPointF getBezierPoint(QPointF point1, QPointF point2, QPointF point3, double t) {
 	QPointF point;
 	point.setX(qPow(1 - t, 3)*point1.x() + 3 * t*qPow(1 - t, 2)*(-(point1.x() - 8 * point2.x() + point3.x()) / 6) + 3 * qPow(t, 2)*(1 - t)*(-(point1.x() - 8 * point2.x() + point3.x()) / 6) + qPow(t, 3)*(point3.x()));
@@ -998,6 +967,7 @@ QPointF getBezierPoint(QPointF point1, QPointF point2, QPointF point3, double t)
 void drawBezierCurve(Point _point1/*first*/, Point _point2/*control*/, Point _point3/*last*/, float red, float green, float blue) {
 	QPointF p1(_point1.x(), _point1.y()), p2, point1(_point1.x(), _point1.y()), point2(_point2.x(), _point2.y()), point3(_point3.x(), _point3.y());
 	glColor3f(red, green, blue);
+	glLineWidth(3);
 	for (double t = 0.0; t <= 1.0; t += 0.02)
 	{
 		QPointF p2 = getBezierPoint(point1, point2, point3, t);

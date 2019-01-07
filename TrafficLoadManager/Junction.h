@@ -178,8 +178,6 @@ private:
 
 	std::vector<Point> getPointsToDrawConnection(Connection);
 	std::vector<Point> getPointsToClearJunctionArea();
-	void connectToOneWayOneLane(Road*, LaneType, Road*);//deprecated
-	void connectToOneWayTwoLanes(Road*, LaneType, Road*);//deprecated
 	void clearJunctionArea();
 	void drawConnection(std::vector<Point>, float, float, float);
 	bool checkIfBelongs(int);
@@ -192,7 +190,6 @@ void drawFilledCircle(Point, float, float, float, float);
 void drawColouredSquare(Point, float, float, float);
 void drawSquare(Point);
 void drawWhiteQuads(std::vector<Point>);
-void copyLanePointVectorToPointVector(std::vector<LanePoint>, std::vector<Point>&); //deprecated
 
 
 struct Way {

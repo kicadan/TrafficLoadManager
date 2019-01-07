@@ -88,25 +88,24 @@ private:
 	void resetNodeTable(Junction*);
 	void updateNode(Junction*, Junction*, Connection);
 	void recursiveNodeFollow(std::vector<Junction*>&, Connection, int);
+	void updateWays();
 	void collectWay(Junction*, Junction*);
 	void collectWayRecursive(Junction*, Connection, int, int, Way&);
 	void drawElement();
 	void drawRoad();
 	void makeConnection();
-	void updateWays();
-	void renewConnectionsForSpawnPoints(); //deprecated
 	void setTrafficLights();
 	void editTrafficLights();
 	void addCarSpawn();
 	void editCarSpawn();
 	void repaintScene();
 	void undoChanges();
-	void validateConnections();
-	bool checkIfCollidingWithOtherRoad(Road*, std::vector<int>);
 	void deleteJunction(Junction*);
 	void deleteRoad(Road*);
 	void deleteVehicle(Vehicle*);
 	void fulfillNodeTable(std::vector<Node>&, Junction*);
+	bool checkIfCollidingWithOtherRoad(Road*, std::vector<int>);
+	void validateConnections();
 	vectors calc_vectors(QPoint, QPoint);
 	void findWay(Junction*, Junction*);
 	void processVehiclesMove();

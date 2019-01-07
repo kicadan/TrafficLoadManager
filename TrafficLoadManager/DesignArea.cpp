@@ -258,16 +258,6 @@ void DesignArea::updateWays()
 	}
 }
 
-//deprecated
-void DesignArea::renewConnectionsForSpawnPoints()
-{
-	for (auto junctionIt = allJunctions.begin(); junctionIt < allJunctions.end(); junctionIt++) {
-		if ((*junctionIt)->isCarSpawn() && (*junctionIt)->getNumberOfRoads() == 1 && (*junctionIt)->getConnectionsFrom(-1).size() == 0) {
-			(*junctionIt)->makeConnectionsForCarSpawn();
-		}
-	}
-}
-
 void DesignArea::setTrafficLights()
 {
 	constructing = false; 

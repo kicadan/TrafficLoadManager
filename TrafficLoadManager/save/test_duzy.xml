@@ -1,0 +1,393 @@
+<?xml version="1.0" ?>
+<DesignArea>
+    <Changes>
+        <Change id="0" type="5">
+            <AppObject object-type="0">
+                <Road id="0" type="2">
+                    <FirstPoint x="454" y="411" />
+                    <LastPoint x="1161" y="411" />
+                </Road>
+            </AppObject>
+        </Change>
+        <Change id="1" type="4">
+            <AppObject object-type="0">
+                <Road id="1" type="1">
+                    <FirstPoint x="753" y="725" />
+                    <LastPoint x="794" y="411" />
+                </Road>
+            </AppObject>
+        </Change>
+        <Change id="1" type="4">
+            <AppObject object-type="1">
+                <Junction id="0" name="Wêze³ numer 0">
+                    <RoadId id="0" />
+                    <Point x="794" y="411" />
+                </Junction>
+            </AppObject>
+        </Change>
+        <Change id="2" type="3">
+            <AppObject object-type="0">
+                <Road id="2" type="0">
+                    <FirstPoint x="305" y="754" />
+                    <LastPoint x="753" y="725" />
+                </Road>
+            </AppObject>
+        </Change>
+        <Change id="2" type="3">
+            <AppObject object-type="1">
+                <Junction id="1" name="Wêze³ numer 1">
+                    <RoadId id="1" />
+                    <Point x="753" y="725" />
+                </Junction>
+            </AppObject>
+        </Change>
+        <Change id="3" type="3">
+            <AppObject object-type="0">
+                <Road id="3" type="0">
+                    <FirstPoint x="1175" y="966" />
+                    <LastPoint x="753" y="725" />
+                </Road>
+            </AppObject>
+        </Change>
+        <Change id="4" type="4">
+            <AppObject object-type="0">
+                <Road id="4" type="1">
+                    <FirstPoint x="1161" y="411" />
+                    <LastPoint x="1364" y="695" />
+                </Road>
+            </AppObject>
+        </Change>
+        <Change id="4" type="4">
+            <AppObject object-type="1">
+                <Junction id="2" name="Wêze³ numer 2">
+                    <RoadId id="0" />
+                    <Point x="1161" y="411" />
+                </Junction>
+            </AppObject>
+        </Change>
+        <Change id="5" type="4">
+            <AppObject object-type="0">
+                <Road id="5" type="1">
+                    <FirstPoint x="1393" y="92" />
+                    <LastPoint x="1161" y="411" />
+                </Road>
+            </AppObject>
+        </Change>
+        <Change id="6" type="3">
+            <AppObject object-type="0">
+                <Road id="6" type="0">
+                    <FirstPoint x="1161" y="411" />
+                    <LastPoint x="936" y="226" />
+                </Road>
+            </AppObject>
+        </Change>
+        <Change id="7" type="3">
+            <AppObject object-type="0">
+                <Road id="7" type="0">
+                    <FirstPoint x="936" y="226" />
+                    <LastPoint x="812" y="224" />
+                </Road>
+            </AppObject>
+        </Change>
+        <Change id="7" type="3">
+            <AppObject object-type="1">
+                <Junction id="3" name="Wêze³ numer 3">
+                    <RoadId id="6" />
+                    <Point x="936" y="226" />
+                </Junction>
+            </AppObject>
+        </Change>
+        <Change id="8" type="3">
+            <AppObject object-type="0">
+                <Road id="8" type="0">
+                    <FirstPoint x="812" y="224" />
+                    <LastPoint x="794" y="411" />
+                </Road>
+            </AppObject>
+        </Change>
+        <Change id="8" type="3">
+            <AppObject object-type="1">
+                <Junction id="4" name="Wêze³ numer 4">
+                    <RoadId id="7" />
+                    <Point x="812" y="224" />
+                </Junction>
+            </AppObject>
+        </Change>
+        <Change id="9" type="5">
+            <AppObject object-type="0">
+                <Road id="9" type="2">
+                    <FirstPoint x="812" y="224" />
+                    <LastPoint x="638" y="54" />
+                </Road>
+            </AppObject>
+        </Change>
+        <Change id="10" type="3">
+            <AppObject object-type="0">
+                <Road id="10" type="0">
+                    <FirstPoint x="1175" y="966" />
+                    <LastPoint x="1364" y="695" />
+                </Road>
+            </AppObject>
+        </Change>
+        <Change id="10" type="3">
+            <AppObject object-type="1">
+                <Junction id="6" name="Wêze³ numer 6">
+                    <RoadId id="4" />
+                    <Point x="1364" y="695" />
+                </Junction>
+            </AppObject>
+        </Change>
+        <Change id="10" type="3">
+            <AppObject object-type="1">
+                <Junction id="5" name="Dolny prawy">
+                    <RoadId id="3" />
+                    <Point x="1175" y="966" />
+                </Junction>
+            </AppObject>
+        </Change>
+        <Change id="11" type="3">
+            <AppObject object-type="0">
+                <Road id="11" type="0">
+                    <FirstPoint x="1629" y="575" />
+                    <LastPoint x="1364" y="695" />
+                </Road>
+            </AppObject>
+        </Change>
+        <Change id="12" type="6">
+            <AppObject object-type="1">
+                <Junction id="7" name="Œrodkowy prawy">
+                    <RoadId id="11" />
+                    <Point x="1629" y="575" />
+                </Junction>
+            </AppObject>
+        </Change>
+        <Change id="13" type="6">
+            <AppObject object-type="1">
+                <Junction id="8" name="Górny lewy">
+                    <RoadId id="9" />
+                    <Point x="638" y="54" />
+                </Junction>
+            </AppObject>
+        </Change>
+        <Change id="14" type="6">
+            <AppObject object-type="1">
+                <Junction id="5" name="Dolny prawy">
+                    <RoadId id="3" />
+                    <Point x="1175" y="966" />
+                </Junction>
+            </AppObject>
+        </Change>
+        <Change id="15" type="6">
+            <AppObject object-type="1">
+                <Junction id="9" name="Górny prawy">
+                    <RoadId id="5" />
+                    <Point x="1393" y="92" />
+                </Junction>
+            </AppObject>
+        </Change>
+        <Change id="16" type="6">
+            <AppObject object-type="1">
+                <Junction id="10" name="Dolny lewy">
+                    <RoadId id="2" />
+                    <Point x="305" y="754" />
+                </Junction>
+            </AppObject>
+        </Change>
+        <Change id="17" type="6">
+            <AppObject object-type="1">
+                <Junction id="11" name="Œrodkowy lewy">
+                    <RoadId id="0" />
+                    <Point x="454" y="411" />
+                </Junction>
+            </AppObject>
+        </Change>
+        <Change id="18" type="9">
+            <AppObject object-type="1">
+                <Junction id="0" name="Wêze³ numer 0">
+                    <RoadId id="0" />
+                    <Point x="794" y="411" />
+                </Junction>
+            </AppObject>
+        </Change>
+        <Change id="19" type="9">
+            <AppObject object-type="1">
+                <Junction id="4" name="Wêze³ numer 4">
+                    <RoadId id="7" />
+                    <Point x="812" y="224" />
+                </Junction>
+            </AppObject>
+        </Change>
+        <Change id="20" type="9">
+            <AppObject object-type="1">
+                <Junction id="2" name="Wêze³ numer 2">
+                    <RoadId id="0" />
+                    <Point x="1161" y="411" />
+                </Junction>
+            </AppObject>
+        </Change>
+        <Change id="21" type="9">
+            <AppObject object-type="1">
+                <Junction id="1" name="Wêze³ numer 1">
+                    <RoadId id="1" />
+                    <Point x="753" y="725" />
+                </Junction>
+            </AppObject>
+        </Change>
+    </Changes>
+    <TrafficLightsSettings>
+        <Settings junction-id="0" up-to-date="1">
+            <LightsSequence>
+                <Lights green="4" red="5" road-id="1" direction="1" />
+                <Lights green="1" red="8" road-id="0" direction="1" />
+                <Lights green="2" red="7" road-id="8" direction="1" />
+                <Lights green="2" red="7" road-id="0" direction="-1" />
+            </LightsSequence>
+        </Settings>
+        <Settings junction-id="1" up-to-date="1">
+            <LightsSequence>
+                <Lights green="5" red="3" road-id="2" direction="1" />
+                <Lights green="3" red="5" road-id="3" direction="1" />
+            </LightsSequence>
+        </Settings>
+        <Settings junction-id="2" up-to-date="1">
+            <LightsSequence>
+                <Lights green="6" red="4" road-id="0" direction="1" />
+                <Lights green="4" red="6" road-id="5" direction="1" />
+            </LightsSequence>
+        </Settings>
+        <Settings junction-id="3" up-to-date="0">
+            <LightsSequence />
+        </Settings>
+        <Settings junction-id="4" up-to-date="1">
+            <LightsSequence>
+                <Lights green="5" red="3" road-id="7" direction="1" />
+                <Lights green="3" red="5" road-id="9" direction="-1" />
+            </LightsSequence>
+        </Settings>
+        <Settings junction-id="5" up-to-date="0">
+            <LightsSequence />
+        </Settings>
+        <Settings junction-id="6" up-to-date="0">
+            <LightsSequence />
+        </Settings>
+        <Settings junction-id="7" up-to-date="0">
+            <LightsSequence />
+        </Settings>
+        <Settings junction-id="8" up-to-date="0">
+            <LightsSequence />
+        </Settings>
+        <Settings junction-id="9" up-to-date="0">
+            <LightsSequence />
+        </Settings>
+        <Settings junction-id="10" up-to-date="0">
+            <LightsSequence />
+        </Settings>
+        <Settings junction-id="11" up-to-date="0">
+            <LightsSequence />
+        </Settings>
+    </TrafficLightsSettings>
+    <CarSpawnSettings>
+        <Settings junction-id="0" time="0" />
+        <Settings junction-id="1" time="0" />
+        <Settings junction-id="2" time="0" />
+        <Settings junction-id="3" time="0" />
+        <Settings junction-id="4" time="0" />
+        <Settings junction-id="5" time="4">
+            <Destination junction-id="11" />
+        </Settings>
+        <Settings junction-id="6" time="0" />
+        <Settings junction-id="7" time="0" />
+        <Settings junction-id="8" time="0" />
+        <Settings junction-id="9" time="0" />
+        <Settings junction-id="10" time="3">
+            <Destination junction-id="8" />
+        </Settings>
+        <Settings junction-id="11" time="0" />
+    </CarSpawnSettings>
+    <Connections>
+        <Connection junction-id="0">
+            <Previous road-id="8" lane-type="2" />
+            <Next road-id="0" lane-type="5" />
+        </Connection>
+        <Connection junction-id="0">
+            <Previous road-id="1" lane-type="4" />
+            <Next road-id="0" lane-type="2" />
+        </Connection>
+        <Connection junction-id="0">
+            <Previous road-id="1" lane-type="3" />
+            <Next road-id="0" lane-type="5" />
+        </Connection>
+        <Connection junction-id="0">
+            <Previous road-id="1" lane-type="4" />
+            <Next road-id="0" lane-type="5" />
+        </Connection>
+        <Connection junction-id="1">
+            <Previous road-id="2" lane-type="2" />
+            <Next road-id="1" lane-type="3" />
+        </Connection>
+        <Connection junction-id="1">
+            <Previous road-id="3" lane-type="2" />
+            <Next road-id="1" lane-type="4" />
+        </Connection>
+        <Connection junction-id="2">
+            <Previous road-id="5" lane-type="4" />
+            <Next road-id="6" lane-type="2" />
+        </Connection>
+        <Connection junction-id="2">
+            <Previous road-id="0" lane-type="2" />
+            <Next road-id="4" lane-type="4" />
+        </Connection>
+        <Connection junction-id="2">
+            <Previous road-id="5" lane-type="3" />
+            <Next road-id="4" lane-type="3" />
+        </Connection>
+        <Connection junction-id="2">
+            <Previous road-id="0" lane-type="2" />
+            <Next road-id="6" lane-type="2" />
+        </Connection>
+        <Connection junction-id="3">
+            <Previous road-id="6" lane-type="2" />
+            <Next road-id="7" lane-type="2" />
+        </Connection>
+        <Connection junction-id="4">
+            <Previous road-id="7" lane-type="2" />
+            <Next road-id="9" lane-type="2" />
+        </Connection>
+        <Connection junction-id="4">
+            <Previous road-id="9" lane-type="5" />
+            <Next road-id="8" lane-type="2" />
+        </Connection>
+        <Connection junction-id="5">
+            <Previous road-id="3" lane-type="2" />
+            <Next road-id="3" lane-type="2" />
+        </Connection>
+        <Connection junction-id="5">
+            <Previous road-id="10" lane-type="2" />
+            <Next road-id="10" lane-type="2" />
+        </Connection>
+        <Connection junction-id="7">
+            <Previous road-id="11" lane-type="2" />
+            <Next road-id="11" lane-type="2" />
+        </Connection>
+        <Connection junction-id="8">
+            <Previous road-id="9" lane-type="5" />
+            <Next road-id="9" lane-type="5" />
+        </Connection>
+        <Connection junction-id="9">
+            <Previous road-id="5" lane-type="3" />
+            <Next road-id="5" lane-type="3" />
+        </Connection>
+        <Connection junction-id="9">
+            <Previous road-id="5" lane-type="4" />
+            <Next road-id="5" lane-type="4" />
+        </Connection>
+        <Connection junction-id="10">
+            <Previous road-id="2" lane-type="2" />
+            <Next road-id="2" lane-type="2" />
+        </Connection>
+        <Connection junction-id="11">
+            <Previous road-id="0" lane-type="2" />
+            <Next road-id="0" lane-type="2" />
+        </Connection>
+    </Connections>
+</DesignArea>
